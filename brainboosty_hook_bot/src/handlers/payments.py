@@ -73,22 +73,18 @@ def build_access_pricing_keyboard(user: User, lang: str) -> InlineKeyboardMarkup
             ),
         ],
     ]
-    if settings.TRIBUTE_PAY_URL_MONTH.strip():
+    if settings.TRIBUTE_APP_URL.strip():
         rows.append(
-            [InlineKeyboardButton(text=t(lang, "BTN_TRIBUTE_MONTH"), url=settings.TRIBUTE_PAY_URL_MONTH)],
+            [InlineKeyboardButton(text=t(lang, "BTN_TRIBUTE_APP"), url=settings.TRIBUTE_APP_URL.strip())],
         )
-    if subscription_service.discount_active(user) and settings.TRIBUTE_PAY_URL_FOREVER_DISCOUNT.strip():
+    if settings.TRIBUTE_APP_URL_PROMO_15.strip():
         rows.append(
             [
                 InlineKeyboardButton(
-                    text=t(lang, "BTN_TRIBUTE_FOREVER_DISC"),
-                    url=settings.TRIBUTE_PAY_URL_FOREVER_DISCOUNT,
+                    text=t(lang, "BTN_TRIBUTE_MONTH_15"),
+                    url=settings.TRIBUTE_APP_URL_PROMO_15.strip(),
                 ),
             ],
-        )
-    elif settings.TRIBUTE_PAY_URL_FOREVER.strip():
-        rows.append(
-            [InlineKeyboardButton(text=t(lang, "BTN_TRIBUTE_FOREVER_FULL"), url=settings.TRIBUTE_PAY_URL_FOREVER)],
         )
     rows.append(
         [InlineKeyboardButton(text=t(lang, "BTN_ACCESS_NOT_READY"), callback_data=ACCESS_NOT_READY_CB)],

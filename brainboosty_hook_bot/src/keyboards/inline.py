@@ -12,10 +12,8 @@ SKILL_CALLBACK_PREFIX = "qs:"
 _SKILL_KEYS = (
     "self_control",
     "sociability",
-    "memory",
     "speech",
     "reduce_anxiety",
-    "empathy",
     "sexual_diversity",
 )
 
@@ -167,10 +165,6 @@ def post_teaser_kb(lang: str) -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(text=t(lang, "BTN_GET_PDF"), callback_data=f"{PDF_CB_PREFIX}last"),
                 InlineKeyboardButton(text=t(lang, "BTN_UNLOCK_FULL"), callback_data=SUB_OFFER_CB),
-            ],
-            [
-                InlineKeyboardButton(text="🇷🇺", callback_data=f"{LANG_PREFIX}ru"),
-                InlineKeyboardButton(text="🇬🇧", callback_data=f"{LANG_PREFIX}en"),
             ],
         ],
     )

@@ -18,9 +18,10 @@ from brainboosty_hook_bot.src.keyboards.inline import (
     TIME_CALLBACK_PREFIX,
     questionnaire_skill_kb,
     questionnaire_time_kb,
+    start_lang_pick_kb,
 )
 from brainboosty_hook_bot.src.locale import t
-from brainboosty_hook_bot.src.utils.flow_chat import flow_remember, flow_wipe, remove_reply_keyboard
+from brainboosty_hook_bot.src.utils.flow_chat import flow_remember, flow_wipe, remove_reply_keyboard, try_delete_user_message
 
 router = Router(name="questionnaire")
 
@@ -29,10 +30,8 @@ _ALLOWED_SKILLS = frozenset(
         "sexual_diversity",
         "self_control",
         "sociability",
-        "memory",
         "speech",
         "reduce_anxiety",
-        "empathy",
     },
 )
 
@@ -54,6 +53,19 @@ class QuestStates(StatesGroup):
 
 def _goals_from_skill_key(key: str) -> list[str]:
     return [key]
+
+
+def _parse_age_years(text: str | None) -> int | None:
+    """Только целые цифры 0–9, возраст 5–120; иначе None."""
+    if text is None:
+        return None
+    raw = text.strip()
+    if not raw or not raw.isdigit():
+        return None
+    age = int(raw)
+    if age < 5 or age > 120:
+        return None
+    return age
 
 
 async def _fetch_user_by_tg(session: AsyncSession, tg_id: int) -> User | None:
@@ -89,6 +101,13 @@ async def quest_language_chosen(callback: CallbackQuery, state: FSMContext) -> N
     await callback.answer()
 
 
+@router.message(QuestStates.language)
+async def quest_language_stray(message: Message, state: FSMContext, locale: str) -> None:
+    await try_delete_user_message(message)
+    sent = await message.answer(t("ru", "LANG_PROMPT"), reply_markup=start_lang_pick_kb())
+    await flow_remember(state, sent.message_id)
+
+
 @router.callback_query(QuestStates.skill, F.data.startswith(SKILL_CALLBACK_PREFIX))
 async def quest_skill_chosen(
     callback: CallbackQuery,
@@ -96,6 +115,7 @@ async def quest_skill_chosen(
     locale: str,
 ) -> None:
     if callback.from_user is None or callback.message is None or callback.data is None:
+        await callback.answer()
         return
 
     lang = await _quest_lang(state, locale)
@@ -115,32 +135,31 @@ async def quest_skill_chosen(
     await callback.answer()
 
 
-@router.message(QuestStates.age, F.text)
+@router.message(QuestStates.skill)
+async def quest_skill_text_instead_of_button(message: Message, state: FSMContext, locale: str) -> None:
+    lang = await _quest_lang(state, locale)
+    await try_delete_user_message(message)
+    sent = await message.answer(
+        t(lang, "QUEST_STAY_ON_STEP"),
+        reply_markup=questionnaire_skill_kb(lang),
+    )
+    await flow_remember(state, sent.message_id)
+
+
+@router.message(QuestStates.age)
 async def quest_age_entered(message: Message, state: FSMContext, locale: str) -> None:
     lang = await _quest_lang(state, locale)
-    raw = (message.text or "").strip()
+    age = _parse_age_years(message.text)
 
-    if not raw.isdigit():
-        try:
-            await message.delete()
-        except Exception:
-            pass
-        await message.answer(t(lang, "AGE_INVALID"))
+    if age is None:
+        await try_delete_user_message(message)
+        sent = await message.answer(
+            f"{t(lang, 'AGE_INVALID')}",
+        )
+        await flow_remember(state, sent.message_id)
         return
 
-    age = int(raw)
-    if age < 5 or age > 120:
-        try:
-            await message.delete()
-        except Exception:
-            pass
-        await message.answer(t(lang, "AGE_INVALID"))
-        return
-
-    try:
-        await message.delete()
-    except Exception:
-        pass
+    await try_delete_user_message(message)
 
     bot = message.bot
     chat_id = message.chat.id
@@ -149,6 +168,17 @@ async def quest_age_entered(message: Message, state: FSMContext, locale: str) ->
     await state.update_data(age=age)
     await state.set_state(QuestStates.time)
     sent = await bot.send_message(chat_id, t(lang, "QUESTION_TIME"), reply_markup=questionnaire_time_kb(lang))
+    await flow_remember(state, sent.message_id)
+
+
+@router.message(QuestStates.time)
+async def quest_time_stray(message: Message, state: FSMContext, locale: str) -> None:
+    lang = await _quest_lang(state, locale)
+    await try_delete_user_message(message)
+    sent = await message.answer(
+        t(lang, "QUEST_STAY_ON_STEP"),
+        reply_markup=questionnaire_time_kb(lang),
+    )
     await flow_remember(state, sent.message_id)
 
 

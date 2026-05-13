@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import false as sql_false
 
 
 revision: str = "20260513_0005"
@@ -25,7 +26,7 @@ def upgrade() -> None:
     )
     op.add_column(
         "users",
-        sa.Column("cognitive_completed", sa.Boolean(), nullable=False, server_default=sa.text("0")),
+        sa.Column("cognitive_completed", sa.Boolean(), nullable=False, server_default=sql_false()),
     )
 
 

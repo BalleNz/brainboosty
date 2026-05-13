@@ -31,7 +31,7 @@ from brainboosty_hook_bot.src.services.assistant_service import TestVariant
 from brainboosty_hook_bot.src.services.brain_map_image import build_brain_map_infographic_png
 from brainboosty_hook_bot.src.services.brain_result_delivery import send_full_brain_result_pack
 from brainboosty_hook_bot.src.services.subscription_service import open_discount_window, user_has_paid_access
-from brainboosty_hook_bot.src.utils.flow_chat import delete_one, flow_remember, flow_wipe
+from brainboosty_hook_bot.src.utils.flow_chat import delete_one, flow_remember, flow_wipe, try_delete_user_message
 from brainboosty_hook_bot.src.utils.helpers import build_ref_link
 
 logger = logging.getLogger(__name__)
@@ -229,7 +229,11 @@ async def cognitive_answer_step(
 
     chat_id = callback.message.chat.id
     bot = callback.bot
-    await flow_wipe(bot, chat_id, state, extra_ids=(callback.message.message_id,))
+    question_mid = callback.message.message_id
+
+    await callback.answer()
+    await delete_one(bot, chat_id, question_mid)
+    await flow_wipe(bot, chat_id, state, extra_ids=(question_mid,))
 
     if q_num < nq:
         nxt = q_num + 1
@@ -241,13 +245,71 @@ async def cognitive_answer_step(
             parse_mode="HTML",
         )
         await flow_remember(state, sent.message_id)
-        await callback.answer()
         return
 
     await state.update_data(cq=nq + 1, answers={str(i): answers[i] for i in sorted(answers)})
     await _finalize(bot, chat_id, callback.from_user.id, session, answers, variant, lang, user)
     await state.clear()
-    await callback.answer()
+
+
+@router.message(CognitiveStates.choose_style)
+async def cognitive_choose_style_stray(
+    message: Message,
+    state: FSMContext,
+    session: AsyncSession,
+    locale: str,
+) -> None:
+    if message.from_user is None:
+        return
+    await try_delete_user_message(message)
+    ur = await session.execute(select(User).where(User.tg_id == message.from_user.id))
+    user = ur.scalar_one_or_none()
+    lang = normalize_user_lang(user, locale)
+    bot = message.bot
+    chat_id = message.chat.id
+    await flow_wipe(bot, chat_id, state)
+    await prompt_test_style_choice(state, lang, bot=bot, chat_id=chat_id)
+
+
+@router.message(CognitiveStates.testing)
+async def cognitive_testing_stray(
+    message: Message,
+    state: FSMContext,
+    session: AsyncSession,
+    locale: str,
+) -> None:
+    if message.from_user is None:
+        return
+    await try_delete_user_message(message)
+    data = await state.get_data()
+    cq = data.get("cq")
+    variant = data.get("test_variant")
+    nq = assistant_service.COGNITIVE_NUM_QUESTIONS
+
+    ur = await session.execute(select(User).where(User.tg_id == message.from_user.id))
+    user = ur.scalar_one_or_none()
+    if user is None:
+        await message.answer(t(locale, "NOT_REGISTERED"))
+        return
+    lang = normalize_user_lang(user, locale)
+
+    bot = message.bot
+    chat_id = message.chat.id
+
+    if not isinstance(cq, int) or variant not in ("sexual", "development") or cq < 1 or cq > nq:
+        await flow_wipe(bot, chat_id, state)
+        await prompt_test_style_choice(state, lang, bot=bot, chat_id=chat_id)
+        return
+
+    await flow_wipe(bot, chat_id, state)
+    text = f"{t(lang, 'COGNITIVE_STAY_ON_STEP')}\n\n{cognitive_question_body(lang, variant, cq)}"
+    sent = await bot.send_message(
+        chat_id,
+        text,
+        reply_markup=cognitive_answer_kb(cq),
+        parse_mode="HTML",
+    )
+    await flow_remember(state, sent.message_id)
 
 
 async def _finalize(

@@ -21,7 +21,7 @@ class User(Base):
     username: Mapped[str | None] = mapped_column(String(255), nullable=True)
     first_name: Mapped[str] = mapped_column(String(255), nullable=False)
 
-    # Список строк целей (например ["attention", "memory"])
+    # Список строк целей (например ["speech", "reduce_anxiety"])
     goals: Mapped[list[Any]] = mapped_column(JSON, nullable=False)
 
     age: Mapped[int] = mapped_column(Integer, nullable=False)

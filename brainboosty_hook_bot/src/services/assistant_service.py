@@ -188,8 +188,16 @@ def _parse_scores_json(content: str) -> dict[str, float]:
     return out
 
 
+def _openai_client() -> AsyncOpenAI:
+    api_key = settings.OPENAI_API_KEY.strip()
+    base = settings.openai_base_url_resolved
+    if base:
+        return AsyncOpenAI(api_key=api_key, base_url=base)
+    return AsyncOpenAI(api_key=api_key)
+
+
 async def _openai_compute_scores(answers_block: str, variant: TestVariant) -> dict[str, float]:
-    client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+    client = _openai_client()
     completion = await client.chat.completions.create(
         model=settings.OPENAI_MODEL,
         temperature=0.2,

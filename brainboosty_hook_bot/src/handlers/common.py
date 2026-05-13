@@ -1,4 +1,4 @@
-"""Общие команды (/cancel, /lang)."""
+"""Общие команды (/cancel, /language)."""
 
 from __future__ import annotations
 
@@ -24,8 +24,8 @@ async def cmd_cancel(message: Message, state: FSMContext, locale: str) -> None:
     await message.answer(t(locale, "CANCELLED"))
 
 
-@router.message(Command("lang"))
-async def cmd_lang(message: Message, locale: str) -> None:
+@router.message(Command("language"))
+async def cmd_language(message: Message, locale: str) -> None:
     await message.answer(t(locale, "LANG_PROMPT"), reply_markup=lang_pick_kb(locale))
 
 

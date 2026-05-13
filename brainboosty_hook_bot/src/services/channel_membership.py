@@ -20,7 +20,7 @@ async def user_is_channel_member(bot: Bot, user_id: int) -> bool:
     except TelegramBadRequest as exc:
         logger.debug("get_chat_member %s: %s", chat_id, exc)
         return False
-    if m.status in (ChatMemberStatus.LEFT, ChatMemberStatus.BANNED):
+    if m.status in (ChatMemberStatus.LEFT, ChatMemberStatus.KICKED):
         return False
     if m.status == ChatMemberStatus.RESTRICTED:
         return bool(getattr(m, "is_member", False))

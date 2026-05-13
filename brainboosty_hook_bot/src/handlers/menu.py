@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import logging
+from pathlib import Path
+
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import BufferedInputFile, CallbackQuery, Message, ReplyKeyboardRemove, FSInputFile
+from aiogram.types import BufferedInputFile, CallbackQuery, Message, ReplyKeyboardRemove
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from brainboosty_hook_bot.src.config.config import settings
 from brainboosty_hook_bot.src.database.models import BrainRegionSnapshot, User
 from brainboosty_hook_bot.src.handlers.cognitive import prompt_test_style_choice
 from brainboosty_hook_bot.src.handlers.payments import send_subscription_offer
@@ -25,6 +29,42 @@ from brainboosty_hook_bot.src.services.teaser_service import generate_teaser_rec
 from brainboosty_hook_bot.src.utils.flow_chat import flow_remember
 
 router = Router(name="menu")
+logger = logging.getLogger(__name__)
+
+
+def _package_root() -> Path:
+    """Каталог проекта: рядом лежат `src/`, `alembic/`, опционально `images/`."""
+    return Path(__file__).resolve().parents[2]
+
+
+def _resolve_about_photo() -> Path | None:
+    """
+    Фото для блока «О проекте».
+    1) ABOUT_PHOTO_PATH из .env (абсолютный или относительно корня проекта).
+    2) Авто: images/ или src/images/, имя author с типичными расширениями (регистр как в Linux).
+    """
+    root = _package_root()
+    custom = (settings.ABOUT_PHOTO_PATH or "").strip()
+    if custom:
+        p = Path(custom).expanduser()
+        if not p.is_absolute():
+            p = root / p
+        return p if p.is_file() else None
+
+    names = (
+        "author.JPG",
+        "author.jpg",
+        "author.jpeg",
+        "author.JPEG",
+        "author.png",
+        "author.PNG",
+    )
+    for sub in (Path("images"), Path("src") / "images"):
+        for name in names:
+            candidate = root / sub / name
+            if candidate.is_file():
+                return candidate
+    return None
 
 
 async def _fetch_user(session: AsyncSession, tg_id: int) -> User | None:
@@ -160,13 +200,30 @@ async def menu_about(message: Message, session: AsyncSession, locale: str) -> No
     lang = user.locale if user and user.locale in {"ru", "en"} else locale
     show_re = bool(user and user_has_paid_access(user))
 
-    photo = FSInputFile("images/author.JPG")
-    await message.reply_photo(
-        caption=t(lang, "ABOUT_PROJECT"),
-        reply_markup=main_reply_kb(lang, show_retest=show_re),
-        photo=photo,
-        parse_mode="HTML"
-    )
+    photo_path = _resolve_about_photo()
+    kb = main_reply_kb(lang, show_retest=show_re)
+    caption = t(lang, "ABOUT_PROJECT")
+
+    if photo_path is not None:
+        try:
+            raw = photo_path.read_bytes()
+        except OSError as exc:
+            logger.warning("About photo unreadable %s: %s", photo_path, exc)
+            await message.answer(caption, reply_markup=kb, parse_mode="HTML")
+            return
+        await message.reply_photo(
+            photo=BufferedInputFile(raw, filename=photo_path.name),
+            caption=caption,
+            reply_markup=kb,
+            parse_mode="HTML",
+        )
+    else:
+        logger.warning(
+            "About photo not found under %s (images/ or src/images/, author.*). "
+            "Set ABOUT_PHOTO_PATH in .env to an absolute path if the file is elsewhere.",
+            _package_root(),
+        )
+        await message.answer(caption, reply_markup=kb, parse_mode="HTML")
 
 
 @router.callback_query(F.data == f"{PDF_CB_PREFIX}last")

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import false as sql_false
 
 
 revision: str = "20260512_0004"
@@ -19,7 +20,10 @@ depends_on: str | None = None
 
 
 def upgrade() -> None:
-    op.add_column("users", sa.Column("lifetime_subscription", sa.Boolean(), nullable=False, server_default=sa.text("0")))
+    op.add_column(
+        "users",
+        sa.Column("lifetime_subscription", sa.Boolean(), nullable=False, server_default=sql_false()),
+    )
     op.add_column("users", sa.Column("test_discount_until", sa.DateTime(timezone=True), nullable=True))
     op.add_column(
         "brain_region_snapshots",

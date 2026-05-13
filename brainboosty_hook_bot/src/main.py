@@ -1,20 +1,23 @@
 """
 Точка входа BrainBoosty Hook Bot.
 
-Запуск из корня проекта:
+Запуск (из каталога brainboosty_hook_bot, PYTHONPATH на родителя пакета):
 
-    cd brainboosty_hook_bot
-    python -m src.main
+    export PYTHONPATH=..
+    python -m brainboosty_hook_bot.src.main
+
+Docker: сервис `bot` в docker-compose.yml.
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import date, timezone
+from datetime import date, timedelta, timezone
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.storage.redis import RedisStorage
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy import select
@@ -31,6 +34,18 @@ from brainboosty_hook_bot.src.web.tribute_app import start_tribute_server
 logger = logging.getLogger(__name__)
 
 _tribute_runner = None
+
+
+def _build_fsm_storage() -> MemoryStorage | RedisStorage:
+    url = (settings.REDIS_URL or "").strip()
+    if not url:
+        return MemoryStorage()
+    kwargs: dict = {}
+    if settings.REDIS_FSM_STATE_TTL_SECONDS > 0:
+        kwargs["state_ttl"] = timedelta(seconds=settings.REDIS_FSM_STATE_TTL_SECONDS)
+    if settings.REDIS_FSM_DATA_TTL_SECONDS > 0:
+        kwargs["data_ttl"] = timedelta(seconds=settings.REDIS_FSM_DATA_TTL_SECONDS)
+    return RedisStorage.from_url(url, **kwargs)
 
 
 async def send_daily_hooks(bot: Bot) -> None:
@@ -59,8 +74,11 @@ async def main() -> None:
         format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
     )
 
+    if not (settings.BOT_TOKEN or "").strip():
+        raise SystemExit("BOT_TOKEN is not set — add it to .env (see .env.example)")
+
     bot = Bot(settings.BOT_TOKEN)
-    dp = Dispatcher(storage=MemoryStorage())
+    dp = Dispatcher(storage=_build_fsm_storage())
 
     # Сначала антиспам (ранний выход), затем сессия БД вокруг хендлера.
     dp.update.middleware(ThrottlingMiddleware())
@@ -83,6 +101,10 @@ async def main() -> None:
     async def on_startup() -> None:
         global _tribute_runner
         logger.info("Starting BrainBoosty Hook Bot")
+        if (settings.REDIS_URL or "").strip():
+            logger.info("FSM storage: Redis (state survives bot restarts; use one bot replica)")
+        else:
+            logger.info("FSM storage: in-memory (single process; state lost on restart)")
         await init_db()
         scheduler.start()
         _tribute_runner = await start_tribute_server(bot)

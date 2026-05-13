@@ -6,7 +6,7 @@ import logging
 
 from aiogram import Bot
 from aiogram.fsm.context import FSMContext
-from aiogram.types import ReplyKeyboardRemove
+from aiogram.types import Message, ReplyKeyboardRemove
 
 logger = logging.getLogger(__name__)
 
@@ -55,3 +55,10 @@ async def delete_one(bot: Bot, chat_id: int, message_id: int | None) -> None:
         await bot.delete_message(chat_id, message_id)
     except Exception as exc:  # noqa: BLE001
         logger.debug("delete_one %s: %s", message_id, exc)
+
+
+async def try_delete_user_message(message: Message) -> None:
+    """Удалить сообщение пользователя (в личке обычно доступно; иначе тихо игнорируем)."""
+    if message.chat is None:
+        return
+    await delete_one(message.bot, message.chat.id, message.message_id)

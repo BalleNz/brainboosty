@@ -35,7 +35,6 @@ def _stable_jitter(seed: int, salt: int) -> float:
 # Цель анкеты → домены, куда добавляем бонус (суммарно ~12 п.п. на цель)
 _GOAL_DOMAINS: dict[str, tuple[str, ...]] = {
     "attention": ("attention",),
-    "memory": ("memory",),
     "speed": ("thinking_speed",),
     "focus": ("focus",),
     "creativity": ("creativity",),
@@ -44,7 +43,6 @@ _GOAL_DOMAINS: dict[str, tuple[str, ...]] = {
     "sociability": ("attention", "creativity"),
     "speech": ("focus", "creativity"),
     "reduce_anxiety": ("attention", "focus"),
-    "empathy": ("creativity", "memory"),
     "all": ("attention", "memory", "thinking_speed", "focus", "creativity"),
 }
 
