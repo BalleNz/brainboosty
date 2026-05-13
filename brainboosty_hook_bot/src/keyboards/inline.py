@@ -17,30 +17,51 @@ _SKILL_KEYS = (
     "sexual_diversity",
 )
 
+QUEST_SKILL_KEY_SET: frozenset[str] = frozenset(_SKILL_KEYS)
+
 SUB_OFFER_CB = "sub:offer"
 PDF_CB_PREFIX = "pdf:"
+STEST_HUB_PREFIX = "sth:"
+STEST_ANS_PREFIX = "sta:"
 CHECK_CHANNEL_SUB_CB = "ch:verify"
 RESUME_COGNITIVE_CB = "resume:cog"
+RESET_ACCOUNT_CONFIRM_CB = "reset:yes"
 ACCESS_NOT_READY_CB = "acc:nr"
+ACCESS_CHANNEL_15_PITCH_CB = "acc:p15"
 ACCESS_CH15_YES_CB = "acc:y15"
 ACCESS_CH15_NO_CB = "acc:n15"
 VERIFY_CH_PROMO_CB = "acc:chp"
 ACCESS_SHOW_REF_CB = "acc:ref"
+PAY_PLAN_PREFIX = "pay:pl:"
+PAY_BACK_TARIFF_CB = "pay:back"
+PAY_STARS_PREFIX = "pay_st:"
 LANG_PREFIX = "lang:"
 QUEST_LANG_PREFIX = "qlang:"
 
 
-def questionnaire_skill_kb(lang: str) -> InlineKeyboardMarkup:
+SKILL_DONE_CALLBACK = f"{SKILL_CALLBACK_PREFIX}__done__"
+
+
+def questionnaire_skill_kb(lang: str, *, selected: tuple[str, ...] | list[str] = ()) -> InlineKeyboardMarkup:
+    """До двух навыков; выбранные подписываются как «| название |»."""
+    sel_tuple = tuple(selected) if isinstance(selected, list) else selected
+    sel_set = frozenset(sel_tuple)
+
+    def _label(key: str) -> str:
+        base = t(lang, f"SKILL_{key}")
+        return f"| {base} |" if key in sel_set else base
+
     rows: list[list[InlineKeyboardButton]] = []
     keys = list(_SKILL_KEYS)
     for i in range(0, len(keys), 2):
         chunk = keys[i : i + 2]
         rows.append(
             [
-                InlineKeyboardButton(text=t(lang, f"SKILL_{k}"), callback_data=f"{SKILL_CALLBACK_PREFIX}{k}")
+                InlineKeyboardButton(text=_label(k), callback_data=f"{SKILL_CALLBACK_PREFIX}{k}")
                 for k in chunk
             ],
         )
+    rows.append([InlineKeyboardButton(text=t(lang, "SKILLS_BTN_DONE"), callback_data=SKILL_DONE_CALLBACK)])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
@@ -122,6 +143,27 @@ def cognitive_answer_kb(question_num: int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[row])
 
 
+def tests_hub_inline_kb(lang: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=t(lang, "TESTS_BTN_DAILY"), callback_data=f"{STEST_HUB_PREFIX}day")],
+            [InlineKeyboardButton(text=t(lang, "TESTS_BTN_WEEKLY"), callback_data=f"{STEST_HUB_PREFIX}week")],
+            [InlineKeyboardButton(text=t(lang, "TESTS_BTN_HISTORY_PDF"), callback_data=f"{STEST_HUB_PREFIX}pdf")],
+        ],
+    )
+
+
+def scheduled_test_answer_kb(shared_test_id: int, question_num: int) -> InlineKeyboardMarkup:
+    p = STEST_ANS_PREFIX
+    row = [
+        InlineKeyboardButton(text="A", callback_data=f"{p}{shared_test_id}:{question_num}:A"),
+        InlineKeyboardButton(text="B", callback_data=f"{p}{shared_test_id}:{question_num}:B"),
+        InlineKeyboardButton(text="C", callback_data=f"{p}{shared_test_id}:{question_num}:C"),
+        InlineKeyboardButton(text="D", callback_data=f"{p}{shared_test_id}:{question_num}:D"),
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=[row])
+
+
 def admin_confirm_broadcast_kb(lang: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
@@ -155,6 +197,25 @@ def access_show_ref_kb(lang: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text=t(lang, "BTN_ACCESS_SHOW_REF"), callback_data=ACCESS_SHOW_REF_CB)],
+        ],
+    )
+
+
+def reset_account_confirm_kb(lang: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=t(lang, "BTN_RESET_CONFIRM"), callback_data=RESET_ACCOUNT_CONFIRM_CB)],
+        ],
+    )
+
+
+def access_tariff_choice_kb(lang: str) -> InlineKeyboardMarkup:
+    """Шаг 1 оплаты: только выбор тарифа + «не готов»."""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=t(lang, "BTN_ACCESS_PLAN_MONTH"), callback_data=f"{PAY_PLAN_PREFIX}month")],
+            [InlineKeyboardButton(text=t(lang, "BTN_ACCESS_PLAN_FOREVER"), callback_data=f"{PAY_PLAN_PREFIX}forever")],
+            [InlineKeyboardButton(text=t(lang, "BTN_ACCESS_NOT_READY"), callback_data=ACCESS_NOT_READY_CB)],
         ],
     )
 

@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from brainboosty_hook_bot.src.database.models import User
-from brainboosty_hook_bot.src.handlers.questionnaire import QuestStates
+from brainboosty_hook_bot.src.handlers.questionnaire import QuestStates, skill_keys_for_resume
 from brainboosty_hook_bot.src.keyboards.inline import (
     cognitive_resume_kb,
     questionnaire_skill_kb,
@@ -38,13 +38,13 @@ async def _send_skill_step_after_intro(message: Message, state: FSMContext, lang
     user = message.from_user
     if user is None:
         return
-    await state.update_data(quest_lang=lang)
+    await state.update_data(quest_lang=lang, skill_keys=[], skills_edit_only=False)
     await state.set_state(QuestStates.skill)
     name = user.first_name or ("friend" if lang == "en" else "друг")
     m1 = await message.answer(t(lang, "START_NEW_INTRO", name=name))
     m2 = await message.answer(
         t(lang, "QUESTION_SKILL"),
-        reply_markup=questionnaire_skill_kb(lang),
+        reply_markup=questionnaire_skill_kb(lang, selected=()),
     )
     await flow_remember(state, m1.message_id, m2.message_id)
 
@@ -63,24 +63,22 @@ async def _resume_questionnaire_if_possible(
     lang = data_before.get("quest_lang")
     if lang not in {"ru", "en"}:
         lang = None
-    skill = data_before.get("skill_key")
-    if not isinstance(skill, str):
-        skill = None
+    skill_keys = skill_keys_for_resume(data_before)
     age = data_before.get("age")
     if not isinstance(age, int):
         age = None
 
     leaf = _quest_fsm_leaf(state_before)
 
-    if lang and skill and age is not None and leaf == "time":
-        await state.update_data(quest_lang=lang, skill_key=skill, age=age)
+    if lang and skill_keys and age is not None and leaf == "time":
+        await state.update_data(quest_lang=lang, skill_keys=skill_keys, age=age)
         await state.set_state(QuestStates.time)
         sent = await message.answer(t(lang, "QUESTION_TIME"), reply_markup=questionnaire_time_kb(lang))
         await flow_remember(state, sent.message_id)
         return True
 
-    if lang and skill and leaf == "age":
-        await state.update_data(quest_lang=lang, skill_key=skill)
+    if lang and skill_keys and leaf == "age":
+        await state.update_data(quest_lang=lang, skill_keys=skill_keys)
         await state.set_state(QuestStates.age)
         sent = await message.answer(t(lang, "QUESTION_AGE"))
         await flow_remember(state, sent.message_id)
@@ -90,15 +88,15 @@ async def _resume_questionnaire_if_possible(
         await _send_skill_step_after_intro(message, state, lang)
         return True
 
-    if lang and leaf == "age" and skill is None:
+    if lang and leaf == "age" and skill_keys is None:
         await _send_skill_step_after_intro(message, state, lang)
         return True
 
-    if lang and leaf == "time" and (skill is None or age is None):
-        if skill is None:
+    if lang and leaf == "time" and (skill_keys is None or age is None):
+        if skill_keys is None:
             await _send_skill_step_after_intro(message, state, lang)
             return True
-        await state.update_data(quest_lang=lang, skill_key=skill)
+        await state.update_data(quest_lang=lang, skill_keys=skill_keys)
         await state.set_state(QuestStates.age)
         sent = await message.answer(t(lang, "QUESTION_AGE"))
         await flow_remember(state, sent.message_id)
@@ -128,6 +126,19 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession, 
     cur_s = str(state_before) if state_before else ""
     in_cognitive_fsm = "CognitiveStates" in cur_s
 
+    if user is not None and not user.goals:
+        await state.clear()
+        await state.update_data(pending_referrer_tg_id=pending_ref)
+        await state.set_state(QuestStates.language)
+        try:
+            await message.delete()
+        except Exception:
+            pass
+        lang = user.locale if user.locale in {"ru", "en"} else locale
+        sent = await message.answer(t(lang, "LANG_PROMPT"), reply_markup=start_lang_pick_kb())
+        await flow_remember(state, sent.message_id)
+        return
+
     if user is not None and not user.cognitive_completed:
         await state.update_data(pending_referrer_tg_id=pending_ref)
         lang = user.locale if user.locale in {"ru", "en"} else locale
@@ -147,7 +158,11 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession, 
         lang = user.locale if user.locale in {"ru", "en"} else locale
         await message.answer(
             t(lang, "START_ALREADY", name=user.first_name, ref_link=ref_link),
-            reply_markup=main_reply_kb(lang, show_retest=user_has_paid_access(user)),
+            reply_markup=main_reply_kb(
+                lang,
+                paid_access=user_has_paid_access(user),
+                show_retest=user_has_paid_access(user),
+            ),
         )
         return
 

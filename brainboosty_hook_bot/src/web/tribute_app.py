@@ -10,8 +10,10 @@ from aiogram import Bot
 
 from brainboosty_hook_bot.src.config.config import settings
 from brainboosty_hook_bot.src.database.session import async_session_maker
+from brainboosty_hook_bot.src.keyboards.reply import main_reply_kb
 from brainboosty_hook_bot.src.locale import normalize_lang, t
 from brainboosty_hook_bot.src.services import subscription_service
+from brainboosty_hook_bot.src.services.subscription_service import user_has_paid_access
 from brainboosty_hook_bot.src.services.tribute_webhook import parse_tribute_grant_kind, verify_tribute_signature
 
 logger = logging.getLogger(__name__)
@@ -56,12 +58,14 @@ async def process_tribute_webhook(raw: bytes, signature: str | None, bot: Bot | 
         else:
             subscription_service.grant_lifetime(user)
         await session.commit()
+        paid = user_has_paid_access(user)
 
     if bot is not None:
         try:
             await bot.send_message(
                 chat_id=tg_id,
                 text=t(user_lang, "PAYMENT_TRIBUTE_SUCCESS"),
+                reply_markup=main_reply_kb(user_lang, paid_access=paid, show_retest=paid),
             )
         except Exception as exc:  # noqa: BLE001
             logger.warning("Notify user after Tribute payment failed: %s", exc)

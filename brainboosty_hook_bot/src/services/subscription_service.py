@@ -10,12 +10,14 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from brainboosty_hook_bot.src.database.models import User
+from brainboosty_hook_bot.src.locale import normalize_lang, t
 
 logger = logging.getLogger(__name__)
 
 MONTH_DELTA = timedelta(days=30)
 CHANNEL_TRIAL_DELTA = timedelta(minutes=15)
 REFERRAL_BONUS_DELTA = timedelta(hours=1)
+TEST_FOREVER_DISCOUNT_WINDOW = timedelta(hours=24)
 
 
 def now_utc() -> datetime:
@@ -35,7 +37,7 @@ def user_has_paid_access(user: User) -> bool:
 
 
 def discount_active(user: User) -> bool:
-    """Скидка Forever после прохождения теста (48 ч)."""
+    """Скидка Forever после прохождения теста (окно TEST_FOREVER_DISCOUNT_WINDOW)."""
     if user.test_discount_until is None:
         return False
     du = user.test_discount_until
@@ -44,9 +46,40 @@ def discount_active(user: User) -> bool:
     return du > now_utc()
 
 
+def test_discount_time_left_phrase(lang: str, user: User) -> str | None:
+    """
+    Человекочитаемый остаток до конца окна Forever (полные часы; <1 ч — «менее часа»).
+    None, если окно не задано или уже истекло.
+    """
+    if user.test_discount_until is None:
+        return None
+    du = user.test_discount_until
+    if du.tzinfo is None:
+        du = du.replace(tzinfo=timezone.utc)
+    sec = int((du - now_utc()).total_seconds())
+    if sec <= 0:
+        return None
+    lg = normalize_lang(lang)
+    if sec < 3600:
+        return t(lg, "DISCOUNT_LEFT_LT_HOUR")
+    hours = sec // 3600
+    if lg == "en":
+        if hours == 1:
+            return t(lg, "DISCOUNT_LEFT_ONE_HOUR_EN")
+        return t(lg, "DISCOUNT_LEFT_N_HOURS_EN", n=hours)
+    if 11 <= (hours % 100) <= 14:
+        return t(lg, "DISCOUNT_LEFT_HOURS_RU_MANY", n=hours)
+    mod10 = hours % 10
+    if mod10 == 1:
+        return t(lg, "DISCOUNT_LEFT_HOURS_RU_ONE", n=hours)
+    if mod10 in (2, 3, 4):
+        return t(lg, "DISCOUNT_LEFT_HOURS_RU_FEW", n=hours)
+    return t(lg, "DISCOUNT_LEFT_HOURS_RU_MANY", n=hours)
+
+
 def open_discount_window(user: User) -> None:
     """Вызывать после каждого завершения когнитивного теста."""
-    user.test_discount_until = now_utc() + timedelta(hours=48)
+    user.test_discount_until = now_utc() + TEST_FOREVER_DISCOUNT_WINDOW
 
 
 def add_premium_delta(user: User, delta: timedelta) -> None:

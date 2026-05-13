@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from typing import Literal
+from typing import Any, Literal
 
 from openai import APIError, AsyncOpenAI
 
@@ -227,3 +227,209 @@ async def compute_region_scores(
     except (APIError, json.JSONDecodeError, ValueError, KeyError, TypeError) as exc:
         logger.warning("OpenAI brain-region scoring failed, using fallback: %s", exc)
         return fallback_region_scores_7(answers), "fallback"
+
+
+GENERATE_SHARED_DAILY_SYSTEM = """Ты составляешь короткий ежедневный когнитивный мини-тест для приложения про мозг и привычки.
+
+Требования:
+- Ровно от 4 до 7 вопросов (включительно).
+- У каждого вопроса ровно 4 варианта ответа с ключами A, B, C, D.
+- Тексты на двух языках: text_ru и text_en у вопроса и у каждого варианта (поля text_ru, text_en внутри каждого option).
+- Вопросы разнообразные, без токсичности, без медицинских диагнозов; образовательный тон.
+- Варианты A–D — разные стили поведения/мышления (не «правильный/неправильный»).
+
+Верни СТРОГО один JSON-объект (без markdown, без комментариев) вида:
+{
+  "questions": [
+    {
+      "id": 1,
+      "text_ru": "...",
+      "text_en": "...",
+      "options": [
+        {"key": "A", "text_ru": "...", "text_en": "..."},
+        {"key": "B", "text_ru": "...", "text_en": "..."},
+        {"key": "C", "text_ru": "...", "text_en": "..."},
+        {"key": "D", "text_ru": "...", "text_en": "..."}
+      ]
+    }
+  ]
+}"""
+
+
+GENERATE_SHARED_WEEKLY_SYSTEM = """Ты составляешь расширенный недельный когнитивный тест для приложения про мозг и саморегуляцию.
+
+Требования:
+- Ровно от 10 до 15 вопросов (включительно).
+- У каждого вопроса ровно 4 варианта ответа с ключами A, B, C, D.
+- Тексты на двух языках: text_ru и text_en у вопроса и у каждого варианта.
+- Вопросы глубже и разнообразнее, чем в ежедневном мини-тесте; без токсичности и без медицинских диагнозов.
+- Варианты A–D отражают разные стили мышления и поведения.
+
+Верни СТРОГО один JSON-объект (без markdown, без комментариев) вида:
+{
+  "questions": [
+    {
+      "id": 1,
+      "text_ru": "...",
+      "text_en": "...",
+      "options": [
+        {"key": "A", "text_ru": "...", "text_en": "..."},
+        {"key": "B", "text_ru": "...", "text_en": "..."},
+        {"key": "C", "text_ru": "...", "text_en": "..."},
+        {"key": "D", "text_ru": "...", "text_en": "..."}
+      ]
+    }
+  ]
+}"""
+
+
+DYNAMIC_REGION_SCORE_SYSTEM = """Ты — нейропсихолог. По полному тексту теста и ответам пользователя (буквы A–D) оцени активацию/развитие шести зон (проценты 0–100).
+
+Зоны (ключи JSON):
+- prefrontal_cortex — префронтальная кора (планирование, контроль)
+- brain_lobes — доли мозга (образность, пространство)
+- insular_cortex — островковая кора (интероцепция, телесность)
+- temporoparietal_junction — височно-теменной узел (понимание других)
+- amygdala — амигдала (стресс, эмоциональные реакции)
+- frontal_gyrus — лобные извилины (выражение, артикуляция мыслей)
+
+Учитывай смысл вопросов и выбранных ответов; взвесь зоны по релевантности вопросов.
+
+Верни СТРОГО ТОЛЬКО JSON (без markdown):
+{
+  "prefrontal_cortex": float,
+  "brain_lobes": float,
+  "insular_cortex": float,
+  "temporoparietal_junction": float,
+  "amygdala": float,
+  "frontal_gyrus": float
+}"""
+
+
+def validate_shared_questions(kind: str, data: Any) -> list[dict[str, Any]]:
+    if kind not in {"daily", "weekly"}:
+        raise ValueError("bad kind")
+    if not isinstance(data, dict):
+        raise ValueError("root must be object")
+    qs = data.get("questions")
+    if not isinstance(qs, list):
+        raise ValueError("questions must be list")
+    lo, hi = (4, 7) if kind == "daily" else (10, 15)
+    if not lo <= len(qs) <= hi:
+        raise ValueError(f"question count {len(qs)} not in [{lo},{hi}]")
+    keys_needed = {"A", "B", "C", "D"}
+    for i, q in enumerate(qs, start=1):
+        if not isinstance(q, dict):
+            raise ValueError("question not object")
+        if not isinstance(q.get("text_ru"), str) or not isinstance(q.get("text_en"), str):
+            raise ValueError("missing text_ru/text_en")
+        opts = q.get("options")
+        if not isinstance(opts, list) or len(opts) != 4:
+            raise ValueError("options must be list of 4")
+        seen: set[str] = set()
+        for o in opts:
+            if not isinstance(o, dict):
+                raise ValueError("option not object")
+            k = str(o.get("key", "")).strip().upper()
+            if k not in keys_needed:
+                raise ValueError("bad option key")
+            if not isinstance(o.get("text_ru"), str) or not isinstance(o.get("text_en"), str):
+                raise ValueError("option missing texts")
+            seen.add(k)
+        if seen != keys_needed:
+            raise ValueError("need keys A-D")
+        q["id"] = i
+    return qs
+
+
+def format_dynamic_qa_block(questions: list[dict[str, Any]], answers: dict[int, str], *, lang: str) -> str:
+    """Текстовый блок вопрос–ответ для модели."""
+    lg = lang if lang in {"ru", "en"} else "ru"
+    text_key = "text_ru" if lg == "ru" else "text_en"
+    opt_key = "text_ru" if lg == "ru" else "text_en"
+    lines: list[str] = []
+    for q in questions:
+        qid = int(q["id"])
+        lines.append(f"Вопрос {qid}: {q[text_key]}")
+        for o in q["options"]:
+            lines.append(f"  {o['key']}: {o[opt_key]}")
+        lines.append(f"Ответ пользователя: {answers[qid].strip().upper()}")
+        lines.append("")
+    return "\n".join(lines).strip()
+
+
+def fallback_region_scores_n(answers: dict[int, str], n: int) -> dict[str, float]:
+    """Равномерное усреднение буквенных баллов по всем зонам (если модель недоступна)."""
+    vals = [letter_to_score(answers[i]) for i in range(1, n + 1)]
+    mean = sum(vals) / max(len(vals), 1)
+    raw = {k: mean for k in REGION_KEYS}
+    return {k: _round_one_dec(min(100.0, max(0.0, raw[k]))) for k in REGION_KEYS}
+
+
+async def _openai_dynamic_scores(qa_block: str) -> dict[str, float]:
+    client = _openai_client()
+    completion = await client.chat.completions.create(
+        model=settings.OPENAI_MODEL,
+        temperature=0.2,
+        messages=[
+            {"role": "system", "content": DYNAMIC_REGION_SCORE_SYSTEM},
+            {"role": "user", "content": qa_block},
+        ],
+    )
+    choice = completion.choices[0].message.content
+    if not choice:
+        raise ValueError("Пустой ответ модели")
+    return _parse_scores_json(choice)
+
+
+async def compute_region_scores_dynamic(
+    questions: list[dict[str, Any]],
+    answers: dict[int, str],
+    *,
+    lang: str,
+) -> tuple[dict[str, float], Literal["openai", "fallback"]]:
+    n = len(questions)
+    if set(answers.keys()) != set(range(1, n + 1)):
+        raise ValueError("incomplete answers")
+    qa_block = format_dynamic_qa_block(questions, answers, lang=lang)
+    if not settings.OPENAI_API_KEY.strip():
+        return fallback_region_scores_n(answers, n), "fallback"
+    try:
+        scores = await _openai_dynamic_scores(qa_block)
+        return scores, "openai"
+    except (APIError, json.JSONDecodeError, ValueError, KeyError, TypeError) as exc:
+        logger.warning("OpenAI dynamic scoring failed, using fallback: %s", exc)
+        return fallback_region_scores_n(answers, n), "fallback"
+
+
+async def _openai_generate_test(system: str, user_msg: str, *, max_tokens: int) -> dict[str, Any]:
+    client = _openai_client()
+    completion = await client.chat.completions.create(
+        model=settings.OPENAI_MODEL,
+        temperature=0.75,
+        max_tokens=max_tokens,
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": user_msg},
+        ],
+    )
+    choice = completion.choices[0].message.content
+    if not choice:
+        raise ValueError("Пустой ответ модели")
+    cleaned = _strip_json_fence(choice)
+    return json.loads(cleaned)
+
+
+async def generate_shared_test_json(kind: Literal["daily", "weekly"]) -> dict[str, Any]:
+    """Генерация JSON теста (daily 4–7, weekly 10–15 вопросов)."""
+    if kind == "daily":
+        system = GENERATE_SHARED_DAILY_SYSTEM
+        max_tokens = 4500
+        hint = "Сгенерируй новый ежедневный мини-тест (4–7 вопросов)."
+    else:
+        system = GENERATE_SHARED_WEEKLY_SYSTEM
+        max_tokens = 14000
+        hint = "Сгенерируй новый недельный тест (10–15 вопросов)."
+    data = await _openai_generate_test(system, hint, max_tokens=max_tokens)
+    validate_shared_questions(kind, data)
+    return data

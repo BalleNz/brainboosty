@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import BigInteger, Boolean, DateTime, Float, ForeignKey, Integer, JSON, String, func
+from sqlalchemy import BigInteger, Boolean, DateTime, Float, ForeignKey, Integer, JSON, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from brainboosty_hook_bot.src.database.base import Base
@@ -67,6 +67,11 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    test_completions: Mapped[list["UserTestCompletion"]] = relationship(
+        "UserTestCompletion",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
 
 class BrainRegionSnapshot(Base):
@@ -96,3 +101,57 @@ class BrainRegionSnapshot(Base):
     frontal_gyrus: Mapped[float] = mapped_column(Float, nullable=False)
 
     user: Mapped[User] = relationship("User", back_populates="brain_snapshots")
+    test_completion: Mapped["UserTestCompletion | None"] = relationship(
+        "UserTestCompletion",
+        back_populates="snapshot",
+        uselist=False,
+    )
+
+
+class SharedTest(Base):
+    """Общий набор вопросов на день или неделю (один для всех пользователей)."""
+
+    __tablename__ = "shared_tests"
+    __table_args__ = (UniqueConstraint("kind", "period_key", name="uq_shared_tests_kind_period"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    kind: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    period_key: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    content_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    completions: Mapped[list["UserTestCompletion"]] = relationship(
+        "UserTestCompletion",
+        back_populates="shared_test",
+    )
+
+
+class UserTestCompletion(Base):
+    """Факт прохождения пользователем общего теста + ссылка на снимок зон."""
+
+    __tablename__ = "user_test_completions"
+    __table_args__ = (UniqueConstraint("user_id", "shared_test_id", name="uq_completion_user_shared"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    shared_test_id: Mapped[int] = mapped_column(ForeignKey("shared_tests.id"), index=True, nullable=False)
+    answers_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    snapshot_id: Mapped[int] = mapped_column(
+        ForeignKey("brain_region_snapshots.id", ondelete="CASCADE"),
+        unique=True,
+        nullable=False,
+    )
+    score_source: Mapped[str] = mapped_column(String(16), nullable=False, default="fallback")
+    completed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    user: Mapped[User] = relationship("User", back_populates="test_completions")
+    shared_test: Mapped[SharedTest] = relationship("SharedTest", back_populates="completions")
+    snapshot: Mapped[BrainRegionSnapshot] = relationship("BrainRegionSnapshot", back_populates="test_completion")

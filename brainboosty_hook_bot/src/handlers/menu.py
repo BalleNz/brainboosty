@@ -139,7 +139,11 @@ async def menu_brain_map(message: Message, session: AsyncSession, locale: str) -
 
     await message.answer(
         text,
-        reply_markup=main_reply_kb(lang, show_retest=user_has_paid_access(user)),
+        reply_markup=main_reply_kb(
+            lang,
+            paid_access=user_has_paid_access(user),
+            show_retest=user_has_paid_access(user),
+        ),
     )
 
 
@@ -184,7 +188,11 @@ async def menu_get_access(message: Message, session: AsyncSession, locale: str) 
     if user.lifetime_subscription or user_has_paid_access(user):
         await message.answer(
             t(lang, "ACCESS_ALREADY_PREMIUM"),
-            reply_markup=main_reply_kb(lang, show_retest=user_has_paid_access(user)),
+            reply_markup=main_reply_kb(
+                lang,
+                paid_access=user_has_paid_access(user),
+                show_retest=user_has_paid_access(user),
+            ),
         )
         return
 
@@ -201,7 +209,7 @@ async def menu_about(message: Message, session: AsyncSession, locale: str) -> No
     show_re = bool(user and user_has_paid_access(user))
 
     photo_path = _resolve_about_photo()
-    kb = main_reply_kb(lang, show_retest=show_re)
+    kb = main_reply_kb(lang, paid_access=show_re, show_retest=show_re)
     caption = t(lang, "ABOUT_PROJECT")
 
     if photo_path is not None:
@@ -238,10 +246,7 @@ async def menu_pdf_last(callback: CallbackQuery, session: AsyncSession, locale: 
         return
 
     lang = user.locale if user.locale in {"ru", "en"} else locale
-
-    if not user_has_paid_access(user):
-        await callback.answer(t(lang, "PDF_NEED_SUBSCRIPTION"), show_alert=True)
-        return
+    paid = user_has_paid_access(user)
 
     stmt = (
         select(BrainRegionSnapshot)
@@ -261,6 +266,7 @@ async def menu_pdf_last(callback: CallbackQuery, session: AsyncSession, locale: 
         scores=scores,
         test_variant=snap.test_variant,
         goal_keys=list(user.goals) if isinstance(user.goals, list) else [],
+        paid=paid,
     )
     await callback.message.answer_document(
         BufferedInputFile(pdf_bytes, filename="brainboosty-brain-map.pdf"),

@@ -6,6 +6,7 @@ import logging
 from datetime import datetime, timezone
 
 from aiogram import Bot, F, Router
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import BaseFilter
 from aiogram.types import (
     CallbackQuery,
@@ -20,15 +21,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from brainboosty_hook_bot.src.config.config import settings
 from brainboosty_hook_bot.src.database.models import User
+from brainboosty_hook_bot.src.keyboards.reply import main_reply_kb
 from brainboosty_hook_bot.src.keyboards.inline import (
+    ACCESS_CHANNEL_15_PITCH_CB,
     ACCESS_CH15_NO_CB,
     ACCESS_CH15_YES_CB,
     ACCESS_NOT_READY_CB,
     ACCESS_SHOW_REF_CB,
+    PAY_BACK_TARIFF_CB,
+    PAY_PLAN_PREFIX,
+    PAY_STARS_PREFIX,
     SUB_OFFER_CB,
     VERIFY_CH_PROMO_CB,
     access_postpone_discount_kb,
     access_show_ref_kb,
+    access_tariff_choice_kb,
     access_verify_promo_kb,
 )
 from brainboosty_hook_bot.src.locale import t
@@ -46,38 +53,47 @@ class _HasSuccessfulPayment(BaseFilter):
         return message.successful_payment is not None
 
 
-PAY_STARS_PREFIX = "pay_st:"
-
 PAYLOAD_XTR_MONTH = "bb_xtr_m790"
 PAYLOAD_XTR_MONTH_DISC = "bb_xtr_m672"
 PAYLOAD_XTR_FOREVER_FULL = "bb_xtr_f3900"
 PAYLOAD_XTR_FOREVER_DISC = "bb_xtr_f2490"
 
 
-def access_pricing_html(lang: str) -> str:
-    return t(lang, "ACCESS_PRICING_BODY")
+def access_pricing_html(lang: str, user: User) -> str:
+    lg = lang if lang in {"ru", "en"} else (user.locale if user.locale in {"ru", "en"} else "ru")
+    if subscription_service.discount_active(user):
+        tl = subscription_service.test_discount_time_left_phrase(lg, user)
+        if tl is None:
+            body = t(lg, "ACCESS_PRICING_BODY")
+        else:
+            body = t(lg, "ACCESS_PRICING_BODY_FOREVER_DISC", time_left=tl)
+    else:
+        body = t(lg, "ACCESS_PRICING_BODY")
+    return body
 
 
-def build_access_pricing_keyboard(user: User, lang: str) -> InlineKeyboardMarkup:
-    rows: list[list[InlineKeyboardButton]] = [
-        [
-            InlineKeyboardButton(
-                text=t(lang, "BTN_STARS_MONTH"),
-                callback_data=f"{PAY_STARS_PREFIX}month",
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text=t(lang, "BTN_STARS_FOREVER"),
-                callback_data=f"{PAY_STARS_PREFIX}forever",
-            ),
-        ],
-    ]
-    if settings.TRIBUTE_APP_URL.strip():
+def _show_channel_15_offer(user: User) -> bool:
+    """Пока нет активного −15% на месяц — снова показываем путь к промо (в т.ч. после «Пока не готов»)."""
+    if user.lifetime_subscription or subscription_service.user_has_paid_access(user):
+        return False
+    return not subscription_service.channel_month_15_discount_active(user)
+
+
+def build_access_payment_method_keyboard(user: User, lang: str, plan: str) -> InlineKeyboardMarkup:
+    """Шаг 2: Stars, Tribute, опционально −15% / канал, назад к тарифам."""
+    rows: list[list[InlineKeyboardButton]] = []
+    if plan == "month":
         rows.append(
-            [InlineKeyboardButton(text=t(lang, "BTN_TRIBUTE_APP"), url=settings.TRIBUTE_APP_URL.strip())],
+            [InlineKeyboardButton(text=t(lang, "BTN_STARS_MONTH"), callback_data=f"{PAY_STARS_PREFIX}month")],
         )
-    if settings.TRIBUTE_APP_URL_PROMO_15.strip():
+    elif plan == "forever":
+        rows.append(
+            [InlineKeyboardButton(text=t(lang, "BTN_STARS_FOREVER"), callback_data=f"{PAY_STARS_PREFIX}forever")],
+        )
+    app = settings.TRIBUTE_APP_URL.strip()
+    if app:
+        rows.append([InlineKeyboardButton(text=t(lang, "BTN_TRIBUTE_APP"), url=app)])
+    if plan == "month" and settings.TRIBUTE_APP_URL_PROMO_15.strip():
         rows.append(
             [
                 InlineKeyboardButton(
@@ -86,10 +102,57 @@ def build_access_pricing_keyboard(user: User, lang: str) -> InlineKeyboardMarkup
                 ),
             ],
         )
-    rows.append(
-        [InlineKeyboardButton(text=t(lang, "BTN_ACCESS_NOT_READY"), callback_data=ACCESS_NOT_READY_CB)],
-    )
+    if plan == "month" and _show_channel_15_offer(user):
+        rows.append(
+            [
+                InlineKeyboardButton(
+                    text=t(lang, "BTN_ACCESS_CHANNEL_15_OFFER"),
+                    callback_data=ACCESS_CHANNEL_15_PITCH_CB,
+                ),
+            ],
+        )
+    rows.append([InlineKeyboardButton(text=t(lang, "BTN_PAY_STEP_BACK"), callback_data=PAY_BACK_TARIFF_CB)])
     return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def access_payment_step_html(lang: str, user: User, plan: str) -> str:
+    lg = lang if lang in {"ru", "en"} else (user.locale if user.locale in {"ru", "en"} else "ru")
+    if plan == "month":
+        body = t(lg, "PAY_STEP2_MONTH_INTRO_HTML")
+        return body
+    if plan == "forever":
+        if subscription_service.discount_active(user):
+            tl = subscription_service.test_discount_time_left_phrase(lg, user)
+            return t(lg, "PAY_STEP2_FOREVER_INTRO_DISC_HTML", time_left=tl or "—")
+        return t(lg, "PAY_STEP2_FOREVER_INTRO_HTML")
+    return t(lg, "ACCESS_PRICING_BODY")
+
+
+async def _edit_payment_flow_message(
+    message: Message | None,
+    *,
+    lang: str,
+    text: str,
+    reply_markup: InlineKeyboardMarkup | None,
+) -> bool:
+    """Один и тот же апдейт воронки оплаты — без лишних сообщений в чате."""
+    if message is None:
+        return False
+    try:
+        await message.edit_text(text=text, reply_markup=reply_markup, parse_mode="HTML")
+        return True
+    except TelegramBadRequest as exc:
+        if "message is not modified" in str(exc).lower():
+            return True
+        logger.warning("payment flow edit_text: %s", exc)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("payment flow edit_text: %s", exc)
+    try:
+        await message.answer(text=text, reply_markup=reply_markup, parse_mode="HTML")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("payment flow answer fallback: %s", exc)
+        return False
+    return True
 
 
 def _referral_followup_text(user: User, lang: str, tg_id: int) -> str:
@@ -132,8 +195,8 @@ async def send_subscription_offer(
     try:
         await bot.send_message(
             chat_id=chat_id,
-            text=access_pricing_html(lg),
-            reply_markup=build_access_pricing_keyboard(user, lg),
+            text=access_pricing_html(lg, user),
+            reply_markup=access_tariff_choice_kb(lg),
             parse_mode="HTML",
         )
     except Exception as exc:  # noqa: BLE001
@@ -159,6 +222,57 @@ async def subscription_inline_offer(
     await callback.answer()
 
 
+@router.callback_query(F.data.startswith(PAY_PLAN_PREFIX))
+async def access_plan_selected_handler(
+    callback: CallbackQuery,
+    session: AsyncSession,
+    locale: str,
+) -> None:
+    if callback.from_user is None or callback.message is None:
+        await callback.answer()
+        return
+    plan = callback.data.removeprefix(PAY_PLAN_PREFIX)
+    if plan not in ("month", "forever"):
+        await callback.answer()
+        return
+    result = await session.execute(select(User).where(User.tg_id == callback.from_user.id))
+    user = result.scalar_one_or_none()
+    if user is None:
+        await callback.answer(t(locale, "NOT_REGISTERED"), show_alert=True)
+        return
+    lang = user.locale if user.locale in {"ru", "en"} else locale
+    text = access_payment_step_html(lang, user, plan)
+    kb = build_access_payment_method_keyboard(user, lang, plan)
+    await _edit_payment_flow_message(callback.message, lang=lang, text=text, reply_markup=kb)
+    await callback.answer()
+
+
+@router.callback_query(F.data == PAY_BACK_TARIFF_CB)
+async def access_pay_back_tariff_handler(
+    callback: CallbackQuery,
+    session: AsyncSession,
+    locale: str,
+) -> None:
+    if callback.from_user is None or callback.message is None:
+        await callback.answer()
+        return
+    result = await session.execute(select(User).where(User.tg_id == callback.from_user.id))
+    user = result.scalar_one_or_none()
+    if user is None:
+        await callback.answer(t(locale, "NOT_REGISTERED"), show_alert=True)
+        return
+    lang = user.locale if user.locale in {"ru", "en"} else locale
+    lg = lang if lang in {"ru", "en"} else (user.locale if user.locale in {"ru", "en"} else "ru")
+    text = access_pricing_html(lg, user)
+    await _edit_payment_flow_message(
+        callback.message,
+        lang=lang,
+        text=text,
+        reply_markup=access_tariff_choice_kb(lg),
+    )
+    await callback.answer()
+
+
 @router.callback_query(F.data == ACCESS_NOT_READY_CB)
 async def access_not_ready_handler(
     callback: CallbackQuery,
@@ -174,8 +288,38 @@ async def access_not_ready_handler(
         await callback.answer(t(locale, "NOT_REGISTERED"), show_alert=True)
         return
     lang = user.locale if user.locale in {"ru", "en"} else locale
-    await callback.message.answer(
-        t(lang, "ACCESS_POSTPONE_DISCOUNT_PITCH"),
+    await _edit_payment_flow_message(
+        callback.message,
+        lang=lang,
+        text=t(lang, "ACCESS_POSTPONE_DISCOUNT_PITCH"),
+        reply_markup=access_postpone_discount_kb(lang),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == ACCESS_CHANNEL_15_PITCH_CB)
+async def access_channel_15_pitch_handler(
+    callback: CallbackQuery,
+    session: AsyncSession,
+    locale: str,
+) -> None:
+    """Повторно открыть сценарий −15% на месяц (как после «Пока не готов»), если промо ещё не активировано."""
+    if callback.from_user is None or callback.message is None:
+        await callback.answer()
+        return
+    result = await session.execute(select(User).where(User.tg_id == callback.from_user.id))
+    user = result.scalar_one_or_none()
+    if user is None:
+        await callback.answer(t(locale, "NOT_REGISTERED"), show_alert=True)
+        return
+    lang = user.locale if user.locale in {"ru", "en"} else locale
+    if not _show_channel_15_offer(user):
+        await callback.answer()
+        return
+    await _edit_payment_flow_message(
+        callback.message,
+        lang=lang,
+        text=t(lang, "ACCESS_POSTPONE_DISCOUNT_PITCH"),
         reply_markup=access_postpone_discount_kb(lang),
     )
     await callback.answer()
@@ -196,10 +340,11 @@ async def access_ch15_yes_handler(
         await callback.answer(t(locale, "NOT_REGISTERED"), show_alert=True)
         return
     lang = user.locale if user.locale in {"ru", "en"} else locale
-    await callback.message.answer(
-        t(lang, "ACCESS_SUBSCRIBE_FOR_PROMO"),
+    await _edit_payment_flow_message(
+        callback.message,
+        lang=lang,
+        text=t(lang, "ACCESS_SUBSCRIBE_FOR_PROMO"),
         reply_markup=access_verify_promo_kb(lang, settings.premium_channel_url),
-        parse_mode="HTML",
     )
     await callback.answer()
 
@@ -219,10 +364,11 @@ async def access_ch15_no_handler(
         await callback.answer(t(locale, "NOT_REGISTERED"), show_alert=True)
         return
     lang = user.locale if user.locale in {"ru", "en"} else locale
-    await callback.message.answer(
-        t(lang, "ACCESS_REF_AFTER_NO_HTML"),
+    await _edit_payment_flow_message(
+        callback.message,
+        lang=lang,
+        text=t(lang, "ACCESS_REF_AFTER_NO_HTML"),
         reply_markup=access_show_ref_kb(lang),
-        parse_mode="HTML",
     )
     await callback.answer()
 
@@ -246,9 +392,11 @@ async def verify_ch_promo_handler(
         await callback.answer(t(lang, "CHANNEL_SUB_NOT_MEMBER"), show_alert=True)
         return
     code = subscription_service.grant_channel_month_15_promo(user)
-    await callback.message.answer(
-        t(lang, "ACCESS_PROMO_GRANTED", code=code),
-        parse_mode="HTML",
+    await _edit_payment_flow_message(
+        callback.message,
+        lang=lang,
+        text=t(lang, "ACCESS_PROMO_GRANTED", code=code),
+        reply_markup=None,
     )
     await callback.answer()
 
@@ -268,9 +416,11 @@ async def access_show_ref_handler(
         await callback.answer(t(locale, "NOT_REGISTERED"), show_alert=True)
         return
     lang = user.locale if user.locale in {"ru", "en"} else locale
-    await callback.message.answer(
-        _referral_followup_text(user, lang, callback.from_user.id),
-        parse_mode="HTML",
+    await _edit_payment_flow_message(
+        callback.message,
+        lang=lang,
+        text=_referral_followup_text(user, lang, callback.from_user.id),
+        reply_markup=None,
     )
     await callback.answer()
 
@@ -318,10 +468,12 @@ async def stars_pay_callback(callback: CallbackQuery, session: AsyncSession, loc
     elif kind == "forever":
         disc = subscription_service.discount_active(user)
         if disc:
+            tl = subscription_service.test_discount_time_left_phrase(lang, user)
+            desc = t(lang, "INV_FOREVER_DISC_DESC", time_left=tl or "—")
             await callback.bot.send_invoice(
                 chat_id=callback.from_user.id,
                 title=t(lang, "INV_FOREVER_DISC_TITLE"),
-                description=t(lang, "INV_FOREVER_DISC_DESC"),
+                description=desc,
                 payload=PAYLOAD_XTR_FOREVER_DISC,
                 provider_token="",
                 currency="XTR",
@@ -340,6 +492,11 @@ async def stars_pay_callback(callback: CallbackQuery, session: AsyncSession, loc
     else:
         await callback.answer()
         return
+
+    try:
+        await callback.message.edit_reply_markup(reply_markup=None)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("clear payment inline kb: %s", exc)
 
     await callback.answer()
 
@@ -374,4 +531,8 @@ async def successful_payment_handler(message: Message, session: AsyncSession, lo
         await message.answer(t(lang, "PAYMENT_UNKNOWN"))
         return
 
-    await message.answer(t(lang, "PAYMENT_SUCCESS"))
+    paid = subscription_service.user_has_paid_access(user)
+    await message.answer(
+        t(lang, "PAYMENT_SUCCESS"),
+        reply_markup=main_reply_kb(lang, paid_access=paid, show_retest=paid),
+    )

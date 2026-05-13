@@ -68,11 +68,18 @@ class Settings(BaseSettings):
     )
     OPENAI_BASE_URL: str = Field(
         default="",
-        description="Базовый URL OpenAI-совместимого API без /v1 (добавится автоматически). Пусто → api.openai.com. Пример DeepSeek: https://api.deepseek.com",
+        description=(
+            "Базовый URL OpenAI-совместимого API без /v1 (добавится автоматически). "
+            "Пусто → api.openai.com, кроме случая когда в OPENAI_MODEL есть «deepseek» — тогда https://api.deepseek.com. "
+            "Явный URL всегда имеет приоритет."
+        ),
     )
     OPENAI_MODEL: str = Field(
         default="gpt-4o-mini",
-        description="Идентификатор модели на выбранном API (для OpenAI по умолчанию — gpt-4o-mini)",
+        description=(
+            "Идентификатор модели на выбранном API (для OpenAI по умолчанию — gpt-4o-mini). "
+            "Если в имени есть «deepseek», а OPENAI_BASE_URL пуст — используется https://api.deepseek.com."
+        ),
     )
 
     @field_validator("OPENAI_API_KEY", mode="before")
@@ -137,16 +144,21 @@ class Settings(BaseSettings):
         description="Публичный username канала без @ (проверка подписки и ссылка t.me)",
     )
 
+    def _with_v1_suffix(self, base: str) -> str:
+        u = base.rstrip("/")
+        return u if u.endswith("/v1") else f"{u}/v1"
+
     @property
     def openai_base_url_resolved(self) -> str | None:
         """Полный base_url для AsyncOpenAI (с суффиксом /v1) или None — тогда клиент берёт дефолт platform.openai.com."""
         raw = (self.OPENAI_BASE_URL or "").strip()
-        if not raw:
-            return None
-        u = raw.rstrip("/")
-        if not u.endswith("/v1"):
-            return f"{u}/v1"
-        return u
+        if raw:
+            return self._with_v1_suffix(raw)
+        # Без явного URL ключ DeepSeek уходит на OpenAI → 401. Совместимые хосты по имени модели:
+        model = (self.OPENAI_MODEL or "").strip().lower()
+        if "deepseek" in model:
+            return self._with_v1_suffix("https://api.deepseek.com")
+        return None
 
     @property
     def premium_channel_url(self) -> str:

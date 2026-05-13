@@ -30,7 +30,12 @@ from brainboosty_hook_bot.src.services import assistant_service
 from brainboosty_hook_bot.src.services.assistant_service import TestVariant
 from brainboosty_hook_bot.src.services.brain_map_image import build_brain_map_infographic_png
 from brainboosty_hook_bot.src.services.brain_result_delivery import send_full_brain_result_pack
-from brainboosty_hook_bot.src.services.subscription_service import open_discount_window, user_has_paid_access
+from brainboosty_hook_bot.src.services.pdf_report import build_brain_map_pdf
+from brainboosty_hook_bot.src.services.subscription_service import (
+    open_discount_window,
+    test_discount_time_left_phrase,
+    user_has_paid_access,
+)
 from brainboosty_hook_bot.src.utils.flow_chat import delete_one, flow_remember, flow_wipe, try_delete_user_message
 from brainboosty_hook_bot.src.utils.helpers import build_ref_link
 
@@ -375,7 +380,9 @@ async def _finalize(
 
     await delete_one(bot, chat_id, computing.message_id)
 
-    await bot.send_message(chat_id, t(lang, "FOREVER_DISCOUNT_LINE"), parse_mode="HTML")
+    tl = test_discount_time_left_phrase(lang, user)
+    if tl:
+        await bot.send_message(chat_id, t(lang, "FOREVER_DISCOUNT_LINE", time_left=tl), parse_mode="HTML")
 
     paid = user_has_paid_access(user)
     if paid:
@@ -394,6 +401,22 @@ async def _finalize(
             )
         except Exception as exc:  # noqa: BLE001
             logger.warning("Brain map infographic failed: %s", exc)
+        try:
+            goal_keys = list(user.goals) if isinstance(user.goals, list) else []
+            pdf_bytes = build_brain_map_pdf(
+                lang=lang,
+                scores=scores,
+                test_variant=v,
+                goal_keys=goal_keys,
+                paid=False,
+            )
+            await bot.send_document(
+                chat_id,
+                BufferedInputFile(pdf_bytes, filename="brainboosty-brain-map.pdf"),
+                caption=t(lang, "PDF_CAPTION"),
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Brain map PDF (free) failed: %s", exc)
         await bot.send_message(
             chat_id,
             t(lang, "CHANNEL_TRIAL_CTA"),
@@ -409,13 +432,13 @@ async def _finalize(
         await bot.send_message(
             chat_id,
             t(lang, "WELCOME_AFTER_QUEST", ref_link=ref_link),
-            reply_markup=main_reply_kb(lang, show_retest=show_retest),
+            reply_markup=main_reply_kb(lang, paid_access=paid, show_retest=show_retest),
         )
     else:
         await bot.send_message(
             chat_id,
             f"{t(lang, 'RETEST_SAVED')}\n\n{t(lang, 'REF_LINK_LABEL')}\n{ref_link}",
-            reply_markup=main_reply_kb(lang, show_retest=show_retest),
+            reply_markup=main_reply_kb(lang, paid_access=paid, show_retest=show_retest),
         )
 
     await send_subscription_offer(bot, from_user_id, session, user, lang)

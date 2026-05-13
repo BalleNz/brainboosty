@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from brainboosty_hook_bot.src.database.models import BrainRegionSnapshot, User
 from brainboosty_hook_bot.src.locale import t
 from brainboosty_hook_bot.src.services.brain_map_image import build_brain_map_infographic_png
+from brainboosty_hook_bot.src.services.pdf_report import build_brain_map_pdf
 from brainboosty_hook_bot.src.services.brain_regions_display import format_brain_map_with_comparison, snapshot_to_scores
 from brainboosty_hook_bot.src.utils.flow_chat import delete_one
 
@@ -50,7 +51,7 @@ async def send_full_brain_result_pack(
     *,
     reply_markup: InlineKeyboardMarkup | None = None,
 ) -> list[int]:
-    """Фото (полная версия) + карточка сравнения. Возвращает id сообщений для отложенного удаления."""
+    """Фото (полная версия) + карточка сравнения + PDF. Возвращает id сообщений для отложенного удаления."""
     latest, previous = await _fetch_latest_two_snapshots(session, user.id)
     v = latest.test_variant if latest.test_variant in ("sexual", "development") else "development"
     scores = snapshot_to_scores(latest)
@@ -71,6 +72,25 @@ async def send_full_brain_result_pack(
     card = format_brain_map_with_comparison(scores, previous_scores, title=title, lang=lang)
     msg2 = await bot.send_message(chat_id, card, reply_markup=reply_markup)
     ids.append(msg2.message_id)
+
+    goal_keys = list(user.goals) if isinstance(user.goals, list) else []
+    try:
+        pdf_bytes = build_brain_map_pdf(
+            lang=lang,
+            scores=scores,
+            test_variant=v,
+            goal_keys=goal_keys,
+            paid=True,
+        )
+        msg_doc = await bot.send_document(
+            chat_id,
+            BufferedInputFile(pdf_bytes, filename="brainboosty-brain-map.pdf"),
+            caption=t(lang, "PDF_CAPTION"),
+        )
+        ids.append(msg_doc.message_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Brain map PDF failed: %s", exc)
+
     return ids
 
 

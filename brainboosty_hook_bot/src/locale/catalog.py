@@ -5,12 +5,22 @@ from __future__ import annotations
 RU: dict[str, str] = {
     "THROTTLE_WARNING": "⏳ Слишком часто. Подождите секунду.",
     "CANCELLED": "❌ Действие отменено.",
+    "RESET_NO_ACCOUNT": "Учётная запись не найдена. Начни с /start.",
+    "RESET_CONFIRM_TEXT": "Сбросить анкету, результаты теста и реферальную статистику? Подписка и Telegram-профиль останутся.",
+    "BTN_RESET_CONFIRM": "Да, сбросить",
+    "RESET_DELETED_DONE": "Данные профиля очищены (подписка сохранена). Заново пройди анкету: /start",
+    "SKILLS_BTN_DONE": "➡️ Далее",
+    "SKILLS_MAX_TWO": "Можно выбрать не больше двух навыков.",
+    "SKILLS_NEED_ONE": "Выбери хотя бы один навык.",
+    "SKILLS_UPDATED": "Навыки обновлены.",
+    "SKILLS_REPICK_INTRO": "Выбери до двух навыков и нажми «Далее», чтобы сохранить.",
+    "SKILLS_FINISH_COGNITIVE_FIRST": "Сначала заверши тест в боте, затем снова отправь /skills.",
     "NOT_REGISTERED": "Сначала завершите регистрацию: /start",
     "START_ALREADY": "👋 С возвращением, {name}!\n\nЯ продолжу присылать «хуки» для мозга 🧠✨\nТвоя ссылка:\n{ref_link}",
     "START_UNFINISHED_TEST": "Тест ещё не завершён. Нажми «Продолжить тест» — вернёмся к вопросам (если сессия ещё в памяти бота) или к выбору стиля.",
     "BTN_RESUME_TEST": "▶️ Продолжить тест",
     "START_NEW_INTRO": "🧠 Привет, {name}! Я — BrainBoosty Hook Bot.\n\nКаждый день — короткие практики и инсайты. Сначала анкета, затем тест из 7 вопросов (на выбор стилистика).",
-    "QUESTION_SKILL": "🎯 Шаг 1/3. Что хочешь прокачать в первую очередь?",
+    "QUESTION_SKILL": "🎯 Шаг 1/3. Выбери до двух навыков (повторное нажатие снимает выбор). Когда готово — «Далее».",
     "QUESTION_AGE": "🎂 Шаг 2/3. Сколько полных лет? Числом (например, 24).",
     "QUESTION_TIME": "⏱ Шаг 3/3. Сколько минут в день готов уделять?",
     "QUEST_TIME_1_5": "1–5 мин",
@@ -23,12 +33,31 @@ RU: dict[str, str] = {
     "REFERRAL_STATS": "👥 Друзей с регистрацией: {count}\n💎 За каждого — +1 ч полного доступа (время суммируется).",
     "PREMIUM_ACTIVE": "⭐ Премиум до: {until}",
     "PREMIUM_NONE": "Премиум не активен.",
-    "PREMIUM_LIFETIME": "♾️ Пожизненный доступ (Forever).",
+    "PREMIUM_LIFETIME": "♾️ Пожизненный доступ.",
     "REFERRAL_BONUS_GRANTED": "🎉 Друг зарегистрировался по твоей ссылке — +1 ч полного доступа!",
     "REPLY_BRAIN_MAP": "🗺 Карта мозга",
     "REPLY_GET_ACCESS": "⭐ Доступ",
     "REPLY_ABOUT": "ℹ️ О проекте",
     "REPLY_RETAKE_TEST": "🔄 Перепройти тест",
+    "REPLY_TESTS": "📋 Тесты",
+    "TESTS_HUB_TEXT": "Общие тесты: один набор вопросов на всех на сегодня или на календарную неделю. История и влияние на зоны — в PDF.",
+    "TESTS_BTN_DAILY": "▶️ Сегодняшний тест",
+    "TESTS_BTN_WEEKLY": "▶️ Недельный тест",
+    "TESTS_BTN_HISTORY_PDF": "📄 История тестов (PDF)",
+    "TESTS_LOCKED": "Тесты по расписанию доступны с активной подпиской.",
+    "TESTS_ALREADY_DONE": "Этот тест уже пройден. Новый будет доступен позже.",
+    "TESTS_GENERATING": "⏳ Генерируем набор вопросов…",
+    "TESTS_COMPUTING": "⏳ Считаем профиль по зонам…",
+    "TESTS_DONE": "✅ Тест сохранён. Снимок зон обновлён.",
+    "TESTS_ERR": "Не удалось продолжить тест. Попробуй снова из меню «Тесты».",
+    "TESTS_HISTORY_EMPTY": "Пока нет завершённых общих тестов.",
+    "PDF_HISTORY_TITLE": "История общих тестов и зоны мозга",
+    "PDF_HISTORY_PERIOD": "Период: {period} ({kind})",
+    "PDF_HISTORY_KIND_DAILY": "день",
+    "PDF_HISTORY_KIND_WEEKLY": "неделя",
+    "PDF_HISTORY_SCORE_LINE": "{name}: {value:.1f}% (изм. {delta:+.1f})",
+    "PDF_HISTORY_SCORE_LINE_FIRST": "{name}: {value:.1f}%",
+    "PDF_HISTORY_CAPTION": "История прохождения общих тестов",
     "COGNITIVE_STYLE_PROMPT": "Отлично! Теперь выбери стиль первого теста (7 вопросов):",
     "TEST_STYLE_SEXUAL_BTN": "🔥 Сексуальная карта мозга",
     "TEST_STYLE_DEV_BTN": "🧠 Развитие отделов мозга",
@@ -45,16 +74,55 @@ RU: dict[str, str] = {
     ),
     "GET_ACCESS_HEADER": "⭐ <b>Доступ</b>\n\nРефералы: за каждого зарегистрированного друга — +1 ч полного доступа.",
     "ACCESS_PRICING_BODY": (
-        "<b>⭐ Выбери свой доступ к Brainboosty</b>\n\n"
+        "<b>⭐ Выбери свой доступ к Брейнбусти</b>\n\n"
         "Не понравится — верну деньги в течение 7 дней\n\n"
+        "<blockquote>"
         "<b>1. Пробный месяц — 790 ₽</b>\n"
-        "• Полный доступ ко всем тестам и результатам\n"
-        "• Персональные рекомендации\n\n"
-        "<b>2. Forever (навсегда) — 3990 ₽</b>\n"
+        "• Полный доступ ко всем тестам и картам мозга\n"
+        "• Персональные рекомендации\n"
+        "• Бот для отслеживания прогресса\n\n"
+        "<b>2. Навсегда</b> — <s>3 990 ₽</s> → <b>2 490 ₽</b>\n"
         "• Пожизненный доступ + все будущие тесты\n"
-        "• Самый выгодный вариант"
+        "• Бот трекинга прогресса навсегда\n"
+        "• Закрытый канал с упражнениями\n"
+        "• Самый выгодный вариант (экономия 1 500 ₽)"
+        "</blockquote>\n\n"
+        "Навсегда — гораздо дешевле в пересчёте"
     ),
+    "ACCESS_PRICING_BODY_FOREVER_DISC": (
+        "<b>⭐ Выбери доступ к Брейнбусти</b>\n\n"
+        "<blockquote>"
+        "<b>1. Пробный месяц — 790 ₽</b>\n"
+        "• Полный доступ ко всем тестам и картам мозга\n"
+        "• Персональные рекомендации\n"
+        "• Бот для отслеживания прогресса\n\n"
+        "<b>2. Навсегда</b> — <s>3 990 ₽</s> → <b>2 490 ₽</b>\n"
+        "• Пожизненный доступ + все будущие тесты\n"
+        "• Бот трекинга прогресса навсегда\n"
+        "• Закрытый канал с упражнениями\n"
+        "• Самый выгодный вариант (экономия 1 500 ₽)"
+        "</blockquote>\n\n"
+        "<tg-spoiler>Не понравится — верну <b>100% денег</b> в течение 7 дней</tg-spoiler>\n\n"
+        '🔥 До конца скидки: <b>{time_left}</b>\n\n'
+    ),
+    "BTN_ACCESS_CHANNEL_15_OFFER": "получить −15%",
     "BTN_ACCESS_NOT_READY": "Пока не готов",
+    "BTN_ACCESS_PLAN_MONTH": "Пробный месяц",
+    "BTN_ACCESS_PLAN_FOREVER": "Навсегда",
+    "BTN_PAY_STEP_BACK": "← Тарифы",
+    "PAY_STEP2_MONTH_INTRO_HTML": (
+        "<b>Пробный месяц</b> — 790 ₽ (или 672 ⭐ при скидке канала).\n\n"
+        "Выберите способ оплаты:"
+    ),
+    "PAY_STEP2_FOREVER_INTRO_HTML": (
+        "<b>Forever</b> — полная цена 3 990 ₽ / 3 900 ⭐.\n\n"
+        "Выберите способ оплаты:"
+    ),
+    "PAY_STEP2_FOREVER_INTRO_DISC_HTML": (
+        "<b>Forever со скидкой после теста</b> — до конца: <b>{time_left}</b>.\n"
+        "2 490 ₽ / 2 490 ⭐ вместо 3 990.\n\n"
+        "Выберите способ оплаты:"
+    ),
     "ACCESS_ALREADY_PREMIUM": "У тебя уже есть полный доступ. Пользуйся кнопками меню ниже 👇",
     "ACCESS_POSTPONE_DISCOUNT_PITCH": (
         "Понял 👍\n\n"
@@ -109,9 +177,13 @@ RU: dict[str, str] = {
     "DAILY_HOOK_2": "90 с: примеры на сложение — рабочая память.",
     "DAILY_HOOK_3": "10 циклов дыхания — внимание.",
     "SUBSCRIPTION_HEADER_HTML": "<b>💎 Подписка BrainBoosty</b>",
-    "SUBSCRIPTION_DISCOUNT_NOTE_HTML": "<i>Скидка Forever — 48 ч после теста.</i>",
+    "SUBSCRIPTION_DISCOUNT_NOTE_HTML": "<i>Скидка Forever — осталось: <b>{time_left}</b>.</i>",
     "SUBSCRIPTION_REFUND_BLOCKQUOTE_HTML": "<blockquote>Не понравится — верну деньги в течение 7 дней</blockquote>",
-    "FOREVER_DISCOUNT_LINE": "🔥 Только для вас: Forever <b>2 490 ₽</b> вместо <b>3 990 ₽</b> — скидка сгорит через <b>48 часов</b>.",
+    "FOREVER_DISCOUNT_LINE": "🔥 Только для вас: Forever <b>2 490 ₽</b> вместо <b>3 990 ₽</b> — до конца скидки: <b>{time_left}</b>.",
+    "DISCOUNT_LEFT_LT_HOUR": "менее часа",
+    "DISCOUNT_LEFT_HOURS_RU_ONE": "{n} час",
+    "DISCOUNT_LEFT_HOURS_RU_FEW": "{n} часа",
+    "DISCOUNT_LEFT_HOURS_RU_MANY": "{n} часов",
     "BTN_GET_PDF": "📄 Получить PDF",
     "BTN_UNLOCK_FULL": "🔓 Полная карта и план",
     "CHANNEL_TRIAL_CTA": "🔥 Хочешь увидеть полные результаты теста прямо сейчас?\n\nПодпишись на мой закрытый канал — и я сразу открою тебе 15 минут полного доступа к «Сексуальной карте мозга» (или выбранному тесту).",
@@ -178,7 +250,7 @@ RU: dict[str, str] = {
     "INV_MONTH_DESC": "Премиум BrainBoosty на 30 дней.",
     "INV_MONTH_LABEL": "Пробный доступ",
     "INV_FOREVER_DISC_TITLE": "Forever (скидка после теста)",
-    "INV_FOREVER_DISC_DESC": "Пожизненный доступ по цене после теста (48 ч).",
+    "INV_FOREVER_DISC_DESC": "Пожизненный доступ по цене после теста. До конца скидки: {time_left}.",
     "INV_FOREVER_TITLE": "Forever",
     "INV_FOREVER_DESC": "Пожизненный доступ BrainBoosty.",
     "INV_FOREVER_LABEL": "Forever",
@@ -207,12 +279,22 @@ RU: dict[str, str] = {
 EN: dict[str, str] = {
     "THROTTLE_WARNING": "⏳ Too fast. Please wait a moment.",
     "CANCELLED": "❌ Cancelled.",
+    "RESET_NO_ACCOUNT": "No account found. Start with /start.",
+    "RESET_CONFIRM_TEXT": "Reset your profile, test results, and referral stats? Your subscription and Telegram identity stay.",
+    "BTN_RESET_CONFIRM": "Yes, reset",
+    "RESET_DELETED_DONE": "Profile data cleared (subscription kept). Run through the profile again: /start",
+    "SKILLS_BTN_DONE": "➡️ Next",
+    "SKILLS_MAX_TWO": "You can pick at most two skills.",
+    "SKILLS_NEED_ONE": "Pick at least one skill.",
+    "SKILLS_UPDATED": "Skills updated.",
+    "SKILLS_REPICK_INTRO": "Pick up to two skills, then tap «Next» to save.",
+    "SKILLS_FINISH_COGNITIVE_FIRST": "Finish the in-bot test first, then send /skills again.",
     "NOT_REGISTERED": "Please finish registration: /start",
     "START_ALREADY": "👋 Welcome back, {name}!\n\nDaily brain hooks 🧠✨\nYour link:\n{ref_link}",
     "START_UNFINISHED_TEST": "Your test isn’t finished yet. Tap “Continue test” — we’ll return to the questions (if the bot still has your session) or to style selection.",
     "BTN_RESUME_TEST": "▶️ Continue test",
     "START_NEW_INTRO": "🧠 Hi, {name}! I’m BrainBoosty Hook Bot.\n\nShort daily practices. First a quick profile, then a 7-question test (pick a style).",
-    "QUESTION_SKILL": "🎯 Step 1/3. What do you want to train first?",
+    "QUESTION_SKILL": "🎯 Step 1/3. Pick up to two focus areas (tap again to deselect). When ready — «Next».",
     "QUESTION_AGE": "🎂 Step 2/3. Your age in full years (e.g. 24).",
     "QUESTION_TIME": "⏱ Step 3/3. Minutes per day you can spend?",
     "QUEST_TIME_1_5": "1–5 min",
@@ -231,6 +313,25 @@ EN: dict[str, str] = {
     "REPLY_GET_ACCESS": "⭐ Get access",
     "REPLY_ABOUT": "ℹ️ About",
     "REPLY_RETAKE_TEST": "🔄 Retake test",
+    "REPLY_TESTS": "📋 Tests",
+    "TESTS_HUB_TEXT": "Shared tests: the same questions for everyone for today or for the calendar week. History and impact on brain regions — PDF.",
+    "TESTS_BTN_DAILY": "▶️ Today’s test",
+    "TESTS_BTN_WEEKLY": "▶️ Weekly test",
+    "TESTS_BTN_HISTORY_PDF": "📄 Test history (PDF)",
+    "TESTS_LOCKED": "Scheduled tests require an active subscription.",
+    "TESTS_ALREADY_DONE": "You already completed this test. A new one will be available later.",
+    "TESTS_GENERATING": "⏳ Generating questions…",
+    "TESTS_COMPUTING": "⏳ Computing brain-region profile…",
+    "TESTS_DONE": "✅ Test saved. Your brain map snapshot is updated.",
+    "TESTS_ERR": "Could not continue the test. Try again from «Tests».",
+    "TESTS_HISTORY_EMPTY": "No completed shared tests yet.",
+    "PDF_HISTORY_TITLE": "Shared test history and brain regions",
+    "PDF_HISTORY_PERIOD": "Period: {period} ({kind})",
+    "PDF_HISTORY_KIND_DAILY": "day",
+    "PDF_HISTORY_KIND_WEEKLY": "week",
+    "PDF_HISTORY_SCORE_LINE": "{name}: {value:.1f}% (Δ {delta:+.1f})",
+    "PDF_HISTORY_SCORE_LINE_FIRST": "{name}: {value:.1f}%",
+    "PDF_HISTORY_CAPTION": "Shared tests completion history",
     "COGNITIVE_STYLE_PROMPT": "Great! Now pick the style for the first test (7 questions):",
     "TEST_STYLE_SEXUAL_BTN": "🔥 Sexual brain map",
     "TEST_STYLE_DEV_BTN": "🧠 Brain regions growth",
@@ -256,7 +357,40 @@ EN: dict[str, str] = {
         "• Lifetime access + all future tests\n"
         "• Best value"
     ),
+    "ACCESS_PRICING_BODY_FOREVER_DISC": (
+        "<b>⭐ Choose BrainBoosty access</b>\n\n"
+        "<blockquote>"
+        "<b>1. Trial month — 790 ₽</b>\n"
+        "• Full access to all tests and brain maps\n"
+        "• Personal recommendations\n"
+        "• Progress-tracking bot\n\n"
+        "<b>2. Lifetime</b> — <s>3,990 ₽</s> → <b>2,490 ₽</b>\n"
+        "• Lifetime access + all future tests\n"
+        "• Progress bot forever\n"
+        "• Private channel with drills\n"
+        "• Best value (save 1,500 ₽)"
+        "</blockquote>\n\n"
+        "<tg-spoiler>Not happy — I’ll refund <b>100% of your money</b> within 7 days.</tg-spoiler>\n\n"
+        "🔥 Discount ends in: <b>{time_left}</b>\n\n"
+    ),
+    "BTN_ACCESS_CHANNEL_15_OFFER": "−15% on month (channel)",
     "BTN_ACCESS_NOT_READY": "Not ready yet",
+    "BTN_ACCESS_PLAN_MONTH": "Trial month",
+    "BTN_ACCESS_PLAN_FOREVER": "Forever",
+    "BTN_PAY_STEP_BACK": "← Plans",
+    "PAY_STEP2_MONTH_INTRO_HTML": (
+        "<b>Trial month</b> — 790 ₽ (or 672 ⭐ with the channel promo).\n\n"
+        "Choose how to pay:"
+    ),
+    "PAY_STEP2_FOREVER_INTRO_HTML": (
+        "<b>Forever</b> — full price 3,990 ₽ / 3,900 ⭐.\n\n"
+        "Choose how to pay:"
+    ),
+    "PAY_STEP2_FOREVER_INTRO_DISC_HTML": (
+        "<b>Forever — post-test discount</b>, time left: <b>{time_left}</b>.\n"
+        "2,490 ₽ / 2,490 ⭐ instead of 3,990.\n\n"
+        "Choose how to pay:"
+    ),
     "ACCESS_ALREADY_PREMIUM": "You already have full access. Use the menu below 👇",
     "ACCESS_POSTPONE_DISCOUNT_PITCH": (
         "Got it 👍\n\n"
@@ -311,9 +445,12 @@ EN: dict[str, str] = {
     "DAILY_HOOK_2": "90s: quick addition drills — working memory.",
     "DAILY_HOOK_3": "10 breath cycles — attention.",
     "SUBSCRIPTION_HEADER_HTML": "<b>💎 BrainBoosty subscription</b>",
-    "SUBSCRIPTION_DISCOUNT_NOTE_HTML": "<i>Forever discount — 48h after the test.</i>",
+    "SUBSCRIPTION_DISCOUNT_NOTE_HTML": "<i>Forever discount — time left: <b>{time_left}</b>.</i>",
     "SUBSCRIPTION_REFUND_BLOCKQUOTE_HTML": "<blockquote>Not happy — money back within 7 days</blockquote>",
-    "FOREVER_DISCOUNT_LINE": "🔥 Only for you: Forever <b>2,490 ₽</b> instead of <b>3,990 ₽</b> — offer ends in <b>48 hours</b>.",
+    "FOREVER_DISCOUNT_LINE": "🔥 Only for you: Forever <b>2,490 ₽</b> instead of <b>3,990 ₽</b> — discount ends in: <b>{time_left}</b>.",
+    "DISCOUNT_LEFT_LT_HOUR": "less than an hour",
+    "DISCOUNT_LEFT_ONE_HOUR_EN": "1 hour",
+    "DISCOUNT_LEFT_N_HOURS_EN": "{n} hours",
     "BTN_GET_PDF": "📄 Get PDF",
     "BTN_UNLOCK_FULL": "🔓 Full map & plan",
     "CHANNEL_TRIAL_CTA": "🔥 Want to see your full test results right now?\n\nSubscribe to my private channel — I’ll unlock 15 minutes of full access to the “Sexual brain map” (or the test style you picked).",
@@ -380,7 +517,7 @@ EN: dict[str, str] = {
     "INV_MONTH_DESC": "BrainBoosty premium for 30 days.",
     "INV_MONTH_LABEL": "Trial access",
     "INV_FOREVER_DISC_TITLE": "Forever (post-test discount)",
-    "INV_FOREVER_DISC_DESC": "Lifetime access at the post-test price (48h window).",
+    "INV_FOREVER_DISC_DESC": "Lifetime access at the post-test price. Time left: {time_left}.",
     "INV_FOREVER_TITLE": "Forever",
     "INV_FOREVER_DESC": "Lifetime BrainBoosty access.",
     "INV_FOREVER_LABEL": "Forever",
