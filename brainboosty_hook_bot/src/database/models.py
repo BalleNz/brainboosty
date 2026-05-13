@@ -1,0 +1,98 @@
+"""ORM-модели."""
+
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any
+
+from sqlalchemy import BigInteger, Boolean, DateTime, Float, ForeignKey, Integer, JSON, String, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from brainboosty_hook_bot.src.database.base import Base
+
+
+class User(Base):
+    """Пользователь Telegram после прохождения анкеты."""
+
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    tg_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True, nullable=False)
+    username: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    first_name: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    # Список строк целей (например ["attention", "memory"])
+    goals: Mapped[list[Any]] = mapped_column(JSON, nullable=False)
+
+    age: Mapped[int] = mapped_column(Integer, nullable=False)
+    daily_time: Mapped[str] = mapped_column(String(32), nullable=False)
+
+    premium_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    lifetime_subscription: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    test_discount_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    channel_month_15_discount_until: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    month_promo_code: Mapped[str | None] = mapped_column(String(32), nullable=True)
+
+    referrer_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    referral_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    locale: Mapped[str] = mapped_column(String(8), nullable=False, default="ru")
+    cognitive_completed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    referrer: Mapped[User | None] = relationship(
+        "User",
+        remote_side=[id],
+        foreign_keys=[referrer_id],
+        backref="referrals",
+    )
+
+    brain_snapshots: Mapped[list["BrainRegionSnapshot"]] = relationship(
+        "BrainRegionSnapshot",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+
+class BrainRegionSnapshot(Base):
+    """Один проход теста: снимок показателей по отделам мозга (история для сравнений)."""
+
+    __tablename__ = "brain_region_snapshots"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    test_variant: Mapped[str] = mapped_column(String(32), nullable=False, default="development")
+
+    prefrontal_cortex: Mapped[float] = mapped_column(Float, nullable=False)
+    brain_lobes: Mapped[float] = mapped_column(Float, nullable=False)
+    insular_cortex: Mapped[float] = mapped_column(Float, nullable=False)
+    temporoparietal_junction: Mapped[float] = mapped_column(Float, nullable=False)
+    amygdala: Mapped[float] = mapped_column(Float, nullable=False)
+    frontal_gyrus: Mapped[float] = mapped_column(Float, nullable=False)
+
+    user: Mapped[User] = relationship("User", back_populates="brain_snapshots")

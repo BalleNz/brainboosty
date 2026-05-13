@@ -1,0 +1,14 @@
+[project]
+name = "brainboosty_hook_bot"
+version = "0.1.0"
+description = "Brainboosty Hook Bot"
+requires-python = ">=3.8"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["brainboosty_hook_bot*"]
+namespaces = false
+
+[tool.setuptools.package-dir]
+"" = "."
