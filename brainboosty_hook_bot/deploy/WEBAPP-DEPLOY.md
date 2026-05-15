@@ -1,90 +1,39 @@
-# Web App: Caddy + brainboosty.ai
+# Web App на VPS
 
-## DNS: какой IP в A-запись
+## Идеальный запуск
 
-Вставьте **публичный IPv4 интернета** машины, где крутится Docker + Caddy — **не** `127.0.0.1` и **не** `192.168.x.x`.
-
-Узнать IP (если `ifconfig.me` висит за VPN или даёт 403 — используйте другой способ):
+1. VPS (Ubuntu), Docker + Compose, порты **80** и **443** открыты.
+2. DNS: **A** `@` и `www` → IP VPS.
+3. `.env` из `.env.example` (см. `WEBAPP_PUBLIC_URL`, `ACME_EMAIL`, `BOT_TOKEN`, …).
+4. Один раз:
 
 ```bash
-curl -4 https://api4.ipify.org
-curl -4 https://ipv4.icanhazip.com
-curl -4 https://checkip.amazonaws.com
-curl -4 https://1.1.1.1/cdn-cgi/trace | grep '^ip='
+cd brainboosty_hook_bot
+chmod +x scripts/dev-up.sh
+./scripts/dev-up.sh
 ```
 
-В браузере **без VPN**: откройте https://api4.ipify.org или https://ipv4.icanhazip.com — покажет одну строку с IP.
+Скрипт: собирает `webapp/dist` → `docker compose` (postgres, redis, api, bot, **caddy**) → ждёт API → сверяет DNS с IP VPS → проверяет `https://…/api/webapp/health`.
 
-Или: панель роутера → «WAN» / «Интернет» → «Внешний IP».
+5. BotFather → домен `brainboosty.ai` (как `WEBAPP_DOMAIN`).
+6. Tribute → вебхук `https://brainboosty.ai/tribute/webhook`, `TRIBUTE_WEBHOOK_PORT=0`.
 
-Запуск `./scripts/dev-up.sh public` тоже пробует несколько сервисов подряд.
-
-| Запись | Тип | Имя | Значение |
-|--------|-----|-----|----------|
-| Корень домена | **A** | `@` | ваш публичный IPv4 |
-| www (опционально) | **A** | `www` | тот же IPv4 |
-
-Пока DNS не обновился (до 24 ч), тест из Telegram не заработает.
-
-**Роутер:** проброс **TCP 80** и **443** на IP вашего Mac в локальной сети (см. настройки Port Forwarding / NAT).
-
-**macOS:** Системные настройки → Сеть → Файрвол — разрешить входящие для Docker/Caddy или временно отключить для теста.
-
----
-
-## Быстрый старт (реальный HTTPS, Telegram)
-
-1. `.env`:
-
-   ```env
-   WEBAPP_PUBLIC_URL=https://brainboosty.ai
-   WEBAPP_DOMAIN=brainboosty.ai
-   ACME_EMAIL=you@example.com
-   ```
-
-2. BotFather → домен бота: `brainboosty.ai`
-
-3. Запуск:
-
-   ```bash
-   cd brainboosty_hook_bot
-   chmod +x scripts/dev-up.sh
-   ./scripts/dev-up.sh public
-   ```
-
-4. Проверки:
-
-   - https://brainboosty.ai/health
-   - https://brainboosty.ai/api/webapp/health → `"dist_built": "true"`
-   - В боте кнопка «Открыть Neural Map»
-
----
-
-## Только браузер на этом Mac (без DNS)
-
-Telegram с телефона **не** подойдёт (нужен доверенный сертификат и публичный IP).
+Повторный деплой без пересборки фронта:
 
 ```bash
-sudo sh -c 'echo "127.0.0.1 brainboosty.ai www.brainboosty.ai" >> /etc/hosts'
+SKIP_BUILD=1 ./scripts/dev-up.sh
+```
+
+## Локальный Mac (без Telegram)
+
+```bash
+sudo sh -c 'echo "127.0.0.1 brainboosty.ai" >> /etc/hosts'
 ./scripts/dev-up.sh local
 ```
 
-Откройте https://brainboosty.ai/webapp/ и примите предупреждение о сертификате.
-
----
-
-## Остановка
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.caddy.yml down
-# или для local:
-docker compose -f docker-compose.yml -f docker-compose.caddy.local.yml down
-```
-
-## Логи Caddy
+## Логи и остановка
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.caddy.yml logs -f caddy
+docker compose -f docker-compose.yml -f docker-compose.caddy.yml down
 ```
-
-Если Let's Encrypt не выдаёт сертификат: проверьте DNS (`dig brainboosty.ai +short`), порты 80/443 снаружи, что A-запись указывает на этот же IP, что `curl ifconfig.me`.
