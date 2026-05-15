@@ -33,7 +33,9 @@ export function regionCardHtml(t, regionKey, region) {
 
   return `
 <section class="bb-section bb-region" data-section="region" data-region="${regionKey}" id="zone-${regionKey}">
-  <img src="${img}" alt="" class="brain-float-top mb-3" width="320" height="220" loading="lazy" decoding="async" />
+  <button type="button" class="bb-region__illu-hit" data-open-zone="${regionKey}" aria-label="${esc(title)} — ${esc(t.zoneIllustrationOpenAria)}">
+    <img src="${img}" alt="" class="brain-float-top bb-region__illu" width="320" height="220" loading="lazy" decoding="async" />
+  </button>
   <h2 class="bb-region__title neon-zone-title px-2">${esc(title)}</h2>
   <p class="bb-region__progress-label">${esc(pctLabel)}</p>
   <div class="glass rounded-2xl p-4 max-w-xl mx-auto w-full">

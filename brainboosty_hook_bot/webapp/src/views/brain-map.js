@@ -1,4 +1,3 @@
-import { brainInteractiveSectionHtml } from "../components/brain-interactive-section.js";
 import { openBrainZoneDrawer } from "../components/brain-zone-drawer.js";
 import { coverSectionHtml } from "../components/cover.js";
 import { regionCardHtml } from "../components/region-card.js";
@@ -21,7 +20,6 @@ export function renderBrainMap(root, profile, route) {
       neuroScore: profile.neuroScore,
       connectivity: profile.connectivity,
     }),
-    brainInteractiveSectionHtml(t),
     ...REGION_KEYS.map((key) =>
       regionCardHtml(t, key, {
         main: profile.scores[key],
@@ -35,22 +33,23 @@ export function renderBrainMap(root, profile, route) {
   setupRevealAnimations(root);
   animateNeuroScore(root);
   animateBars(root);
-  setupInteractiveBrain(root, profile, route);
+  setupRegionIllustrationOpeners(root, profile, route);
 }
 
 /**
+ * Клик по иллюстрации отдела в карточке зоны открывает тот же drawer, что и раньше с «карты».
  * @param {HTMLElement} root
  * @param {import('../api.js').normalizeProfile extends (x:any)=>infer P ? P : never} profile
  * @param {{ params: URLSearchParams } | undefined} route
  */
-function setupInteractiveBrain(root, profile, route) {
-  const wrap = root.querySelector(".bb-interactive-brain");
-  if (!wrap) return;
+function setupRegionIllustrationOpeners(root, profile, route) {
+  const openers = root.querySelectorAll("[data-open-zone]");
+  if (!openers.length) return;
 
   const setHot = (key) => {
-    wrap.querySelectorAll(".bb-brain-zone").forEach((p) => {
-      const id = p.dataset.region;
-      p.classList.toggle("is-hot", Boolean(key) && id === key);
+    root.querySelectorAll(".bb-region").forEach((sec) => {
+      const id = sec.dataset.region;
+      sec.classList.toggle("is-zone-hot", Boolean(key) && id === key);
     });
   };
 
@@ -62,36 +61,20 @@ function setupInteractiveBrain(root, profile, route) {
     });
   };
 
-  wrap.querySelectorAll(".bb-brain-zone").forEach((path) => {
-    path.addEventListener("pointerenter", () => setHot(path.dataset.region || ""));
-    path.addEventListener("pointerleave", (e) => {
+  openers.forEach((btn) => {
+    btn.addEventListener("pointerenter", () => setHot(btn.getAttribute("data-open-zone") || ""));
+    btn.addEventListener("pointerleave", (e) => {
       const next = e.relatedTarget;
-      if (
-        next &&
-        wrap.contains(next) &&
-        /** @type {Element} */ (next).classList?.contains("bb-brain-zone")
-      ) {
-        return;
-      }
+      if (next instanceof Node && root.contains(next) && next.closest("[data-open-zone]")) return;
       setHot(null);
     });
-    path.addEventListener("click", (e) => {
+    btn.addEventListener("click", (e) => {
       e.preventDefault();
-      const key = path.dataset.region;
+      const key = btn.getAttribute("data-open-zone");
       if (!key) return;
       hapticLight();
       openZone(key);
     });
-    if (!(path instanceof HTMLButtonElement)) {
-      path.addEventListener("keydown", (e) => {
-        if (e.key !== "Enter" && e.key !== " ") return;
-        e.preventDefault();
-        const key = path.dataset.region;
-        if (!key) return;
-        hapticLight();
-        openZone(key);
-      });
-    }
   });
 
   const dz = route?.params?.get?.("zone");
