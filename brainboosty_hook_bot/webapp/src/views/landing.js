@@ -109,8 +109,8 @@ async function runLanding(lang) {
     </div>`;
 
   let meta = {
-    botUrl: "https://t.me/BRAINBOOSTY?start=site",
-    webappEntryUrl: "https://t.me/BRAINBOOSTY?start=webapp",
+    botUrl: "https://t.me/brainboosty?start=site",
+    webappEntryUrl: "https://t.me/brainboosty?start=webapp",
     channelUrl: "https://t.me/androgenautist",
     hasAuthorPhoto: false,
     hasChannelAvatar: false,
