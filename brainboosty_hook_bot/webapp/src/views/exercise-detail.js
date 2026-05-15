@@ -51,7 +51,7 @@ function animateEntrance(root) {
 
 /**
  * @param {HTMLElement} root
- * @param {{ initData: string }} ctx
+ * @param {{ initData: string, siteToken?: string }} ctx
  * @param {import('../api.js').normalizeProfile extends (x:any)=>infer P ? P : never} profile
  * @param {number} exerciseId
  */

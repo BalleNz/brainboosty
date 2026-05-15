@@ -1,6 +1,6 @@
 import brainImg from "@bb-assets/full-glowing-brain.png";
 import logoSvg from "@bb-assets/pdf/logo.svg?raw";
-import { fetchLandingMeta } from "../api.js";
+import { fetchLandingMeta, SITE_SESSION_STORAGE_KEY, SITE_USER_STORAGE_KEY } from "../api.js";
 import { initLandingHeroMotion } from "../lib/landing-hero-motion.js";
 import { initLandingReveal } from "../lib/landing-reveal.js";
 import { getStrings } from "../i18n/index.js";
@@ -114,6 +114,8 @@ async function runLanding(lang) {
     channelUrl: "https://t.me/androgenautist",
     hasAuthorPhoto: false,
     hasChannelAvatar: false,
+    neuralMapHubUrl: "/#hub-login",
+    hubHostDisplay: "neuralmap.brainboosty.app",
   };
   try {
     meta = { ...meta, ...(await fetchLandingMeta()) };
@@ -139,6 +141,7 @@ async function runLanding(lang) {
           <div class="bb-landing-nav__links">
             <a href="#about">${esc(t.landingNavAbout)}</a>
             <a href="#project">${esc(t.landingNavProject)}</a>
+            <a href="#hub-login">${esc(t.landingNavHub)}</a>
             <a href="#start" class="bb-landing-nav__cta">${esc(t.landingNavCta)}</a>
           </div>
           <div class="bb-landing-nav__extras">
@@ -170,6 +173,9 @@ async function runLanding(lang) {
           </a>
         </div>
         <p class="bb-landing-cta-sub">${esc(t.landingCtaSub)}</p>
+        <p class="bb-landing-hub-hero-link-wrap">
+          <a href="#hub-login" class="bb-landing-hub-hero-link">${esc(t.landingHubHeroLink)}</a>
+        </p>
         </div>
       </header>
 
@@ -193,6 +199,16 @@ async function runLanding(lang) {
         <h2 class="bb-landing-section__title">${esc(t.landingProjectTitle)}</h2>
         <ul class="bb-landing-features">${features}</ul>
         <p class="bb-landing-disclaimer">${esc(t.footer)}</p>
+      </section>
+
+      <section id="hub-login" class="bb-landing-section bb-landing-hub bb-landing-reveal">
+        <p class="bb-landing-hub__domain" translate="no">${esc(meta.hubHostDisplay)}</p>
+        <h2 class="bb-landing-section__title bb-landing-hub__title">${esc(t.landingHubTitle)}</h2>
+        <p class="bb-landing-hub__lead">${esc(t.landingHubLead)}</p>
+        <p class="bb-landing-hub__hint">${esc(t.landingHubHint)}</p>
+        <div class="bb-landing-hub__card glass bb-landing-hover-rise">
+          <div id="bb-tg-login-widget" class="bb-landing-hub__widget"></div>
+        </div>
       </section>
 
       <section id="start" class="bb-landing-section bb-landing-final bb-landing-reveal">
@@ -252,4 +268,60 @@ async function runLanding(lang) {
     window.removeEventListener("pagehide", onPageHide);
   };
   window.addEventListener("pagehide", onPageHide);
+
+  window.__bbTelegramAuth = async (tgUser) => {
+    const tloc = getStrings(lang);
+    try {
+      const res = await fetch("/api/webapp/auth/site", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(tgUser),
+      });
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {
+        data = {};
+      }
+      if (!res.ok) {
+        const d = data?.detail;
+        const msg =
+          res.status === 403
+            ? tloc.notRegistered
+            : res.status === 401
+              ? tloc.authError
+              : typeof d === "string"
+                ? d
+                : tloc.errorLoad;
+        window.alert(msg);
+        return;
+      }
+      localStorage.setItem(SITE_SESSION_STORAGE_KEY, data.accessToken);
+      localStorage.setItem(
+        SITE_USER_STORAGE_KEY,
+        JSON.stringify({
+          first_name: data.user?.first_name ?? tgUser.first_name,
+          last_name: data.user?.last_name ?? tgUser.last_name ?? "",
+          language_code: data.lang === "en" ? "en" : "ru",
+        }),
+      );
+      window.location.replace("/#map");
+      window.location.reload();
+    } catch {
+      window.alert(tloc.errorLoad);
+    }
+  };
+
+  const wMount = root.querySelector("#bb-tg-login-widget");
+  if (wMount && meta.botUsername) {
+    const scr = document.createElement("script");
+    scr.src = "https://telegram.org/js/telegram-widget.js?22";
+    scr.async = true;
+    scr.setAttribute("data-telegram-login", meta.botUsername);
+    scr.setAttribute("data-size", "large");
+    scr.setAttribute("data-radius", "12");
+    scr.setAttribute("data-onauth", "window.__bbTelegramAuth(user)");
+    scr.setAttribute("data-request-access", "write");
+    wMount.appendChild(scr);
+  }
 }

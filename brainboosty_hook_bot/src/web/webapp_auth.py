@@ -62,3 +62,45 @@ def tg_user_id_from_init(parsed: dict[str, Any]) -> int | None:
         except (TypeError, ValueError):
             return None
     return None
+
+
+def validate_telegram_login_widget_payload(data: dict[str, Any], *, max_age_sec: int = 86400) -> int:
+    """Проверка подписи Telegram Login Widget (callback onTelegramAuth), не Mini App initData."""
+    if not data:
+        raise WebAppAuthError("empty_body")
+    check_hash = data.get("hash")
+    if not check_hash or not isinstance(check_hash, str):
+        raise WebAppAuthError("missing_hash")
+
+    try:
+        auth_date = int(data.get("auth_date") or 0)
+    except (TypeError, ValueError) as exc:
+        raise WebAppAuthError("missing_auth_date") from exc
+    if not auth_date:
+        raise WebAppAuthError("missing_auth_date")
+    if max_age_sec > 0 and time.time() - auth_date > max_age_sec:
+        raise WebAppAuthError("expired")
+
+    token = (settings.BOT_TOKEN or "").strip()
+    if not token:
+        raise WebAppAuthError("bot_token_missing")
+
+    parts: list[str] = []
+    for key in sorted(data.keys()):
+        if key == "hash":
+            continue
+        val = data[key]
+        if val is None:
+            continue
+        parts.append(f"{key}={val}")
+
+    data_check_string = "\n".join(parts)
+    secret_key = hashlib.sha256(token.encode("utf-8")).digest()
+    calculated = hmac.new(secret_key, data_check_string.encode("utf-8"), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(calculated, check_hash):
+        raise WebAppAuthError("invalid_signature")
+
+    try:
+        return int(data["id"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise WebAppAuthError("no_user_id") from exc

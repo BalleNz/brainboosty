@@ -1,4 +1,4 @@
-import { fetchBrainProfile } from "./api.js";
+import { fetchBrainProfile, SITE_SESSION_STORAGE_KEY, SITE_USER_STORAGE_KEY } from "./api.js";
 import { getStrings } from "./i18n/index.js";
 import { getRoute, navigate, onRouteChange, startRouter } from "./router.js";
 import { initTelegramWebApp, hapticLight } from "./telegram.js";
@@ -136,6 +136,16 @@ async function renderRoute(route) {
           .join(" ");
       }
     } catch (e) {
+      if (e?.status === 401 && e?.detail === "invalid_site_token" && appCtx?.siteToken) {
+        try {
+          localStorage.removeItem(SITE_SESSION_STORAGE_KEY);
+          localStorage.removeItem(SITE_USER_STORAGE_KEY);
+        } catch {
+          /* ignore */
+        }
+        window.location.replace("/");
+        return;
+      }
       const msg =
         e?.status === 403
           ? t.notRegistered
@@ -163,10 +173,19 @@ async function renderRoute(route) {
 }
 
 export async function bootApp(ctx) {
-  appCtx = { ...ctx, lang: "ru" };
+  const lang0 = ctx.lang === "en" ? "en" : "ru";
+  appCtx = {
+    initData: ctx.initData ?? "",
+    user: ctx.user ?? null,
+    lang: lang0,
+    siteToken: ctx.siteToken ?? "",
+  };
   profileCache = null;
 
   document.body.classList.add("bb-app--telegram");
+  if (appCtx.siteToken) {
+    document.body.classList.add("bb-app--site");
+  }
 
   const root = document.getElementById("bb-root");
   if (!root) return;
@@ -180,6 +199,26 @@ export async function bootApp(ctx) {
   if (header) {
     header.hidden = false;
     header.classList.add("is-visible");
+    header.querySelector(".bb-header__logout")?.remove();
+    if (appCtx.siteToken) {
+      header.classList.add("bb-header--with-logout");
+      const lo = document.createElement("button");
+      lo.type = "button";
+      lo.className = "bb-header__logout";
+      lo.textContent = t0.navLogout;
+      lo.addEventListener("click", () => {
+        try {
+          localStorage.removeItem(SITE_SESSION_STORAGE_KEY);
+          localStorage.removeItem(SITE_USER_STORAGE_KEY);
+        } catch {
+          /* ignore */
+        }
+        window.location.replace("/");
+      });
+      header.appendChild(lo);
+    } else {
+      header.classList.remove("bb-header--with-logout");
+    }
   }
 
   setupNav(appCtx.lang);

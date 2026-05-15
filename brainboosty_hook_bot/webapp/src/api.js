@@ -1,18 +1,25 @@
 import { REGION_KEYS } from "./data/regions.js";
 import { computeNeuroScore } from "./data/demo-profile.js";
 
-function headers(initData) {
+export const SITE_SESSION_STORAGE_KEY = "bb-site-session";
+export const SITE_USER_STORAGE_KEY = "bb-site-user";
+
+function headers(initData, siteToken) {
   const h = { "Content-Type": "application/json" };
   if (initData) {
     h["X-Telegram-Init-Data"] = initData;
   }
+  const st = (siteToken || "").trim();
+  if (st) {
+    h.Authorization = `Bearer ${st}`;
+  }
   return h;
 }
 
-async function apiFetch(path, { initData, method = "GET", body } = {}) {
+async function apiFetch(path, { initData = "", siteToken = "", method = "GET", body } = {}) {
   const res = await fetch(`/api/webapp${path}`, {
     method,
-    headers: headers(initData),
+    headers: headers(initData, siteToken),
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
@@ -64,28 +71,36 @@ function normalizeProfile(raw) {
 }
 
 export async function fetchLandingMeta() {
-  return apiFetch("/landing", { initData: "" });
+  return apiFetch("/landing", { initData: "", siteToken: "" });
 }
 
 export async function fetchBrainProfile(ctx) {
-  const data = await apiFetch("/profile", { initData: ctx.initData });
+  const data = await apiFetch("/profile", {
+    initData: ctx.initData ?? "",
+    siteToken: ctx.siteToken ?? "",
+  });
   return normalizeProfile(data);
 }
 
 export async function fetchHistory(ctx) {
-  return apiFetch("/history", { initData: ctx.initData });
+  return apiFetch("/history", {
+    initData: ctx.initData ?? "",
+    siteToken: ctx.siteToken ?? "",
+  });
 }
 
 export async function fetchTestQuestions(ctx, variant = "development") {
   return apiFetch(`/test/questions?variant=${encodeURIComponent(variant)}`, {
-    initData: ctx.initData,
+    initData: ctx.initData ?? "",
+    siteToken: ctx.siteToken ?? "",
   });
 }
 
 export async function submitTest(ctx, { variant, answers }) {
   const payload = { variant, answers };
   const data = await apiFetch("/test/submit", {
-    initData: ctx.initData,
+    initData: ctx.initData ?? "",
+    siteToken: ctx.siteToken ?? "",
     method: "POST",
     body: payload,
   });
@@ -93,5 +108,8 @@ export async function submitTest(ctx, { variant, answers }) {
 }
 
 export async function fetchExercise(ctx, exerciseId) {
-  return apiFetch(`/exercises/${encodeURIComponent(String(exerciseId))}`, { initData: ctx.initData });
+  return apiFetch(`/exercises/${encodeURIComponent(String(exerciseId))}`, {
+    initData: ctx.initData ?? "",
+    siteToken: ctx.siteToken ?? "",
+  });
 }

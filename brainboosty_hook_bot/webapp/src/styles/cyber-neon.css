@@ -1861,6 +1861,105 @@ body.bb-lang-gate-open {
   margin-top: 16px;
 }
 
+/* Neural Map Hub — вход с сайта (Telegram Login Widget) */
+.bb-landing-hub__domain {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(103, 232, 249, 0.85);
+  margin: 0 0 8px;
+}
+
+.bb-landing-hub__title {
+  margin-bottom: 12px !important;
+}
+
+.bb-landing-hub__lead {
+  text-align: center;
+  max-width: 36rem;
+  margin: 0 auto 10px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #cbd5e1;
+}
+
+.bb-landing-hub__hint {
+  text-align: center;
+  max-width: 32rem;
+  margin: 0 auto 20px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #94a3b8;
+}
+
+.bb-landing-hub__card {
+  max-width: 22rem;
+  margin: 0 auto;
+  padding: 24px 20px 28px;
+  border-radius: 20px;
+  text-align: center;
+}
+
+.bb-landing-hub__widget {
+  display: flex;
+  justify-content: center;
+  min-height: 48px;
+}
+
+.bb-landing-hub-hero-link-wrap {
+  margin: 18px 0 0;
+  text-align: center;
+}
+
+.bb-landing-hub-hero-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: #67e8f9;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(103, 232, 249, 0.35);
+  padding-bottom: 2px;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.bb-landing-hub-hero-link:hover {
+  color: #a5f3fc;
+  border-color: rgba(165, 243, 252, 0.55);
+}
+
+.bb-header.bb-app-top-nav.bb-header--with-logout {
+  justify-content: space-between;
+}
+
+.bb-header.bb-app-top-nav.bb-header--with-logout .bb-header__brand {
+  flex: 0 1 auto;
+  justify-content: flex-start;
+}
+
+.bb-header__logout {
+  flex-shrink: 0;
+  margin-left: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.25s ease;
+}
+
+.bb-header__logout:hover {
+  border-color: rgba(34, 211, 238, 0.45);
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.12);
+}
+
 .bb-landing-final__card {
   padding: 28px 20px;
   border-radius: 20px;

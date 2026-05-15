@@ -16,7 +16,8 @@ chmod +x scripts/dev-up.sh
 Скрипт: собирает `webapp/dist` → `docker compose` (postgres, redis, api, bot, **caddy**) → ждёт API → сверяет DNS с IP VPS → проверяет `https://…/api/webapp/health`.
 
 5. BotFather → домен `brainboosty.ai` (как `WEBAPP_DOMAIN`).
-6. Tribute → вебхук `https://brainboosty.ai/tribute/webhook`, `TRIBUTE_WEBHOOK_PORT=0`.
+6. **Telegram Login Widget (Neural Map Hub в браузере):** в [@BotFather](https://t.me/BotFather) → бот → **Bot Settings → Domain** — укажите тот же домен, где открывается сайт (`WEBAPP_PUBLIC_URL` без `https://`). Иначе кнопка «Войти через Telegram» на лендинге не загрузится.
+7. Tribute → вебхук `https://brainboosty.ai/tribute/webhook`, `TRIBUTE_WEBHOOK_PORT=0`.
 
 Повторный деплой без пересборки фронта:
 

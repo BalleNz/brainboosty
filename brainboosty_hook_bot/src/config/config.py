@@ -96,6 +96,14 @@ class Settings(BaseSettings):
         ),
     )
 
+    WEBAPP_SITE_SESSION_SECRET: str = Field(
+        default="",
+        description=(
+            "Секрет подписи браузерных сессий (вход через Telegram Login Widget на сайте). "
+            "Пусто — ключ выводится из BOT_TOKEN."
+        ),
+    )
+
     DAILY_HOOK_HOUR: int = Field(default=10, ge=0, le=23)
     DAILY_HOOK_MINUTE: int = Field(default=0, ge=0, le=59)
 

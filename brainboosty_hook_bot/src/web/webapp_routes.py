@@ -15,9 +15,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from brainboosty_hook_bot.src.config.config import settings
 from brainboosty_hook_bot.src.database.session import get_session
 from brainboosty_hook_bot.src.locale import normalize_lang
-from brainboosty_hook_bot.src.web.webapp_auth import WebAppAuthError, tg_user_id_from_init, validate_init_data
+from brainboosty_hook_bot.src.web.webapp_auth import (
+    WebAppAuthError,
+    tg_user_id_from_init,
+    validate_init_data,
+    validate_telegram_login_widget_payload,
+)
 from brainboosty_hook_bot.src.services.about_photo import resolve_about_photo_path, resolve_channel_avatar_path
-from brainboosty_hook_bot.src.web.exercise_service import fetch_exercise_for_user
+from brainboosty_hook_bot.src.web.site_session import mint_site_access_token, verify_site_access_token
 from brainboosty_hook_bot.src.web.webapp_service import (
     cognitive_questions_payload,
     get_user_by_tg_id,
@@ -65,7 +70,24 @@ class TestSubmitBody(BaseModel):
 async def _resolve_user(
     session: AsyncSession,
     x_telegram_init_data: str | None,
+    authorization: str | None = None,
 ) -> tuple[Any, str]:
+    bearer = ""
+    if authorization:
+        auth = authorization.strip()
+        low = auth.lower()
+        if low.startswith("bearer "):
+            bearer = auth[7:].strip()
+    if bearer:
+        tg_id = verify_site_access_token(bearer)
+        if tg_id is None:
+            raise HTTPException(status_code=401, detail="invalid_site_token")
+        user = await get_user_by_tg_id(session, tg_id)
+        if user is None:
+            raise HTTPException(status_code=403, detail="not_registered")
+        lang = normalize_lang(user.locale or "ru")
+        return user, lang
+
     try:
         parsed = validate_init_data(x_telegram_init_data or "")
     except WebAppAuthError as exc:
@@ -93,6 +115,8 @@ async def webapp_config() -> dict[str, str]:
 async def webapp_landing() -> dict[str, str | bool]:
     """Публичные ссылки для лендинга (без Telegram initData)."""
     bot = settings.BOT_USERNAME.strip().lstrip("@")
+    base = (settings.WEBAPP_PUBLIC_URL or "").strip().rstrip("/")
+    hub_entry = f"{base}/#hub-login" if base else "/#hub-login"
     return {
         "botUrl": f"https://t.me/{bot}?start=site",
         "webappEntryUrl": f"https://t.me/{bot}?start=webapp",
@@ -101,7 +125,33 @@ async def webapp_landing() -> dict[str, str | bool]:
         "hasAuthorPhoto": resolve_about_photo_path() is not None,
         "hasChannelAvatar": resolve_channel_avatar_path() is not None,
         "webappUrl": webapp_public_url(),
+        "neuralMapHubUrl": hub_entry,
+        "hubHostDisplay": "neuralmap.brainboosty.app",
     }
+
+
+@router.post("/auth/site")
+async def webapp_auth_site(
+    body: dict[str, Any],
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> JSONResponse:
+    """Вход с сайта: тело = объект из Telegram Login Widget (onTelegramAuth)."""
+    try:
+        tg_id = validate_telegram_login_widget_payload(body)
+    except WebAppAuthError as exc:
+        raise HTTPException(status_code=401, detail=exc.code) from exc
+    user = await get_user_by_tg_id(session, tg_id)
+    if user is None:
+        raise HTTPException(status_code=403, detail="not_registered")
+    lang = normalize_lang(user.locale or "ru")
+    token = mint_site_access_token(tg_id)
+    return JSONResponse(
+        {
+            "accessToken": token,
+            "lang": lang,
+            "user": {"first_name": user.first_name, "last_name": ""},
+        }
+    )
 
 
 @router.get("/landing/photo")
@@ -139,8 +189,9 @@ async def webapp_exercise(
     exercise_id: int,
     session: Annotated[AsyncSession, Depends(get_session)],
     x_telegram_init_data: str | None = Header(default=None, alias="X-Telegram-Init-Data"),
+    authorization: str | None = Header(default=None),
 ) -> JSONResponse:
-    user, lang = await _resolve_user(session, x_telegram_init_data)
+    user, lang = await _resolve_user(session, x_telegram_init_data, authorization)
     try:
         payload = await fetch_exercise_for_user(session, user, exercise_id, lang)
     except PermissionError:
@@ -154,8 +205,9 @@ async def webapp_exercise(
 async def webapp_profile(
     session: Annotated[AsyncSession, Depends(get_session)],
     x_telegram_init_data: str | None = Header(default=None, alias="X-Telegram-Init-Data"),
+    authorization: str | None = Header(default=None),
 ) -> JSONResponse:
-    user, lang = await _resolve_user(session, x_telegram_init_data)
+    user, lang = await _resolve_user(session, x_telegram_init_data, authorization)
     snap = await latest_snapshot(session, user.id)
     return JSONResponse(profile_from_snapshot(user, snap, lang=lang))
 
@@ -164,8 +216,9 @@ async def webapp_profile(
 async def webapp_history(
     session: Annotated[AsyncSession, Depends(get_session)],
     x_telegram_init_data: str | None = Header(default=None, alias="X-Telegram-Init-Data"),
+    authorization: str | None = Header(default=None),
 ) -> JSONResponse:
-    user, lang = await _resolve_user(session, x_telegram_init_data)
+    user, lang = await _resolve_user(session, x_telegram_init_data, authorization)
     snaps = await list_snapshots(session, user.id)
     return JSONResponse(history_payload(snaps, lang=lang))
 
@@ -175,8 +228,9 @@ async def webapp_test_questions(
     session: Annotated[AsyncSession, Depends(get_session)],
     variant: str = "development",
     x_telegram_init_data: str | None = Header(default=None, alias="X-Telegram-Init-Data"),
+    authorization: str | None = Header(default=None),
 ) -> JSONResponse:
-    user, lang = await _resolve_user(session, x_telegram_init_data)
+    user, lang = await _resolve_user(session, x_telegram_init_data, authorization)
     v = variant if variant in ("sexual", "development") else (user.test_variant or "development")
     if v not in ("sexual", "development"):
         v = "development"
@@ -188,8 +242,9 @@ async def webapp_test_submit(
     body: TestSubmitBody,
     session: Annotated[AsyncSession, Depends(get_session)],
     x_telegram_init_data: str | None = Header(default=None, alias="X-Telegram-Init-Data"),
+    authorization: str | None = Header(default=None),
 ) -> JSONResponse:
-    user, lang = await _resolve_user(session, x_telegram_init_data)
+    user, lang = await _resolve_user(session, x_telegram_init_data, authorization)
     answers: dict[int, str] = {}
     for k, v in body.answers.items():
         try:
