@@ -113,3 +113,19 @@ export async function fetchExercise(ctx, exerciseId) {
     siteToken: ctx.siteToken ?? "",
   });
 }
+
+/** Одноразовая ссылка в бот (deep-link /start site_<token>). */
+export async function fetchSiteLoginLink() {
+  return apiFetch("/auth/site/link", {
+    initData: "",
+    siteToken: "",
+    method: "POST",
+  });
+}
+
+export async function fetchSiteLoginPoll(loginToken) {
+  return apiFetch(`/auth/site/poll?token=${encodeURIComponent(loginToken)}`, {
+    initData: "",
+    siteToken: "",
+  });
+}

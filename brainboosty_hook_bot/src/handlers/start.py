@@ -20,7 +20,8 @@ from brainboosty_hook_bot.src.keyboards.reply import main_reply_kb
 from brainboosty_hook_bot.src.locale import normalize_lang, question_skill_message, t
 from brainboosty_hook_bot.src.services.subscription_service import user_has_paid_access
 from brainboosty_hook_bot.src.utils.flow_chat import flow_remember
-from brainboosty_hook_bot.src.utils.helpers import build_ref_link, parse_start_payload
+from brainboosty_hook_bot.src.utils.helpers import build_ref_link, parse_site_login_token, parse_start_payload
+from brainboosty_hook_bot.src.web.site_login_challenge import attach_site_login_challenge
 from brainboosty_hook_bot.src.web.webapp_link import send_webapp_link
 
 router = Router(name="start")
@@ -126,6 +127,21 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession, 
 
     parts = (message.text or "").split(maxsplit=1)
     payload = parts[1].strip() if len(parts) > 1 else None
+
+    site_raw = parse_site_login_token(payload)
+    if site_raw:
+        result = await attach_site_login_challenge(session, message.from_user.id, site_raw)
+        db_user = await _get_user(session, message.from_user.id)
+        lang = db_user.locale if db_user and db_user.locale in {"ru", "en"} else normalize_lang(locale)
+        if result == "ok":
+            await message.answer(t(lang, "SITE_LOGIN_OK"))
+        elif result == "not_registered":
+            lang_nr = normalize_lang(locale)
+            await message.answer(t(lang_nr, "SITE_LOGIN_NOT_REGISTERED"))
+        else:
+            await message.answer(t(lang, "SITE_LOGIN_BAD_TOKEN"))
+        return
+
     pending_ref = parse_start_payload(payload)
 
     data_before = await state.get_data()

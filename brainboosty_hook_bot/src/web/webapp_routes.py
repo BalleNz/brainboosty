@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -21,7 +21,12 @@ from brainboosty_hook_bot.src.web.webapp_auth import (
     validate_init_data,
     validate_telegram_login_widget_payload,
 )
-from brainboosty_hook_bot.src.services.about_photo import resolve_about_photo_path, resolve_channel_avatar_path
+from brainboosty_hook_bot.src.web.exercise_service import fetch_exercise_for_user
+from brainboosty_hook_bot.src.web.site_login_challenge import (
+    CHALLENGE_TTL_SEC,
+    create_site_login_challenge,
+    poll_site_login_challenge,
+)
 from brainboosty_hook_bot.src.web.site_session import mint_site_access_token, verify_site_access_token
 from brainboosty_hook_bot.src.web.webapp_service import (
     cognitive_questions_payload,
@@ -152,6 +157,33 @@ async def webapp_auth_site(
             "user": {"first_name": user.first_name, "last_name": ""},
         }
     )
+
+
+@router.post("/auth/site/link")
+async def webapp_auth_site_link(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> JSONResponse:
+    """Создать одноразовый токен: пользователь открывает telegramLink и жмёт Start в боте."""
+    login_token, telegram_link = await create_site_login_challenge(session)
+    await session.commit()
+    return JSONResponse(
+        {
+            "loginToken": login_token,
+            "telegramLink": telegram_link,
+            "expiresInSec": CHALLENGE_TTL_SEC,
+        }
+    )
+
+
+@router.get("/auth/site/poll")
+async def webapp_auth_site_poll(
+    session: Annotated[AsyncSession, Depends(get_session)],
+    token: Annotated[str, Query(min_length=1)],
+) -> JSONResponse:
+    raw = token.strip().lower()
+    data = await poll_site_login_challenge(session, raw)
+    await session.commit()
+    return JSONResponse(data)
 
 
 @router.get("/landing/photo")

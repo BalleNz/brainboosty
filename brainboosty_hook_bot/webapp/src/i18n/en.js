@@ -9,16 +9,22 @@ export default {
   landingNavProject: "The project",
   landingNavHub: "Neural Map Hub",
   landingNavCta: "Open bot",
-  landingHubHeroLink: "Already in BrainBoosty? Open Neural Map Hub",
   landingHubTitle: "Neural Map Hub",
   landingHubLead:
     "Your brain map, test, history, and exercises—in the browser, same account as the bot and Mini App.",
-  landingHubHint: "Finish the bot questionnaire first—without a profile, sign-in won’t work.",
+  landingHubHint:
+    "You need a profile after the bot onboarding. Tap the button — Telegram opens with /start and a one-time token; confirm with «Start», then return here; this tab will log you in automatically.",
+  landingHubStartLogin: "Open Telegram and confirm",
+  landingHubPrepare: "Preparing your link…",
+  landingHubPolling: "Waiting for confirmation in Telegram… keep this tab open.",
+  landingHubExpired: "That link expired. Tap the button to try again.",
+  landingHubPopupBlocked:
+    "Your browser blocked the Telegram window. Allow pop-ups for this site and try again.",
   landingLoginTelegram: "Log in with Telegram",
   landingChannelAria: "Telegram channel",
   landingAboutTitle: "About me",
   landingAboutParagraphs: [
-    "Hi, I'm @androgenautist — creator of BrainBoosty.",
+    "Hi, I'm Damian — creator of BrainBoosty.",
     "I went from anxiety, brain fog, and tension to clarity, inner strength, and confidence. Now I help others with neurobiology, hormones, and cognitive habits.",
     "On my channel I share actionable insights—no marketing noise, only what actually shifts your state.",
   ],

@@ -1,6 +1,5 @@
 import brainImg from "@bb-assets/full-glowing-brain.png";
-import logoSvg from "@bb-assets/pdf/logo.svg?raw";
-import { fetchLandingMeta, SITE_SESSION_STORAGE_KEY, SITE_USER_STORAGE_KEY } from "../api.js";
+import { fetchLandingMeta, fetchSiteLoginLink, fetchSiteLoginPoll, SITE_SESSION_STORAGE_KEY, SITE_USER_STORAGE_KEY } from "../api.js";
 import { initLandingHeroMotion } from "../lib/landing-hero-motion.js";
 import { initLandingReveal } from "../lib/landing-reveal.js";
 import { getStrings } from "../i18n/index.js";
@@ -124,10 +123,6 @@ async function runLanding(lang) {
   }
 
   const photoSrc = "/api/webapp/landing/photo";
-  const channelAvatarSrc = "/api/webapp/landing/channel-avatar";
-  const channelNavInner = meta.hasChannelAvatar
-    ? `<img class="bb-landing-nav__channel-img" src="${channelAvatarSrc}" alt="" width="38" height="38" loading="lazy" />`
-    : `<span class="bb-landing-nav__channel-fallback" aria-hidden="true">TG</span>`;
 
   const features = t.landingFeatures.map((f) => `<li>${esc(f)}</li>`).join("");
 
@@ -135,24 +130,6 @@ async function runLanding(lang) {
 
   root.innerHTML = `
     <div class="bb-landing">
-      <nav class="bb-landing-nav glass bb-landing-reveal bb-landing-reveal--fade-only" aria-label="Menu">
-        <a href="#top" class="bb-landing-nav__logo">${logoSvg}</a>
-        <div class="bb-landing-nav__tail">
-          <div class="bb-landing-nav__links">
-            <a href="#about">${esc(t.landingNavAbout)}</a>
-            <a href="#project">${esc(t.landingNavProject)}</a>
-            <a href="#hub-login">${esc(t.landingNavHub)}</a>
-            <a href="#start" class="bb-landing-nav__cta">${esc(t.landingNavCta)}</a>
-          </div>
-          <div class="bb-landing-nav__extras">
-            <a class="bb-landing-nav__channel" href="${esc(meta.channelUrl)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(t.landingChannelAria)}">
-              ${channelNavInner}
-            </a>
-            <a class="bb-landing-nav__login" href="${esc(meta.webappEntryUrl)}" rel="noopener noreferrer">${esc(t.landingLoginTelegram)}</a>
-          </div>
-        </div>
-      </nav>
-
       <header id="top" class="bb-landing-hero">
         <div class="bb-landing-hero__visual-anchor">
           <div class="bb-landing-hero__glow" aria-hidden="true" data-parallax-glow></div>
@@ -168,14 +145,11 @@ async function runLanding(lang) {
           <a class="bb-landing-cta-primary" href="${esc(meta.botUrl)}" rel="noopener noreferrer">
             ${esc(t.landingCta)}
           </a>
-          <a class="bb-landing-cta-secondary" href="${esc(meta.webappEntryUrl)}" rel="noopener noreferrer">
+          <button type="button" class="bb-landing-cta-secondary" data-start-site-login>
             ${esc(t.landingLoginTelegram)}
-          </a>
+          </button>
         </div>
         <p class="bb-landing-cta-sub">${esc(t.landingCtaSub)}</p>
-        <p class="bb-landing-hub-hero-link-wrap">
-          <a href="#hub-login" class="bb-landing-hub-hero-link">${esc(t.landingHubHeroLink)}</a>
-        </p>
         </div>
       </header>
 
@@ -207,7 +181,8 @@ async function runLanding(lang) {
         <p class="bb-landing-hub__lead">${esc(t.landingHubLead)}</p>
         <p class="bb-landing-hub__hint">${esc(t.landingHubHint)}</p>
         <div class="bb-landing-hub__card glass bb-landing-hover-rise">
-          <div id="bb-tg-login-widget" class="bb-landing-hub__widget"></div>
+          <button type="button" class="bb-landing-hub__start" data-start-site-login>${esc(t.landingHubStartLogin)}</button>
+          <p class="bb-landing-hub__status" hidden></p>
         </div>
       </section>
 
@@ -237,14 +212,6 @@ async function runLanding(lang) {
     }
   });
 
-  root.querySelectorAll(".bb-landing-nav__channel-img").forEach((img) => {
-    img.addEventListener("error", () => {
-      const wrap = img.closest(".bb-landing-nav__channel");
-      if (!wrap) return;
-      wrap.innerHTML = `<span class="bb-landing-nav__channel-fallback" aria-hidden="true">TG</span>`;
-    });
-  });
-
   root.querySelectorAll('a[href^="#"]').forEach((link) => {
     link.addEventListener("click", (e) => {
       const id = link.getAttribute("href")?.slice(1);
@@ -262,66 +229,97 @@ async function runLanding(lang) {
   const heroEl = root.querySelector(".bb-landing-hero");
   const stopHero = heroEl ? initLandingHeroMotion(heroEl) : () => {};
 
+  let sitePollTimer = null;
+  const clearSitePoll = () => {
+    if (sitePollTimer != null) {
+      clearInterval(sitePollTimer);
+      sitePollTimer = null;
+    }
+  };
+
   const onPageHide = () => {
+    clearSitePoll();
     stopReveal();
     stopHero();
     window.removeEventListener("pagehide", onPageHide);
   };
   window.addEventListener("pagehide", onPageHide);
 
-  window.__bbTelegramAuth = async (tgUser) => {
-    const tloc = getStrings(lang);
-    try {
-      const res = await fetch("/api/webapp/auth/site", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(tgUser),
-      });
-      let data = {};
-      try {
-        data = await res.json();
-      } catch {
-        data = {};
-      }
-      if (!res.ok) {
-        const d = data?.detail;
-        const msg =
-          res.status === 403
-            ? tloc.notRegistered
-            : res.status === 401
-              ? tloc.authError
-              : typeof d === "string"
-                ? d
-                : tloc.errorLoad;
-        window.alert(msg);
-        return;
-      }
-      localStorage.setItem(SITE_SESSION_STORAGE_KEY, data.accessToken);
-      localStorage.setItem(
-        SITE_USER_STORAGE_KEY,
-        JSON.stringify({
-          first_name: data.user?.first_name ?? tgUser.first_name,
-          last_name: data.user?.last_name ?? tgUser.last_name ?? "",
-          language_code: data.lang === "en" ? "en" : "ru",
-        }),
-      );
-      window.location.replace("/#map");
-      window.location.reload();
-    } catch {
-      window.alert(tloc.errorLoad);
-    }
+  const startBtns = root.querySelectorAll("[data-start-site-login]");
+  const statusEl = root.querySelector(".bb-landing-hub__status");
+
+  const setStartBtnsDisabled = (disabled) => {
+    startBtns.forEach((b) => {
+      b.disabled = disabled;
+    });
   };
 
-  const wMount = root.querySelector("#bb-tg-login-widget");
-  if (wMount && meta.botUsername) {
-    const scr = document.createElement("script");
-    scr.src = "https://telegram.org/js/telegram-widget.js?22";
-    scr.async = true;
-    scr.setAttribute("data-telegram-login", meta.botUsername);
-    scr.setAttribute("data-size", "large");
-    scr.setAttribute("data-radius", "12");
-    scr.setAttribute("data-onauth", "window.__bbTelegramAuth(user)");
-    scr.setAttribute("data-request-access", "write");
-    wMount.appendChild(scr);
-  }
+  const openTelegramFromAuthClick = (url) => {
+    const w = window.open("about:blank", "_blank");
+    if (w) {
+      w.location.href = url;
+      return true;
+    }
+    return false;
+  };
+
+  startBtns.forEach((startBtn) => {
+    startBtn.addEventListener("click", async () => {
+      const tloc = getStrings(lang);
+      clearSitePoll();
+      document.getElementById("hub-login")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      setStartBtnsDisabled(true);
+      if (statusEl) {
+        statusEl.hidden = false;
+        statusEl.textContent = tloc.landingHubPrepare;
+      }
+      try {
+        const linkData = await fetchSiteLoginLink();
+        if (!openTelegramFromAuthClick(linkData.telegramLink)) {
+          clearSitePoll();
+          setStartBtnsDisabled(false);
+          if (statusEl) {
+            statusEl.hidden = false;
+            statusEl.textContent = tloc.landingHubPopupBlocked;
+          }
+          return;
+        }
+        if (statusEl) statusEl.textContent = tloc.landingHubPolling;
+        sitePollTimer = setInterval(async () => {
+          try {
+            const r = await fetchSiteLoginPoll(linkData.loginToken);
+            if (r.status === "ready") {
+              clearSitePoll();
+              localStorage.setItem(SITE_SESSION_STORAGE_KEY, r.accessToken);
+              localStorage.setItem(
+                SITE_USER_STORAGE_KEY,
+                JSON.stringify({
+                  first_name: r.user?.first_name ?? "",
+                  last_name: r.user?.last_name ?? "",
+                  language_code: r.lang === "en" ? "en" : "ru",
+                }),
+              );
+              window.location.replace("/#map");
+              window.location.reload();
+              return;
+            }
+            if (r.status === "expired" || r.status === "not_found") {
+              clearSitePoll();
+              setStartBtnsDisabled(false);
+              if (statusEl) statusEl.textContent = tloc.landingHubExpired;
+            }
+          } catch {
+            /* продолжаем опрос до истечения */
+          }
+        }, 2000);
+      } catch {
+        clearSitePoll();
+        setStartBtnsDisabled(false);
+        if (statusEl) {
+          statusEl.hidden = false;
+          statusEl.textContent = tloc.errorLoad;
+        }
+      }
+    });
+  });
 }

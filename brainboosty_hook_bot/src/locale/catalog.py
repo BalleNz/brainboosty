@@ -20,6 +20,9 @@ RU: dict[str, str] = {
     "START_ALREADY": "👋 С возвращением, {name}!\n\nЯ продолжу присылать «хуки» для мозга 🧠✨\nТвоя ссылка:\n{ref_link}",
     "WEBAPP_OPEN_HINT": "🧠 <b>Neural Map</b> — карта мозга, история прогресса и тест из 7 вопросов прямо в приложении:",
     "BTN_OPEN_WEBAPP": "🚀 Открыть Neural Map",
+    "SITE_LOGIN_OK": "✅ Вход с сайта подтверждён. Вернись в браузер — страница подхватит сессию сама.",
+    "SITE_LOGIN_BAD_TOKEN": "Ссылка для входа с сайта недействительна или устарела. Запроси новую на странице Neural Map Hub.",
+    "SITE_LOGIN_NOT_REGISTERED": "Сначала пройди анкету в этом боте (отправь /start без ссылки), затем снова нажми «Войти» на сайте.",
     "START_UNFINISHED_TEST": "Тест ещё не завершён. Нажми «Продолжить тест» — вернёмся к вопросам (если сессия ещё в памяти бота) или к выбору стиля.",
     "BTN_RESUME_TEST": "▶️ Продолжить тест",
     "BTN_TEST_BACK": "Назад",
@@ -88,7 +91,7 @@ RU: dict[str, str] = {
     "NO_BRAIN_MAP_YET": "Карты ещё нет. Заверши регистрацию: /start",
     "ABOUT_PROJECT": (
         "<b>Кто я</b>\n\n"
-        "Привет, я @androgenautist — <u>автор</u> проекта.\n\n"
+        "Привет, я Дамиан — <u>автор</u> проекта.\n\n"
         "Я сам прошёл путь от <u>тревожного</u> и <u>зажатого</u> человека с туманом в голове — до того, кто сейчас помогает людям возвращать ясность ума, внутреннюю силу, уверенность и сексуальность.\n\n"
         "<blockquote>@androgenautist — я тут делюсь самыми рабочими инсайтами по нейробиологии, гормонам и развитию мозга (и не только.)</blockquote>\n\n"
         "Если ты здесь — значит, ты уже на шаг ближе к своей лучшей версии."
@@ -383,6 +386,9 @@ EN: dict[str, str] = {
     "START_ALREADY": "👋 Welcome back, {name}!\n\nDaily brain hooks 🧠✨\nYour link:\n{ref_link}",
     "WEBAPP_OPEN_HINT": "🧠 <b>Neural Map</b> — brain map, progress history, and the 7-question test in the app:",
     "BTN_OPEN_WEBAPP": "🚀 Open Neural Map",
+    "SITE_LOGIN_OK": "✅ Browser sign-in confirmed. Return to the site—the page will continue automatically.",
+    "SITE_LOGIN_BAD_TOKEN": "That browser sign-in link is invalid or expired. Start again from the Neural Map Hub page.",
+    "SITE_LOGIN_NOT_REGISTERED": "Finish onboarding in this bot first (send /start without a link), then try signing in on the site again.",
     "START_UNFINISHED_TEST": "Your test isn’t finished yet. Tap “Continue test” — we’ll return to the questions (if the bot still has your session) or to style selection.",
     "BTN_RESUME_TEST": "▶️ Continue test",
     "BTN_TEST_BACK": "Back",
@@ -451,7 +457,7 @@ EN: dict[str, str] = {
     "NO_BRAIN_MAP_YET": "No map yet. Finish onboarding: /start",
     "ABOUT_PROJECT": (
         "Who I am\n\n"
-        "Hi, I'm @androgenautist — the author of this project.\n\n"
+        "Hi, I'm Damian — the author of this project.\n\n"
         "I've gone from an anxious, tense guy with low testosterone and brain fog to someone who now helps thousands of men reclaim strength, clarity, and sexuality.\n\n"
         "My channel @androgenautist is where I share the most actionable insights on neurobiology, hormones, and men's development — no marketing fluff or rose-tinted glasses.\n\n"
         "If you're here, you're already one step closer to your best self."

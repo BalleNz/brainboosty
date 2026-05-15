@@ -209,3 +209,13 @@ class Exercise(Base):
         onupdate=func.now(),
         nullable=False,
     )
+
+
+class SiteLoginChallenge(Base):
+    """Одноразовый токен: браузер ждёт, пока тот же аккаунт нажмёт /start в боте."""
+
+    __tablename__ = "site_login_challenges"
+
+    token: Mapped[str] = mapped_column(String(64), primary_key=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    tg_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True, index=True)

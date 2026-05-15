@@ -14,7 +14,7 @@ let profileCache = null;
 function setActiveNav(routeName) {
   const nav = document.getElementById("bb-nav");
   if (!nav) return;
-  nav.querySelectorAll(".bb-nav__btn").forEach((btn) => {
+  nav.querySelectorAll(".bb-nav__btn[data-route]").forEach((btn) => {
     btn.classList.toggle("is-active", btn.dataset.route === routeName);
   });
 }
@@ -55,17 +55,31 @@ function setupNav(lang) {
   if (!nav) return;
   const t = getStrings(lang);
   nav.hidden = false;
+  const logoutBtn = appCtx?.siteToken
+    ? `<button type="button" class="bb-nav__btn bb-nav__btn--logout" data-site-logout>${t.navLogout}</button>`
+    : "";
   nav.innerHTML = `
     <button type="button" class="bb-nav__btn" data-route="map">${t.navMap}</button>
     <button type="button" class="bb-nav__btn" data-route="history">${t.navHistory}</button>
     <button type="button" class="bb-nav__btn" data-route="test">${t.navTest}</button>
     <button type="button" class="bb-nav__btn" data-route="premium">${t.navPremium}</button>
+    ${logoutBtn}
   `;
-  nav.querySelectorAll(".bb-nav__btn").forEach((btn) => {
+  nav.querySelectorAll(".bb-nav__btn[data-route]").forEach((btn) => {
     btn.addEventListener("click", () => {
       hapticLight();
       navigate(btn.dataset.route || "map");
     });
+  });
+  nav.querySelector("[data-site-logout]")?.addEventListener("click", () => {
+    hapticLight();
+    try {
+      localStorage.removeItem(SITE_SESSION_STORAGE_KEY);
+      localStorage.removeItem(SITE_USER_STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
+    window.location.replace("/");
   });
 }
 
@@ -73,11 +87,9 @@ async function renderRoute(route) {
   const root = document.getElementById("bb-root");
   if (!root || !appCtx) return;
 
-  const header = document.getElementById("bb-header");
   const nav = document.getElementById("bb-nav");
   const isExercise = route.name === "exercise";
   document.body.classList.toggle("bb-route-exercise", isExercise);
-  if (header) header.hidden = isExercise;
   if (nav) nav.hidden = isExercise;
 
   if (!isExercise) {
@@ -193,33 +205,8 @@ export async function bootApp(ctx) {
   root.classList.add("bb-root--spa");
 
   const t0 = getStrings(appCtx.lang);
-  const header = document.getElementById("bb-header");
   const headerWordmark = document.getElementById("bb-header-wordmark");
   if (headerWordmark) headerWordmark.textContent = t0.appBrandName;
-  if (header) {
-    header.hidden = false;
-    header.classList.add("is-visible");
-    header.querySelector(".bb-header__logout")?.remove();
-    if (appCtx.siteToken) {
-      header.classList.add("bb-header--with-logout");
-      const lo = document.createElement("button");
-      lo.type = "button";
-      lo.className = "bb-header__logout";
-      lo.textContent = t0.navLogout;
-      lo.addEventListener("click", () => {
-        try {
-          localStorage.removeItem(SITE_SESSION_STORAGE_KEY);
-          localStorage.removeItem(SITE_USER_STORAGE_KEY);
-        } catch {
-          /* ignore */
-        }
-        window.location.replace("/");
-      });
-      header.appendChild(lo);
-    } else {
-      header.classList.remove("bb-header--with-logout");
-    }
-  }
 
   setupNav(appCtx.lang);
   onRouteChange((route) => {

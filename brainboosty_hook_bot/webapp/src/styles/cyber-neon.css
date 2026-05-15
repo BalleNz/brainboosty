@@ -939,10 +939,21 @@ body {
   text-shadow: 0 0 16px rgba(34, 211, 238, 0.5);
 }
 
+.bb-nav__btn--logout {
+  color: #64748b;
+  flex: 0.85;
+  max-width: 72px;
+  font-size: 9px;
+}
+
+.bb-nav__btn--logout:hover {
+  color: #94a3b8;
+}
+
 /* Telegram mini app: same glass / glow language as public landing */
 body.bb-app--telegram .bb-root.bb-root--spa {
   position: relative;
-  padding-top: calc(72px + var(--bb-safe-top));
+  padding-top: calc(12px + var(--bb-safe-top));
   padding-bottom: calc(100px + var(--bb-safe-bottom));
   max-width: 720px;
   margin-left: auto;
@@ -1087,12 +1098,16 @@ body.bb-app--telegram .bb-nav__btn.is-active {
   background: rgba(34, 211, 238, 0.1);
 }
 
+body.bb-app--telegram .bb-nav__btn--logout {
+  background: rgba(148, 163, 184, 0.06);
+}
+
 body.bb-app--telegram .bb-premium-fab {
   bottom: calc(92px + var(--bb-safe-bottom));
 }
 
 body.bb-app--telegram .bb-region {
-  scroll-margin-top: calc(72px + var(--bb-safe-top));
+  scroll-margin-top: calc(16px + var(--bb-safe-top));
 }
 
 .bb-premium-fab {
@@ -1559,13 +1574,20 @@ body.bb-lang-gate-open {
   color: #e2e8f0 !important;
   font-size: 14px;
   font-weight: 600;
+  font-family: inherit;
   text-decoration: none;
   background: rgba(15, 23, 42, 0.45);
+  cursor: pointer;
   transition:
     border-color 0.35s ease,
     color 0.3s ease,
     box-shadow 0.4s ease,
     transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bb-landing-cta-secondary:disabled {
+  opacity: 0.72;
+  cursor: wait;
 }
 
 .bb-landing-cta-secondary:hover {
@@ -1902,10 +1924,41 @@ body.bb-lang-gate-open {
   text-align: center;
 }
 
-.bb-landing-hub__widget {
-  display: flex;
-  justify-content: center;
-  min-height: 48px;
+.bb-landing-hub__start {
+  width: 100%;
+  max-width: 100%;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(103, 232, 249, 0.45);
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.35), rgba(124, 58, 237, 0.28));
+  color: #ecfeff;
+  font-family: var(--bb-font-display, "Space Grotesk", sans-serif);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    filter 0.2s ease,
+    box-shadow 0.25s ease,
+    transform 0.15s ease;
+  box-shadow: 0 0 28px rgba(34, 211, 238, 0.12);
+}
+
+.bb-landing-hub__start:hover:not(:disabled) {
+  filter: brightness(1.06);
+  box-shadow: 0 0 36px rgba(192, 132, 252, 0.14);
+}
+
+.bb-landing-hub__start:disabled {
+  opacity: 0.72;
+  cursor: wait;
+}
+
+.bb-landing-hub__status {
+  margin: 14px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #a5f3fc;
 }
 
 .bb-landing-hub-hero-link-wrap {

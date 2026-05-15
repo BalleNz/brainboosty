@@ -48,3 +48,20 @@ def build_ref_link(inviter_tg_id: int) -> str:
     bot = settings.BOT_USERNAME.lstrip("@")
     payload = quote(f"ref_{inviter_tg_id}")
     return f"https://t.me/{bot}?start={payload}"
+
+
+_SITE_LOGIN_TOKEN_PATTERN = re.compile(r"^site_([a-f0-9]{32})$", re.IGNORECASE)
+
+
+def parse_site_login_token(payload: str | None) -> str | None:
+    """
+    Токен входа с сайта: deep-link /start site_<32 hex>.
+
+    Возвращает сырое hex (32 символа) без префикса site_, либо None.
+    """
+    if not payload:
+        return None
+    m = _SITE_LOGIN_TOKEN_PATTERN.match(payload.strip())
+    if not m:
+        return None
+    return m.group(1).lower()

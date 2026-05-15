@@ -9,16 +9,22 @@ export default {
   landingNavProject: "Проект",
   landingNavHub: "Neural Map Hub",
   landingNavCta: "В бота",
-  landingHubHeroLink: "Уже в BrainBoosty? Войти в Neural Map Hub",
   landingHubTitle: "Neural Map Hub",
   landingHubLead:
     "Карта мозга, тест, история и упражнения — в браузере, тот же аккаунт, что в боте и мини-приложении.",
-  landingHubHint: "Сначала пройди анкету в боте — без профиля вход не откроется.",
+  landingHubHint:
+    "Нужен аккаунт после анкеты в боте. Нажми кнопку — откроется Telegram с командой /start и одноразовым токеном; подтверди «Start», вернись сюда: страница сама авторизуется.",
+  landingHubStartLogin: "Открыть Telegram и подтвердить вход",
+  landingHubPrepare: "Готовим ссылку…",
+  landingHubPolling: "Ждём подтверждение в Telegram… не закрывай эту вкладку.",
+  landingHubExpired: "Ссылка устарела. Нажми кнопку ещё раз.",
+  landingHubPopupBlocked:
+    "Браузер заблокировал окно Telegram. Разреши всплывающие окна для этого сайта и нажми кнопку снова.",
   landingLoginTelegram: "Войти через Telegram",
   landingChannelAria: "Канал в Telegram",
   landingAboutTitle: "Обо мне",
   landingAboutParagraphs: [
-    "Привет, я @androgenautist — автор BrainBoosty.",
+    "Привет, я Дамиан — автор BrainBoosty.",
     "Сам прошёл путь от тревожности, тумана в голове и зажатости — к ясности, внутренней силе и уверенности. Сейчас помогаю другим по нейробиологии, гормонам и когнитивным привычкам.",
     "В канале делюсь рабочими инсайтами без маркетинговой шелухи — только то, что реально меняет состояние.",
   ],
