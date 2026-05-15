@@ -140,8 +140,8 @@ echo "==> URL:   $PUBLIC_URL"
 
 build_webapp
 
-echo "==> Docker: ${COMPOSE[*]} up --build -d"
-"${COMPOSE[@]}" up --build -d
+echo "==> Docker: ${COMPOSE[*]} up --build -d api"
+"${COMPOSE[@]}" up --build -d api
 
 echo ""
 echo "==> Ожидание API (http://127.0.0.1:${API_PORT}/health)…"
@@ -195,7 +195,8 @@ echo "==> Готово — проверьте вручную"
 echo "    Web App:    ${PUBLIC_URL}/webapp/"
 echo "    Tribute:    POST ${PUBLIC_URL}${WEBHOOK_PATH}"
 echo "    BotFather:  домен бота → ${DOMAIN}"
-echo "    Telegram:   /start → «Открыть Neural Map»"
+echo "    Telegram:   webhook ${PUBLIC_URL}${TELEGRAM_WEBHOOK_PATH:-/telegram/webhook}"
+echo "                /start → «Открыть Neural Map» (контейнер api, не bot)"
 echo ""
 echo "    Логи:  ${COMPOSE[*]} logs -f caddy"
 echo "    Стоп:  ${COMPOSE[*]} down"

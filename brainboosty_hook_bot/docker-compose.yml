@@ -1,7 +1,8 @@
-# Локальный/серверный стек: Postgres + Redis (FSM) + FastAPI (вебхуки) + Telegram-бот.
-# Скопируйте .env.example → .env и подставьте BOT_TOKEN / секреты.
+# Postgres + Redis + FastAPI (Web App, Tribute, Telegram webhook).
+# Бот без polling: апдейты → POST https://ваш-домен/telegram/webhook
 #
-# Запуск: docker compose up --build
+# Запуск: docker compose up --build api
+# (сервис bot — только TELEGRAM_UPDATE_MODE=polling)
 # Только миграции: docker compose run --rm migrate
 
 services:
@@ -51,6 +52,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
       migrate:
         condition: service_completed_successfully
     ports:
@@ -79,6 +82,7 @@ services:
     restart: unless-stopped
 
   bot:
+    profiles: ["polling"]
     build: .
     env_file:
       - .env

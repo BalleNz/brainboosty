@@ -31,6 +31,28 @@ sudo sh -c 'echo "127.0.0.1 brainboosty.ai" >> /etc/hosts'
 ./scripts/dev-up.sh local
 ```
 
+## Telegram: режим webhook (по умолчанию)
+
+Апдейты приходят **на ваш сервер** (`POST /telegram/webhook`), а не через long polling.
+
+В `.env`:
+
+```env
+TELEGRAM_UPDATE_MODE=webhook
+TELEGRAM_WEBHOOK_SECRET=случайная_длинная_строка
+WEBAPP_PUBLIC_URL=https://brainboosty.ai
+```
+
+Запуск **без** контейнера `bot`:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.caddy.yml up -d api
+```
+
+При старте `api` один раз вызывает `setWebhook` (нужен доступ к api.telegram.org или `TELEGRAM_PROXY_URL`). Дальше бот работает на входящих HTTPS-запросах от Telegram.
+
+Локальный polling (редко): `TELEGRAM_UPDATE_MODE=polling` и `docker compose --profile polling up bot`.
+
 ## Бот: `TelegramNetworkError: Request timeout`
 
 На части VPS (РФ, некоторые ДЦ) **api.telegram.org** недоступен или режется.

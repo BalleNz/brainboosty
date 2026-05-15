@@ -38,6 +38,22 @@ class Settings(BaseSettings):
         le=300.0,
         description="Таймаут HTTP-запросов к Telegram API (сек.)",
     )
+    TELEGRAM_UPDATE_MODE: str = Field(
+        default="webhook",
+        description="webhook (рекомендуется на VPS/РФ) или polling (только локальная отладка)",
+    )
+    TELEGRAM_WEBHOOK_PATH: str = Field(
+        default="/telegram/webhook",
+        description="POST-путь на FastAPI; полный URL = WEBAPP_PUBLIC_URL + этот путь",
+    )
+    TELEGRAM_WEBHOOK_SECRET: str = Field(
+        default="",
+        description="Секрет X-Telegram-Bot-Api-Secret-Token (задайте случайную строку)",
+    )
+    TELEGRAM_WEBHOOK_URL: str = Field(
+        default="",
+        description="Полный URL вебхука; пусто → {WEBAPP_PUBLIC_URL}{TELEGRAM_WEBHOOK_PATH}",
+    )
     BOT_USERNAME: str = Field(
         default="BrainBoostyHookBot",
         description="Username бота без @ (для реферальных ссылок)",
@@ -202,6 +218,21 @@ class Settings(BaseSettings):
         if "deepseek" in model:
             return self._with_v1_suffix("https://api.deepseek.com")
         return None
+
+    @property
+    def uses_telegram_webhook(self) -> bool:
+        return (self.TELEGRAM_UPDATE_MODE or "webhook").strip().lower() == "webhook"
+
+    @property
+    def telegram_webhook_url(self) -> str:
+        explicit = (self.TELEGRAM_WEBHOOK_URL or "").strip().rstrip("/")
+        if explicit:
+            return explicit
+        base = (self.WEBAPP_PUBLIC_URL or "").strip().rstrip("/")
+        path = (self.TELEGRAM_WEBHOOK_PATH or "/telegram/webhook").strip()
+        if not path.startswith("/"):
+            path = f"/{path}"
+        return f"{base}{path}"
 
     @property
     def premium_channel_url(self) -> str:
