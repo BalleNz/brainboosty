@@ -47,3 +47,18 @@ def resolve_about_photo_path() -> Path | None:
                 return candidate
 
     return None
+
+
+def resolve_channel_avatar_path() -> Path | None:
+    """Аватар ссылки на канал (лендинг без Telegram): дубликат author.* или channel-avatar.*."""
+    assets_dir = package_root() / "assets"
+    for name in (
+        "channel-avatar.jpg",
+        "channel-avatar.jpeg",
+        "channel-avatar.png",
+        "channel-avatar.webp",
+    ):
+        candidate = assets_dir / name
+        if candidate.is_file():
+            return candidate
+    return resolve_about_photo_path()

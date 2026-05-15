@@ -1,7 +1,7 @@
 import { REGION_KEYS } from "../data/regions.js";
 import { getStrings } from "../i18n/index.js";
 import { fetchHistory } from "../api.js";
-import { navigate } from "../router.js";
+import { getRoute, navigate } from "../router.js";
 
 function esc(s) {
   return String(s)
@@ -28,6 +28,7 @@ function formatDate(iso, lang) {
 
 export async function renderHistory(root, ctx, profile) {
   const t = getStrings(profile.lang);
+  const focusZone = getRoute().params.get("zone");
   const wrap = document.createElement("section");
   wrap.className = "bb-section is-visible bb-history";
   wrap.innerHTML = `
@@ -94,7 +95,7 @@ export async function renderHistory(root, ctx, profile) {
       const val = Number(item.scores?.[key] ?? 0).toFixed(1);
       const delta = item.isFirst ? "—" : item.deltas?.[key] ?? "·";
       const row = document.createElement("div");
-      row.className = "bb-history-row";
+      row.className = `bb-history-row${focusZone === key ? " bb-history-row--focus" : ""}`;
       const s1 = document.createElement("span");
       s1.textContent = label;
       const s2 = document.createElement("span");
@@ -116,5 +117,11 @@ export async function renderHistory(root, ctx, profile) {
     card.appendChild(openBtn);
 
     list.appendChild(card);
+  }
+
+  if (focusZone && items.length) {
+    requestAnimationFrame(() => {
+      wrap.querySelector(".bb-history-row--focus")?.scrollIntoView({ block: "center", behavior: "smooth" });
+    });
   }
 }

@@ -28,8 +28,8 @@ async function apiFetch(path, { initData, method = "GET", body } = {}) {
   return res.json();
 }
 
-function normalizeProfile(raw, fallbackLang) {
-  const lang = raw.lang === "en" ? "en" : raw.lang === "ru" ? "ru" : fallbackLang;
+function normalizeProfile(raw) {
+  const lang = raw.lang === "en" ? "en" : "ru";
   const scores = {};
   for (const k of REGION_KEYS) {
     scores[k] = Number(raw.scores?.[k] ?? 0);
@@ -69,7 +69,7 @@ export async function fetchLandingMeta() {
 
 export async function fetchBrainProfile(ctx) {
   const data = await apiFetch("/profile", { initData: ctx.initData });
-  return normalizeProfile(data, ctx.lang);
+  return normalizeProfile(data);
 }
 
 export async function fetchHistory(ctx) {
@@ -89,5 +89,5 @@ export async function submitTest(ctx, { variant, answers }) {
     method: "POST",
     body: payload,
   });
-  return normalizeProfile(data.profile, ctx.lang);
+  return normalizeProfile(data.profile);
 }

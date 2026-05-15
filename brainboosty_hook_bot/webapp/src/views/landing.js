@@ -1,6 +1,8 @@
 import brainImg from "@bb-assets/full-glowing-brain.png";
 import logoSvg from "@bb-assets/pdf/logo.svg?raw";
 import { fetchLandingMeta } from "../api.js";
+import { initLandingHeroMotion } from "../lib/landing-hero-motion.js";
+import { initLandingReveal } from "../lib/landing-reveal.js";
 import { getStrings } from "../i18n/index.js";
 
 function esc(s) {
@@ -108,44 +110,72 @@ async function runLanding(lang) {
 
   let meta = {
     botUrl: "https://t.me/BRAINBOOSTY?start=site",
+    webappEntryUrl: "https://t.me/BRAINBOOSTY?start=webapp",
     channelUrl: "https://t.me/androgenautist",
     hasAuthorPhoto: false,
+    hasChannelAvatar: false,
   };
   try {
-    meta = await fetchLandingMeta();
+    meta = { ...meta, ...(await fetchLandingMeta()) };
   } catch {
     /* defaults */
   }
 
   const photoSrc = "/api/webapp/landing/photo";
+  const channelAvatarSrc = "/api/webapp/landing/channel-avatar";
+  const channelNavInner = meta.hasChannelAvatar
+    ? `<img class="bb-landing-nav__channel-img" src="${channelAvatarSrc}" alt="" width="38" height="38" loading="lazy" />`
+    : `<span class="bb-landing-nav__channel-fallback" aria-hidden="true">TG</span>`;
+
   const features = t.landingFeatures.map((f) => `<li>${esc(f)}</li>`).join("");
+
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   root.innerHTML = `
     <div class="bb-landing">
-      <nav class="bb-landing-nav glass" aria-label="Menu">
+      <nav class="bb-landing-nav glass bb-landing-reveal bb-landing-reveal--fade-only" aria-label="Menu">
         <a href="#top" class="bb-landing-nav__logo">${logoSvg}</a>
-        <div class="bb-landing-nav__links">
-          <a href="#about">${esc(t.landingNavAbout)}</a>
-          <a href="#project">${esc(t.landingNavProject)}</a>
-          <a href="#start" class="bb-landing-nav__cta">${esc(t.landingNavCta)}</a>
+        <div class="bb-landing-nav__tail">
+          <div class="bb-landing-nav__links">
+            <a href="#about">${esc(t.landingNavAbout)}</a>
+            <a href="#project">${esc(t.landingNavProject)}</a>
+            <a href="#start" class="bb-landing-nav__cta">${esc(t.landingNavCta)}</a>
+          </div>
+          <div class="bb-landing-nav__extras">
+            <a class="bb-landing-nav__channel" href="${esc(meta.channelUrl)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(t.landingChannelAria)}">
+              ${channelNavInner}
+            </a>
+            <a class="bb-landing-nav__login" href="${esc(meta.webappEntryUrl)}" rel="noopener noreferrer">${esc(t.landingLoginTelegram)}</a>
+          </div>
         </div>
       </nav>
 
       <header id="top" class="bb-landing-hero">
-        <div class="bb-landing-hero__glow" aria-hidden="true"></div>
-        <img class="bb-landing-hero__brain" src="${brainImg}" alt="" width="280" height="280" />
+        <div class="bb-landing-hero__visual-anchor">
+          <div class="bb-landing-hero__glow" aria-hidden="true" data-parallax-glow></div>
+          <div class="bb-landing-hero__brain-layer" data-parallax-brain>
+            <img class="bb-landing-hero__brain" src="${brainImg}" alt="" width="280" height="280" decoding="async" />
+          </div>
+        </div>
+        <div class="bb-landing-hero__copy bb-landing-reveal">
         <p class="bb-landing-kicker">${esc(t.landingKicker)}</p>
         <h1 class="bb-landing-title neon-zone-title">${esc(t.landingTitle)}</h1>
         <p class="bb-landing-tagline">${esc(t.landingTagline)}</p>
-        <a class="bb-landing-cta-primary" href="${esc(meta.botUrl)}" rel="noopener noreferrer">
-          ${esc(t.landingCta)}
-        </a>
+        <div class="bb-landing-hero__ctas">
+          <a class="bb-landing-cta-primary" href="${esc(meta.botUrl)}" rel="noopener noreferrer">
+            ${esc(t.landingCta)}
+          </a>
+          <a class="bb-landing-cta-secondary" href="${esc(meta.webappEntryUrl)}" rel="noopener noreferrer">
+            ${esc(t.landingLoginTelegram)}
+          </a>
+        </div>
         <p class="bb-landing-cta-sub">${esc(t.landingCtaSub)}</p>
+        </div>
       </header>
 
-      <section id="about" class="bb-landing-section">
+      <section id="about" class="bb-landing-section bb-landing-reveal">
         <h2 class="bb-landing-section__title">${esc(t.landingAboutTitle)}</h2>
-        <article class="bb-landing-about glass">
+        <article class="bb-landing-about glass bb-landing-hover-rise">
           <div class="bb-landing-about__photo-wrap">
             <img class="bb-landing-about__photo" src="${photoSrc}" alt="" width="320" height="320" loading="lazy" data-fallback-src="${brainImg}" />
             <div class="bb-landing-about__ring" aria-hidden="true"></div>
@@ -159,14 +189,14 @@ async function runLanding(lang) {
         </article>
       </section>
 
-      <section id="project" class="bb-landing-section">
+      <section id="project" class="bb-landing-section bb-landing-reveal">
         <h2 class="bb-landing-section__title">${esc(t.landingProjectTitle)}</h2>
         <ul class="bb-landing-features">${features}</ul>
         <p class="bb-landing-disclaimer">${esc(t.footer)}</p>
       </section>
 
-      <section id="start" class="bb-landing-section bb-landing-final">
-        <div class="glass bb-landing-final__card">
+      <section id="start" class="bb-landing-section bb-landing-final bb-landing-reveal">
+        <div class="glass bb-landing-final__card bb-landing-hover-rise">
           <h2 class="bb-landing-final__title">${esc(t.landingFinalTitle)}</h2>
           <p class="bb-landing-final__sub">${esc(t.landingFinalSub)}</p>
           <a class="bb-landing-cta-primary bb-landing-cta-primary--lg" href="${esc(meta.botUrl)}" rel="noopener noreferrer">
@@ -191,6 +221,14 @@ async function runLanding(lang) {
     }
   });
 
+  root.querySelectorAll(".bb-landing-nav__channel-img").forEach((img) => {
+    img.addEventListener("error", () => {
+      const wrap = img.closest(".bb-landing-nav__channel");
+      if (!wrap) return;
+      wrap.innerHTML = `<span class="bb-landing-nav__channel-fallback" aria-hidden="true">TG</span>`;
+    });
+  });
+
   root.querySelectorAll('a[href^="#"]').forEach((link) => {
     link.addEventListener("click", (e) => {
       const id = link.getAttribute("href")?.slice(1);
@@ -202,4 +240,16 @@ async function runLanding(lang) {
       }
     });
   });
+
+  const landingEl = root.querySelector(".bb-landing");
+  const stopReveal = initLandingReveal(landingEl || root, { reducedMotion });
+  const heroEl = root.querySelector(".bb-landing-hero");
+  const stopHero = heroEl ? initLandingHeroMotion(heroEl) : () => {};
+
+  const onPageHide = () => {
+    stopReveal();
+    stopHero();
+    window.removeEventListener("pagehide", onPageHide);
+  };
+  window.addEventListener("pagehide", onPageHide);
 }

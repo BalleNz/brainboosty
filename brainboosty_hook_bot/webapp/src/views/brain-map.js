@@ -1,14 +1,17 @@
-import logoSvg from "@bb-assets/pdf/logo.svg?raw";
+import { brainInteractiveSectionHtml } from "../components/brain-map-svg.js";
+import { openBrainZoneDrawer } from "../components/brain-zone-drawer.js";
 import { coverSectionHtml } from "../components/cover.js";
 import { regionCardHtml } from "../components/region-card.js";
 import { REGION_KEYS } from "../data/regions.js";
 import { getStrings } from "../i18n/index.js";
+import { hapticLight } from "../telegram.js";
 
 /**
  * @param {HTMLElement} root
- * @param {import('../api.js').fetchBrainProfile extends (...args:any)=>Promise<infer P> ? P : never} profile
+ * @param {import('../api.js').normalizeProfile extends (x:any)=>infer P ? P : never} profile
+ * @param {{ params: URLSearchParams }} [route]
  */
-export function renderBrainMap(root, profile) {
+export function renderBrainMap(root, profile, route) {
   const t = getStrings(profile.lang);
   const displayName = profile.userDisplayName || (profile.lang === "en" ? "Guest" : "Гость");
 
@@ -18,6 +21,7 @@ export function renderBrainMap(root, profile) {
       neuroScore: profile.neuroScore,
       connectivity: profile.connectivity,
     }),
+    brainInteractiveSectionHtml(t),
     ...REGION_KEYS.map((key) =>
       regionCardHtml(t, key, {
         main: profile.scores[key],
@@ -28,13 +32,70 @@ export function renderBrainMap(root, profile) {
   ];
 
   root.innerHTML = sections.join("\n");
-  const headerLogo = document.getElementById("bb-header-logo");
-  if (headerLogo) {
-    headerLogo.innerHTML = logoSvg;
-  }
   setupRevealAnimations(root);
   animateNeuroScore(root);
   animateBars(root);
+  setupInteractiveBrain(root, profile, route);
+}
+
+/**
+ * @param {HTMLElement} root
+ * @param {import('../api.js').normalizeProfile extends (x:any)=>infer P ? P : never} profile
+ * @param {{ params: URLSearchParams } | undefined} route
+ */
+function setupInteractiveBrain(root, profile, route) {
+  const wrap = root.querySelector(".bb-interactive-brain");
+  if (!wrap) return;
+
+  const setHot = (key) => {
+    wrap.querySelectorAll(".bb-brain-zone").forEach((p) => {
+      const id = p.dataset.region;
+      p.classList.toggle("is-hot", Boolean(key) && id === key);
+    });
+  };
+
+  const openZone = (key) => {
+    if (!key || !REGION_KEYS.includes(key)) return;
+    setHot(key);
+    openBrainZoneDrawer(profile, key, {
+      onClose: () => setHot(null),
+    });
+  };
+
+  wrap.querySelectorAll(".bb-brain-zone").forEach((path) => {
+    path.addEventListener("pointerenter", () => setHot(path.dataset.region || ""));
+    path.addEventListener("pointerleave", (e) => {
+      const next = e.relatedTarget;
+      if (
+        next &&
+        wrap.contains(next) &&
+        /** @type {Element} */ (next).classList?.contains("bb-brain-zone")
+      ) {
+        return;
+      }
+      setHot(null);
+    });
+    path.addEventListener("click", (e) => {
+      e.preventDefault();
+      const key = path.dataset.region;
+      if (!key) return;
+      hapticLight();
+      openZone(key);
+    });
+    path.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      const key = path.dataset.region;
+      if (!key) return;
+      hapticLight();
+      openZone(key);
+    });
+  });
+
+  const dz = route?.params?.get?.("zone");
+  if (dz && REGION_KEYS.includes(dz)) {
+    requestAnimationFrame(() => openZone(dz));
+  }
 }
 
 function setupRevealAnimations(root) {

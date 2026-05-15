@@ -8,6 +8,8 @@ export default {
   landingNavAbout: "About me",
   landingNavProject: "The project",
   landingNavCta: "Open bot",
+  landingLoginTelegram: "Log in with Telegram",
+  landingChannelAria: "Telegram channel",
   landingAboutTitle: "About me",
   landingAboutParagraphs: [
     "Hi, I'm @androgenautist — creator of BrainBoosty.",
@@ -76,5 +78,71 @@ export default {
     temporoparietal_junction: "Temporoparietal junction",
     amygdala: "Amygdala",
     frontal_gyrus: "Frontal gyrus",
+  },
+  interactiveBrainKicker: "Interactive map",
+  interactiveBrainHint: "Tap a region — insight, progress, and your next move.",
+  interactiveBrainAria: "Interactive brain region map",
+  zoneDrawerCloseAria: "Close",
+  zoneCurrentLevel: "Current level",
+  zoneWhyTitle: "Why it matters",
+  zoneBoostCta: "Boost this zone",
+  zoneUnlockNote:
+    "Full access unlocks personal drills per zone, progress tracking, and training history.",
+  zoneOpenHistory: "History for this zone",
+  zoneExercisesHeading: "Zone exercises",
+  zoneExerciseListCap: "In your program for this zone:",
+  zoneExercisePlaceholder: "More protocols are on the way — your full access already includes the base track.",
+  zonePaidHint: "More protocols and metrics tailored to your profile are coming next.",
+  zoneWhy: {
+    prefrontal_cortex:
+      "Planning, impulse control, and focus. A stronger PFC means clearer decisions and fewer spirals.",
+    brain_lobes:
+      "Integrates imagery, language, and space. Balance here improves how you read reality and old patterns.",
+    insular_cortex:
+      "Interoception and emotional regulation — the bridge between body state and action.",
+    temporoparietal_junction:
+      "Perspective, attention, and social context — helps you update stories instead of locking in one view.",
+    amygdala:
+      "Threat and reward signaling. Tuning it reduces false alarms while keeping healthy drive.",
+    frontal_gyrus:
+      "Links effort, intention, and follow-through — trained with sequenced action and repetition.",
+  },
+  zoneExercises: {
+    prefrontal_cortex: [
+      {
+        title: "90-second stop frame",
+        body: "Before an impulsive reply, state one value and one tiny next step out loud.",
+      },
+    ],
+    brain_lobes: [
+      {
+        title: "Sensory anchor",
+        body: "For 30s describe one object: color, texture, sound — no judgments.",
+      },
+    ],
+    insular_cortex: [
+      {
+        title: "Rib-cage breath",
+        body: "4 cycles: inhale 4 counts, soft pause, exhale 6 — attention on rib expansion.",
+      },
+    ],
+    temporoparietal_junction: [
+      {
+        title: "Perspective swap",
+        body: "Phrase the same situation two neutral ways — without «I'm right» framing.",
+      },
+    ],
+    amygdala: [
+      {
+        title: "Tolerance window",
+        body: "2 min: note 3 neutral facts around a trigger, then one action 2% softer.",
+      },
+    ],
+    frontal_gyrus: [
+      {
+        title: "Three-step chain",
+        body: "Write three micro-steps for one goal today; track completion only.",
+      },
+    ],
   },
 };

@@ -1,4 +1,3 @@
-import logoSvg from "@bb-assets/pdf/logo.svg?raw";
 import { fetchBrainProfile } from "./api.js";
 import { getStrings } from "./i18n/index.js";
 import { getRoute, navigate, onRouteChange, startRouter } from "./router.js";
@@ -19,10 +18,26 @@ function setActiveNav(routeName) {
   });
 }
 
+function applyAppLang(lang) {
+  if (!appCtx) return;
+  const next = lang === "en" ? "en" : "ru";
+  if (appCtx.lang === next) return;
+  appCtx.lang = next;
+  document.documentElement.lang = next;
+  const t = getStrings(next);
+  const wordmark = document.getElementById("bb-header-wordmark");
+  if (wordmark) wordmark.textContent = t.appBrandName;
+  setupNav(next);
+}
+
+function syncLangFromProfile(profile) {
+  if (profile?.lang) applyAppLang(profile.lang);
+}
+
 function setupPremiumFab(profile) {
   document.querySelector(".bb-premium-fab")?.remove();
   if (profile.paid || !profile.tributeUrl) return;
-  const t = getStrings(profile.lang);
+  const t = getStrings(appCtx?.lang || profile.lang);
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "bb-premium-fab";
@@ -60,23 +75,33 @@ async function renderRoute(route) {
   setActiveNav(route.name);
 
   if (route.name === "premium") {
-    if (!profileCache) profileCache = await fetchBrainProfile(appCtx);
+    if (!profileCache) {
+      profileCache = await fetchBrainProfile(appCtx);
+      syncLangFromProfile(profileCache);
+    }
     renderPremium(root, profileCache);
     return;
   }
 
   if (route.name === "test") {
-    if (!profileCache) profileCache = await fetchBrainProfile(appCtx);
+    if (!profileCache) {
+      profileCache = await fetchBrainProfile(appCtx);
+      syncLangFromProfile(profileCache);
+    }
     await renderTest(root, appCtx, profileCache, {
       onProfile: (p) => {
         profileCache = p;
+        syncLangFromProfile(p);
       },
     });
     return;
   }
 
   if (route.name === "history") {
-    if (!profileCache) profileCache = await fetchBrainProfile(appCtx);
+    if (!profileCache) {
+      profileCache = await fetchBrainProfile(appCtx);
+      syncLangFromProfile(profileCache);
+    }
     await renderHistory(root, appCtx, profileCache);
     return;
   }
@@ -90,6 +115,7 @@ async function renderRoute(route) {
       </div>`;
     try {
       profileCache = await fetchBrainProfile(appCtx);
+      syncLangFromProfile(profileCache);
       if (appCtx.user?.first_name && !profileCache.userDisplayName) {
         profileCache.userDisplayName = [appCtx.user.first_name, appCtx.user.last_name]
           .filter(Boolean)
@@ -112,12 +138,12 @@ async function renderRoute(route) {
     return;
   }
 
-  renderBrainMap(root, profileCache);
+  renderBrainMap(root, profileCache, route);
   setupPremiumFab(profileCache);
 }
 
 export async function bootApp(ctx) {
-  appCtx = ctx;
+  appCtx = { ...ctx, lang: "ru" };
   profileCache = null;
 
   document.body.classList.add("bb-app--telegram");
@@ -127,20 +153,16 @@ export async function bootApp(ctx) {
 
   root.classList.add("bb-root--spa");
 
-  const t0 = getStrings(ctx.lang);
+  const t0 = getStrings(appCtx.lang);
   const header = document.getElementById("bb-header");
   const headerWordmark = document.getElementById("bb-header-wordmark");
-  const headerTitle = document.getElementById("bb-header-title");
-  const headerLogo = document.getElementById("bb-header-logo");
   if (headerWordmark) headerWordmark.textContent = t0.appBrandName;
-  if (headerTitle) headerTitle.textContent = t0.appHeaderTitle;
-  if (headerLogo) headerLogo.innerHTML = logoSvg;
   if (header) {
     header.hidden = false;
     header.classList.add("is-visible");
   }
 
-  setupNav(ctx.lang);
+  setupNav(appCtx.lang);
   onRouteChange((route) => {
     renderRoute(route).catch(() => {});
   });

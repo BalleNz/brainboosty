@@ -16,7 +16,7 @@ from brainboosty_hook_bot.src.config.config import settings
 from brainboosty_hook_bot.src.database.session import get_session
 from brainboosty_hook_bot.src.locale import normalize_lang
 from brainboosty_hook_bot.src.web.webapp_auth import WebAppAuthError, tg_user_id_from_init, validate_init_data
-from brainboosty_hook_bot.src.services.about_photo import resolve_about_photo_path
+from brainboosty_hook_bot.src.services.about_photo import resolve_about_photo_path, resolve_channel_avatar_path
 from brainboosty_hook_bot.src.web.webapp_service import (
     cognitive_questions_payload,
     get_user_by_tg_id,
@@ -78,12 +78,7 @@ async def _resolve_user(
     if user is None:
         raise HTTPException(status_code=403, detail="not_registered")
 
-    user_obj = parsed.get("user")
     lang = normalize_lang(user.locale or "ru")
-    if isinstance(user_obj, dict) and user_obj.get("language_code"):
-        lc = str(user_obj["language_code"])
-        if lc.startswith("en"):
-            lang = "en"
 
     return user, lang
 
@@ -99,9 +94,11 @@ async def webapp_landing() -> dict[str, str | bool]:
     bot = settings.BOT_USERNAME.strip().lstrip("@")
     return {
         "botUrl": f"https://t.me/{bot}?start=site",
+        "webappEntryUrl": f"https://t.me/{bot}?start=webapp",
         "botUsername": bot,
         "channelUrl": settings.premium_channel_url,
         "hasAuthorPhoto": resolve_about_photo_path() is not None,
+        "hasChannelAvatar": resolve_channel_avatar_path() is not None,
         "webappUrl": webapp_public_url(),
     }
 
@@ -111,6 +108,21 @@ async def webapp_landing_photo() -> FileResponse:
     path = resolve_about_photo_path()
     if path is None:
         raise HTTPException(status_code=404, detail="photo_not_found")
+    suffix = path.suffix.lower()
+    if suffix in {".jpg", ".jpeg"}:
+        media = "image/jpeg"
+    elif suffix == ".webp":
+        media = "image/webp"
+    else:
+        media = "image/png"
+    return FileResponse(path, media_type=media)
+
+
+@router.get("/landing/channel-avatar")
+async def webapp_landing_channel_avatar() -> FileResponse:
+    path = resolve_channel_avatar_path()
+    if path is None:
+        raise HTTPException(status_code=404, detail="channel_avatar_not_found")
     suffix = path.suffix.lower()
     if suffix in {".jpg", ".jpeg"}:
         media = "image/jpeg"
