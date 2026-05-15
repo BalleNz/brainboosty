@@ -51,19 +51,6 @@ function setupRevealAnimations(root) {
     { root: null, rootMargin: "0px 0px -8% 0px", threshold: 0.08 },
   );
   sections.forEach((el) => observer.observe(el));
-
-  const header = document.getElementById("bb-header");
-  const cover = root.querySelector('[data-section="cover"]');
-  if (header && cover) {
-    const headerObs = new IntersectionObserver(
-      ([entry]) => {
-        header.hidden = false;
-        header.classList.toggle("is-visible", !entry.isIntersecting);
-      },
-      { threshold: 0.15 },
-    );
-    headerObs.observe(cover);
-  }
 }
 
 function animateNeuroScore(root) {

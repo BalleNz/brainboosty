@@ -43,8 +43,11 @@ class Settings(BaseSettings):
         description="webhook (рекомендуется на VPS/РФ) или polling (только локальная отладка)",
     )
     TELEGRAM_WEBHOOK_PATH: str = Field(
-        default="/telegram/webhook",
-        description="POST-путь на FastAPI; полный URL = WEBAPP_PUBLIC_URL + этот путь",
+        default="/",
+        description=(
+            "POST-путь вебхука на FastAPI. По умолчанию «/»: тот же URL что и главная "
+            "(GET / → редирект в Web App, POST / — только Telegram). Иначе задайте, напр. /telegram/webhook."
+        ),
     )
     TELEGRAM_WEBHOOK_SECRET: str = Field(
         default="",
@@ -232,7 +235,9 @@ class Settings(BaseSettings):
         if explicit:
             return explicit
         base = (self.WEBAPP_PUBLIC_URL or "").strip().rstrip("/")
-        path = (self.TELEGRAM_WEBHOOK_PATH or "/telegram/webhook").strip()
+        path = (self.TELEGRAM_WEBHOOK_PATH or "/").strip()
+        if not path:
+            path = "/"
         if not path.startswith("/"):
             path = f"/{path}"
         return f"{base}{path}"

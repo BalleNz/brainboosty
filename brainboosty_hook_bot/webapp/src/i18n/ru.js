@@ -48,6 +48,7 @@ export default {
   navHistory: "История",
   navTest: "Тест",
   navPremium: "Доступ",
+  appHeaderTitle: "Neural Map",
   loading: "Загружаем нейропрофиль…",
   computing: "Считаем твою карту мозга…",
   errorLoad: "Не удалось загрузить данные. Попробуйте позже.",

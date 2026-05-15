@@ -48,6 +48,7 @@ export default {
   navHistory: "History",
   navTest: "Test",
   navPremium: "Access",
+  appHeaderTitle: "Neural Map",
   loading: "Loading your neuro profile…",
   computing: "Computing your brain map…",
   errorLoad: "Could not load data. Please try again later.",

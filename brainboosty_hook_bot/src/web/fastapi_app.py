@@ -70,7 +70,7 @@ mount_webapp_static(app)
 
 @app.get("/")
 async def root() -> RedirectResponse:
-    """Корень домена → Web App (SPA живёт в /webapp/)."""
+    """Сайт на главном домене: браузер → Web App. POST на этот же путь — только Telegram (см. TELEGRAM_WEBHOOK_PATH)."""
     return RedirectResponse(url="/webapp/", status_code=302)
 
 

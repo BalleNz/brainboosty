@@ -1,3 +1,4 @@
+import logoSvg from "@bb-assets/pdf/logo.svg?raw";
 import { fetchBrainProfile } from "./api.js";
 import { getStrings } from "./i18n/index.js";
 import { getRoute, navigate, onRouteChange, startRouter } from "./router.js";
@@ -119,8 +120,23 @@ export async function bootApp(ctx) {
   appCtx = ctx;
   profileCache = null;
 
+  document.body.classList.add("bb-app--telegram");
+
   const root = document.getElementById("bb-root");
   if (!root) return;
+
+  root.classList.add("bb-root--spa");
+
+  const t0 = getStrings(ctx.lang);
+  const header = document.getElementById("bb-header");
+  const headerTitle = document.getElementById("bb-header-title");
+  const headerLogo = document.getElementById("bb-header-logo");
+  if (headerTitle) headerTitle.textContent = t0.appHeaderTitle;
+  if (headerLogo) headerLogo.innerHTML = logoSvg;
+  if (header) {
+    header.hidden = false;
+    header.classList.add("is-visible");
+  }
 
   setupNav(ctx.lang);
   onRouteChange((route) => {

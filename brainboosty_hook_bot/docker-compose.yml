@@ -1,5 +1,5 @@
 # Postgres + Redis + FastAPI (Web App, Tribute, Telegram webhook).
-# Бот без polling: апдейты → POST https://ваш-домен/telegram/webhook
+# Бот без polling: апдейты → POST https://ваш-домен/ (по умолчанию TELEGRAM_WEBHOOK_PATH=/)
 #
 # Запуск: docker compose up --build api
 # (сервис bot — только TELEGRAM_UPDATE_MODE=polling)

@@ -559,6 +559,125 @@ body {
   text-shadow: 0 0 16px rgba(34, 211, 238, 0.5);
 }
 
+/* Telegram mini app: same glass / glow language as public landing */
+body.bb-app--telegram .bb-root.bb-root--spa {
+  position: relative;
+  padding-top: calc(72px + var(--bb-safe-top));
+  padding-bottom: calc(100px + var(--bb-safe-bottom));
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+body.bb-app--telegram .bb-root.bb-root--spa::before {
+  content: "";
+  position: fixed;
+  left: 50%;
+  top: min(22vh, 160px);
+  width: min(120vw, 480px);
+  height: min(120vw, 480px);
+  transform: translate(-50%, -42%);
+  background:
+    radial-gradient(circle, rgba(34, 211, 238, 0.12), transparent 68%),
+    radial-gradient(circle at 32% 38%, rgba(167, 139, 250, 0.08), transparent 58%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+body.bb-app--telegram .bb-root.bb-root--spa > * {
+  position: relative;
+  z-index: 1;
+}
+
+.bb-header.bb-app-top-nav {
+  position: fixed;
+  top: calc(10px + var(--bb-safe-top));
+  left: 16px;
+  right: 16px;
+  width: auto;
+  max-width: 680px;
+  margin-left: auto;
+  margin-right: auto;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  transform: none !important;
+  opacity: 1 !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.bb-header.bb-app-top-nav .bb-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.bb-header.bb-app-top-nav .bb-header__logo {
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.bb-header.bb-app-top-nav .bb-header__logo svg {
+  height: 100%;
+  width: auto;
+  display: block;
+}
+
+.bb-header.bb-app-top-nav .bb-header__title {
+  font-family: var(--bb-font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(207, 250, 254, 0.92);
+  text-shadow: 0 0 18px rgba(34, 211, 238, 0.35);
+}
+
+body.bb-app--telegram .bb-nav {
+  left: 16px;
+  right: 16px;
+  max-width: 680px;
+  margin-left: auto;
+  margin-right: auto;
+  bottom: calc(12px + var(--bb-safe-bottom));
+  padding: 10px 8px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+body.bb-app--telegram .bb-nav__btn {
+  border-radius: 12px;
+  transition:
+    color 0.2s,
+    background 0.2s,
+    text-shadow 0.2s;
+}
+
+body.bb-app--telegram .bb-nav__btn.is-active {
+  background: rgba(34, 211, 238, 0.1);
+}
+
+body.bb-app--telegram .bb-premium-fab {
+  bottom: calc(92px + var(--bb-safe-bottom));
+}
+
+body.bb-app--telegram .bb-region {
+  scroll-margin-top: calc(72px + var(--bb-safe-top));
+}
+
 .bb-premium-fab {
   position: fixed;
   right: 16px;
@@ -1015,8 +1134,9 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .bb-section,
   .pdf-bar-gradient,
-  .bb-header,
-  .bb-landing-cta-primary {
+  .bb-header:not(.bb-app-top-nav),
+  .bb-landing-cta-primary,
+  body.bb-app--telegram .bb-nav__btn {
     transition: none !important;
     animation: none !important;
   }
