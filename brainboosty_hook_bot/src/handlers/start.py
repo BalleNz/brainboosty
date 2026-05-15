@@ -21,6 +21,7 @@ from brainboosty_hook_bot.src.locale import normalize_lang, question_skill_messa
 from brainboosty_hook_bot.src.services.subscription_service import user_has_paid_access
 from brainboosty_hook_bot.src.utils.flow_chat import flow_remember
 from brainboosty_hook_bot.src.utils.helpers import build_ref_link, parse_start_payload
+from brainboosty_hook_bot.src.web.webapp_link import send_webapp_link
 
 router = Router(name="start")
 
@@ -170,6 +171,7 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession, 
                 show_retest=user_has_paid_access(user),
             ),
         )
+        await send_webapp_link(message, lang)
         return
 
     if await _resume_questionnaire_if_possible(

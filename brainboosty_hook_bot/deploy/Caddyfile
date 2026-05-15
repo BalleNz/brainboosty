@@ -1,0 +1,15 @@
+# HTTPS для Web App (Let's Encrypt). Домен из WEBAPP_DOMAIN в docker-compose.caddy.yml.
+# Порты 80/443 на хосте должны быть проброшены на машину с Docker.
+
+{
+	email {$ACME_EMAIL}
+}
+
+{$WEBAPP_DOMAIN:brainboosty.ai} {
+	encode gzip zstd
+	reverse_proxy api:8000
+}
+
+www.{$WEBAPP_DOMAIN:brainboosty.ai} {
+	redir https://{$WEBAPP_DOMAIN:brainboosty.ai}{uri} permanent
+}

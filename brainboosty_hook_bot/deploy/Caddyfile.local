@@ -1,0 +1,14 @@
+# Локальная отладка в браузере (Telegram с телефона так НЕ откроет — нужен публичный HTTPS).
+# 1) sudo sh -c 'echo "127.0.0.1 brainboosty.ai www.brainboosty.ai" >> /etc/hosts'
+# 2) docker compose -f docker-compose.yml -f docker-compose.caddy.local.yml up -d
+# 3) https://brainboosty.ai/webapp/ (самоподписанный сертификат — в браузере «Доверять»)
+
+{
+	local_certs
+}
+
+brainboosty.ai, www.brainboosty.ai {
+	encode gzip
+	reverse_proxy api:8000
+	tls internal
+}

@@ -1,0 +1,25 @@
+# Публичный HTTPS: docker compose -f docker-compose.yml -f docker-compose.caddy.yml up -d
+# См. deploy/WEBAPP-DEPLOY.md
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      WEBAPP_DOMAIN: ${WEBAPP_DOMAIN:-brainboosty.ai}
+      ACME_EMAIL: ${ACME_EMAIL:-}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  caddy_data:
+  caddy_config:

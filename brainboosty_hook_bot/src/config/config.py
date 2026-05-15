@@ -56,6 +56,14 @@ class Settings(BaseSettings):
     API_HOST: str = Field(default="0.0.0.0", description="Хост bind для uvicorn (см. docker-compose)")
     API_PORT: int = Field(default=8000, ge=1, le=65535, description="Порт uvicorn внутри контейнера api")
 
+    WEBAPP_PUBLIC_URL: str = Field(
+        default="",
+        description=(
+            "Публичный HTTPS URL API без слэша на конце (например https://api.example.com). "
+            "Кнопка Web App в боте: {WEBAPP_PUBLIC_URL}/webapp/"
+        ),
+    )
+
     DAILY_HOOK_HOUR: int = Field(default=10, ge=0, le=23)
     DAILY_HOOK_MINUTE: int = Field(default=0, ge=0, le=59)
 

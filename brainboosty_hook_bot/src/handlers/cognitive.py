@@ -32,6 +32,7 @@ from brainboosty_hook_bot.src.services.brain_result_delivery import deliver_brai
 from brainboosty_hook_bot.src.services.subscription_service import open_discount_window, user_has_paid_access
 from brainboosty_hook_bot.src.utils.flow_chat import delete_one, flow_remember, flow_wipe, try_delete_user_message
 from brainboosty_hook_bot.src.utils.helpers import build_ref_link
+from brainboosty_hook_bot.src.web.webapp_link import send_webapp_link_to_chat
 
 logger = logging.getLogger(__name__)
 
@@ -485,3 +486,4 @@ async def _finalize(
             f"{t(lang, 'RETEST_SAVED')}\n\n{t(lang, 'REF_LINK_LABEL')}\n{ref_link}",
             reply_markup=main_reply_kb(lang, paid_access=paid, show_retest=show_retest),
         )
+    await send_webapp_link_to_chat(bot, chat_id, lang)

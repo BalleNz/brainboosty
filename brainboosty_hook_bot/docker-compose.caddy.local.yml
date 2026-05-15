@@ -1,0 +1,21 @@
+# Локальный Caddy с tls internal + /etc/hosts (без Let's Encrypt).
+# docker compose -f docker-compose.yml -f docker-compose.caddy.local.yml up -d
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile.local:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  caddy_data:
+  caddy_config:

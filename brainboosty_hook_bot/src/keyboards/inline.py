@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 
 from brainboosty_hook_bot.src.locale import t
 
@@ -312,6 +312,20 @@ def lang_pick_kb(lang: str) -> InlineKeyboardMarkup:
         inline_keyboard=[
             [InlineKeyboardButton(text=t(lang, "LANG_RU"), callback_data=f"{LANG_PREFIX}ru")],
             [InlineKeyboardButton(text=t(lang, "LANG_EN"), callback_data=f"{LANG_PREFIX}en")],
+        ],
+    )
+
+
+def webapp_entry_kb(lang: str, webapp_url: str) -> InlineKeyboardMarkup:
+    """Кнопка открытия Telegram Web App (Neural Map)."""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=t(lang, "BTN_OPEN_WEBAPP"),
+                    web_app=WebAppInfo(url=webapp_url),
+                )
+            ],
         ],
     )
 
