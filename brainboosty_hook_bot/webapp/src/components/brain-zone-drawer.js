@@ -36,6 +36,11 @@ export function openBrainZoneDrawer(profile, regionKey, opts = {}) {
                   <li class="bb-zone-drawer__exercise">
                     <p class="bb-zone-drawer__exercise-title">${esc(ex.title)}</p>
                     <p class="bb-zone-drawer__exercise-body">${esc(ex.body)}</p>
+                    ${
+                      ex.exerciseId != null
+                        ? `<button type="button" class="bb-zone-drawer__ex-open" data-open-exercise="${Number(ex.exerciseId)}">${esc(t.zoneOpenFullExercise)}</button>`
+                        : ""
+                    }
                   </li>`,
           )
           .join("")
@@ -85,11 +90,17 @@ export function openBrainZoneDrawer(profile, regionKey, opts = {}) {
                 ${exerciseItemsHtml}
               </ul>
             </div>
-            <p class="bb-zone-drawer__paid-hint">${esc(t.zonePaidHint)}</p>`
+            <p class="bb-zone-drawer__paid-hint">${esc(t.zonePaidHint)}</p>
+            <button type="button" class="bb-zone-drawer__btn bb-zone-drawer__btn--ghost bb-zone-drawer__btn--compact" data-scroll-zone="${regionKey}">
+              ${esc(t.zoneReadMoreDetail)}
+            </button>`
               : `
             <p class="bb-zone-drawer__lock-note">${esc(t.zoneUnlockNote)}</p>
             <button type="button" class="bb-zone-drawer__btn bb-zone-drawer__btn--primary" data-go="boost">
               ${esc(t.zoneBoostCta)}
+            </button>
+            <button type="button" class="bb-zone-drawer__btn bb-zone-drawer__btn--ghost bb-zone-drawer__btn--compact" data-scroll-zone="${regionKey}">
+              ${esc(t.zoneReadMoreDetail)}
             </button>`
           }
         </div>
@@ -143,6 +154,26 @@ export function openBrainZoneDrawer(profile, regionKey, opts = {}) {
     const open = exBlock.hasAttribute("hidden");
     if (open) exBlock.removeAttribute("hidden");
     else exBlock.setAttribute("hidden", "");
+  });
+
+  host.querySelectorAll("[data-scroll-zone]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      hapticLight();
+      const z = btn.getAttribute("data-scroll-zone") || regionKey;
+      close();
+      requestAnimationFrame(() => {
+        document.getElementById(`zone-${z}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+  });
+
+  host.querySelectorAll("[data-open-exercise]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      hapticLight();
+      const id = btn.getAttribute("data-open-exercise") || "1";
+      close();
+      navigate("exercise", { id });
+    });
   });
 
   requestAnimationFrame(() => {

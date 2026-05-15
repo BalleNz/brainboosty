@@ -1,4 +1,5 @@
 import "./styles/cyber-neon.css";
+import "./styles/exercise-lux.css";
 import { bootApp } from "./app.js";
 import { bootLanding } from "./views/landing.js";
 import { initTelegramWebApp } from "./telegram.js";

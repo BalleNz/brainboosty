@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import BigInteger, Boolean, DateTime, Float, ForeignKey, Integer, JSON, String, UniqueConstraint, func
+from sqlalchemy import BigInteger, Boolean, DateTime, Float, ForeignKey, Integer, JSON, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from brainboosty_hook_bot.src.database.base import Base
@@ -158,3 +158,57 @@ class UserTestCompletion(Base):
     user: Mapped[User] = relationship("User", back_populates="test_completions")
     shared_test: Mapped[SharedTest] = relationship("SharedTest", back_populates="completions")
     snapshot: Mapped[BrainRegionSnapshot] = relationship("BrainRegionSnapshot", back_populates="test_completion")
+
+
+class Exercise(Base):
+    """Упражнение из закрытого канала (персональные протоколы по зонам мозга)."""
+
+    __tablename__ = "exercises"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    slug: Mapped[str | None] = mapped_column(String(96), nullable=True, unique=True)
+
+    emoji: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    title_ru: Mapped[str] = mapped_column(String(512), nullable=False)
+    title_en: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    short_description_ru: Mapped[str] = mapped_column(String(1024), nullable=False)
+    short_description_en: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+
+    # Список ключей из REGION_KEYS (ровно те же строки, что в brain_region_keys).
+    regions_json: Mapped[list[Any]] = mapped_column(JSON, nullable=False)
+    primary_region: Mapped[str] = mapped_column(String(64), nullable=False)
+    difficulty: Mapped[int] = mapped_column(Integer, nullable=False, default=50)
+    effectiveness: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+
+    instruction_ru: Mapped[str] = mapped_column(Text, nullable=False)
+    instruction_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+    instruction_image_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+
+    for_who_ru: Mapped[str] = mapped_column(String(512), nullable=False)
+    for_who_en: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    first_result_days: Mapped[int] = mapped_column(Integer, nullable=False, default=7)
+
+    research_links_json: Mapped[list[Any]] = mapped_column(JSON, nullable=False, default=lambda: [])
+
+    amplify_ru: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    amplify_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+    expected_results_ru: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    expected_results_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    is_published: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+
+class SharedTest(Base):

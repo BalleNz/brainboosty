@@ -3,6 +3,7 @@ import { getStrings } from "./i18n/index.js";
 import { getRoute, navigate, onRouteChange, startRouter } from "./router.js";
 import { initTelegramWebApp, hapticLight } from "./telegram.js";
 import { renderBrainMap } from "./views/brain-map.js";
+import { renderExerciseDetail } from "./views/exercise-detail.js";
 import { renderHistory } from "./views/history.js";
 import { renderPremium } from "./views/premium.js";
 import { renderTest } from "./views/test.js";
@@ -72,7 +73,20 @@ async function renderRoute(route) {
   const root = document.getElementById("bb-root");
   if (!root || !appCtx) return;
 
-  setActiveNav(route.name);
+  const header = document.getElementById("bb-header");
+  const nav = document.getElementById("bb-nav");
+  const isExercise = route.name === "exercise";
+  document.body.classList.toggle("bb-route-exercise", isExercise);
+  if (header) header.hidden = isExercise;
+  if (nav) nav.hidden = isExercise;
+
+  if (!isExercise) {
+    setActiveNav(route.name);
+  }
+
+  if (route.name !== "map") {
+    document.querySelector(".bb-premium-fab")?.remove();
+  }
 
   if (route.name === "premium") {
     if (!profileCache) {
@@ -131,6 +145,12 @@ async function renderRoute(route) {
       root.innerHTML = `<p class="bb-error">${msg}</p>`;
       return;
     }
+  }
+
+  if (route.name === "exercise") {
+    const id = parseInt(route.params.get("id") || "0", 10);
+    await renderExerciseDetail(root, appCtx, profileCache, id);
+    return;
   }
 
   if (!profileCache.hasMap && route.name === "map") {

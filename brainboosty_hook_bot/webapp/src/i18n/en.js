@@ -81,7 +81,7 @@ export default {
   },
   interactiveBrainKicker: "Interactive map",
   interactiveBrainHint: "Tap a region — insight, progress, and your next move.",
-  interactiveBrainAria: "Interactive brain region map",
+  interactiveBrainAria: "Six regions — tap an illustration to open",
   zoneDrawerCloseAria: "Close",
   zoneCurrentLevel: "Current level",
   zoneWhyTitle: "Why it matters",
@@ -93,6 +93,7 @@ export default {
   zoneExerciseListCap: "In your program for this zone:",
   zoneExercisePlaceholder: "More protocols are on the way — your full access already includes the base track.",
   zonePaidHint: "More protocols and metrics tailored to your profile are coming next.",
+  zoneReadMoreDetail: "Full zone breakdown below in the feed",
   zoneWhy: {
     prefrontal_cortex:
       "Planning, impulse control, and focus. A stronger PFC means clearer decisions and fewer spirals.",
@@ -124,6 +125,7 @@ export default {
       {
         title: "Rib-cage breath",
         body: "4 cycles: inhale 4 counts, soft pause, exhale 6 — attention on rib expansion.",
+        exerciseId: 1,
       },
     ],
     temporoparietal_junction: [
@@ -145,4 +147,24 @@ export default {
       },
     ],
   },
+  exerciseLoading: "Loading protocol…",
+  exerciseNotFound: "Exercise not found.",
+  exerciseBackAria: "Back",
+  exerciseTagForWho: "For who",
+  exerciseTagEfficiency: "Effectiveness",
+  exerciseTagFirstResult: "First results",
+  exerciseDifficulty: "Difficulty",
+  exerciseFirstResultDays: (n) => `~${n} days`,
+  exerciseEfficiencyLabels: ["Low", "Moderate", "High", "Exceptional", "Best for this region"],
+  exerciseAccInstruction: "Instruction",
+  exerciseAccResearch: "Research",
+  exerciseAccAmplify: "How to amplify",
+  exerciseAccResults: "Expected outcomes",
+  exerciseNoResearch: "Links will appear here soon.",
+  exerciseCtaPrimary: "Add to my training plan",
+  exerciseCtaMessage:
+    "Sync with your bot plan is coming soon. For now, block time on your calendar and log completion.",
+  exercisePremiumTitle: "Full access",
+  exercisePremiumText: "Channel exercises are available with BrainBoosty full access.",
+  zoneOpenFullExercise: "Open full exercise",
 };

@@ -1,4 +1,4 @@
-import { brainInteractiveSectionHtml } from "../components/brain-map-svg.js";
+import { brainInteractiveSectionHtml } from "../components/brain-interactive-section.js";
 import { openBrainZoneDrawer } from "../components/brain-zone-drawer.js";
 import { coverSectionHtml } from "../components/cover.js";
 import { regionCardHtml } from "../components/region-card.js";
@@ -82,14 +82,16 @@ function setupInteractiveBrain(root, profile, route) {
       hapticLight();
       openZone(key);
     });
-    path.addEventListener("keydown", (e) => {
-      if (e.key !== "Enter" && e.key !== " ") return;
-      e.preventDefault();
-      const key = path.dataset.region;
-      if (!key) return;
-      hapticLight();
-      openZone(key);
-    });
+    if (!(path instanceof HTMLButtonElement)) {
+      path.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        const key = path.dataset.region;
+        if (!key) return;
+        hapticLight();
+        openZone(key);
+      });
+    }
   });
 
   const dz = route?.params?.get?.("zone");

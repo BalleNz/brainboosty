@@ -17,6 +17,7 @@ from brainboosty_hook_bot.src.database.session import get_session
 from brainboosty_hook_bot.src.locale import normalize_lang
 from brainboosty_hook_bot.src.web.webapp_auth import WebAppAuthError, tg_user_id_from_init, validate_init_data
 from brainboosty_hook_bot.src.services.about_photo import resolve_about_photo_path, resolve_channel_avatar_path
+from brainboosty_hook_bot.src.web.exercise_service import fetch_exercise_for_user
 from brainboosty_hook_bot.src.web.webapp_service import (
     cognitive_questions_payload,
     get_user_by_tg_id,
@@ -131,6 +132,22 @@ async def webapp_landing_channel_avatar() -> FileResponse:
     else:
         media = "image/png"
     return FileResponse(path, media_type=media)
+
+
+@router.get("/exercises/{exercise_id}")
+async def webapp_exercise(
+    exercise_id: int,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    x_telegram_init_data: str | None = Header(default=None, alias="X-Telegram-Init-Data"),
+) -> JSONResponse:
+    user, lang = await _resolve_user(session, x_telegram_init_data)
+    try:
+        payload = await fetch_exercise_for_user(session, user, exercise_id, lang)
+    except PermissionError:
+        raise HTTPException(status_code=403, detail="premium_required") from None
+    except LookupError:
+        raise HTTPException(status_code=404, detail="exercise_not_found") from None
+    return JSONResponse(payload)
 
 
 @router.get("/profile")

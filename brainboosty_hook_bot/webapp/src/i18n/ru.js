@@ -81,7 +81,7 @@ export default {
   },
   interactiveBrainKicker: "Интерактивная карта",
   interactiveBrainHint: "Нажми на зону — инсайт, прогресс и следующий шаг.",
-  interactiveBrainAria: "Интерактивная схема зон мозга",
+  interactiveBrainAria: "Шесть зон — нажмите на нужную иллюстрацию",
   zoneDrawerCloseAria: "Закрыть",
   zoneCurrentLevel: "Текущий уровень",
   zoneWhyTitle: "Почему это важно",
@@ -93,6 +93,7 @@ export default {
   zoneExerciseListCap: "Сейчас в программе для этой зоны:",
   zoneExercisePlaceholder: "Скоро добавим ещё шаги — уже доступен базовый протокол в полном доступе.",
   zonePaidHint: "Дальше — больше протоколов и метрик именно под твой профиль.",
+  zoneReadMoreDetail: "Подробный разбор зоны в ленте ниже",
   zoneWhy: {
     prefrontal_cortex:
       "Планирование, торможение импульсов и фокус. Сильная ПФК — ясные решения, меньше хаоса и откатов.",
@@ -124,6 +125,7 @@ export default {
       {
         title: "Дыхание в ребро",
         body: "4 цикла: вдох 4 счёта, мягкая пауза, выдох 6 — внимание на расширении рёбер.",
+        exerciseId: 1,
       },
     ],
     temporoparietal_junction: [
@@ -145,4 +147,25 @@ export default {
       },
     ],
   },
+  exerciseLoading: "Загружаем протокол…",
+  exerciseNotFound: "Упражнение не найдено.",
+  exerciseBackAria: "Назад",
+  exerciseTagForWho: "Для кого",
+  exerciseTagEfficiency: "Эффективность",
+  exerciseTagFirstResult: "Первый результат",
+  exerciseDifficulty: "Сложность",
+  exerciseFirstResultDays: (n) => `ориентир ≈ ${n} дн.`,
+  exerciseEfficiencyLabels: ["Низкая", "Средняя", "Высокая", "Чрезвычайная", "Оптимально для отдела"],
+  exerciseAccInstruction: "Инструкция",
+  exerciseAccResearch: "Исследования",
+  exerciseAccAmplify: "Как усилить эффект",
+  exerciseAccResults: "Ожидаемые результаты",
+  exerciseNoResearch: "Ссылки будут добавлены.",
+  exerciseCtaPrimary: "Добавить в мой план прокачки",
+  exerciseCtaMessage:
+    "Скоро здесь будет синхронизация с твоим планом в боте. Пока закрепи время в календаре и отметь выполнение в заметках.",
+  exercisePremiumTitle: "Полный доступ",
+  exercisePremiumText:
+    "Экран упражнений из закрытого канала доступен с подпиской BrainBoosty.",
+  zoneOpenFullExercise: "Полный экран упражнения",
 };

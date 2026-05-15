@@ -91,3 +91,7 @@ export async function submitTest(ctx, { variant, answers }) {
   });
   return normalizeProfile(data.profile);
 }
+
+export async function fetchExercise(ctx, exerciseId) {
+  return apiFetch(`/exercises/${encodeURIComponent(String(exerciseId))}`, { initData: ctx.initData });
+}

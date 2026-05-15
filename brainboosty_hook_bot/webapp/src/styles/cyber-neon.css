@@ -412,7 +412,7 @@ body {
   width: auto;
 }
 
-/* Interactive SVG brain (map) */
+/* Interactive brain zones — клики по тем же PNG, что в карточках зон */
 .bb-interactive-brain {
   scroll-margin-top: calc(56px + var(--bb-safe-top));
 }
@@ -449,61 +449,114 @@ body {
   box-shadow: 0 0 48px rgba(34, 211, 238, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-.bb-interactive-brain__svg {
-  display: block;
+.bb-interactive-brain__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  max-width: 28rem;
   margin: 0 auto;
-  max-width: 100%;
-  height: auto;
   touch-action: manipulation;
 }
 
-.bb-brain-silhouette {
-  pointer-events: none;
+@media (min-width: 420px) {
+  .bb-interactive-brain__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
 }
 
 .bb-brain-zone {
-  fill: rgba(34, 211, 238, 0.12);
-  stroke: rgba(103, 232, 249, 0.35);
-  stroke-width: 1.2;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgba(103, 232, 249, 0.28);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.45);
   cursor: pointer;
+  text-align: center;
+  overflow: hidden;
+  font: inherit;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
   transition:
-    fill 0.35s ease,
-    stroke 0.35s ease,
-    stroke-width 0.35s ease,
-    filter 0.35s ease,
-    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-  transform-origin: 200px 230px;
+    border-color 0.35s ease,
+    box-shadow 0.35s ease,
+    background 0.35s ease,
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .bb-brain-zone:hover,
-.bb-brain-zone:focus {
+.bb-brain-zone:focus-visible {
   outline: none;
-  fill: rgba(34, 211, 238, 0.22);
-  stroke: rgba(186, 230, 253, 0.75);
-  stroke-width: 1.6;
+  border-color: rgba(186, 230, 253, 0.65);
+  background: rgba(34, 211, 238, 0.08);
+  box-shadow: 0 0 24px rgba(34, 211, 238, 0.12);
+}
+
+.bb-brain-zone:active {
+  transform: scale(0.98);
+}
+
+.bb-brain-zone__img-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 88px;
+  padding: 8px 6px 4px;
+  background: radial-gradient(ellipse 80% 90% at 50% 30%, rgba(34, 211, 238, 0.07), transparent 65%);
+}
+
+.bb-brain-zone__img-wrap img {
+  display: block;
+  width: 100%;
+  max-width: 132px;
+  height: auto;
+  margin: 0 auto;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.bb-brain-zone__name {
+  display: block;
+  padding: 8px 8px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  color: rgba(226, 232, 240, 0.92);
 }
 
 .bb-brain-zone.is-hot {
-  fill: rgba(167, 139, 250, 0.2);
-  stroke: rgba(224, 231, 255, 0.9);
-  stroke-width: 2;
-  filter: url(#bbZoneGlowStrong);
-  animation: bb-brain-zone-pulse 2.4s ease-in-out infinite;
+  border-color: rgba(224, 231, 255, 0.75);
+  background: rgba(167, 139, 250, 0.12);
+  box-shadow:
+    0 0 28px rgba(167, 139, 250, 0.2),
+    0 0 20px rgba(34, 211, 238, 0.12);
+  animation: bb-brain-zone-tile-pulse 2.4s ease-in-out infinite;
 }
 
-@keyframes bb-brain-zone-pulse {
+@keyframes bb-brain-zone-tile-pulse {
   0%,
   100% {
-    fill: rgba(167, 139, 250, 0.18);
+    border-color: rgba(167, 139, 250, 0.55);
+    box-shadow:
+      0 0 24px rgba(167, 139, 250, 0.16),
+      0 0 16px rgba(34, 211, 238, 0.08);
   }
   50% {
-    fill: rgba(34, 211, 238, 0.24);
+    border-color: rgba(34, 211, 238, 0.55);
+    box-shadow:
+      0 0 28px rgba(34, 211, 238, 0.18),
+      0 0 22px rgba(192, 132, 252, 0.14);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .bb-brain-zone {
-    transition: fill 0.2s ease, stroke 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   }
   .bb-brain-zone.is-hot {
     animation: none;
@@ -729,6 +782,14 @@ body {
   box-shadow: 0 0 20px rgba(34, 211, 238, 0.12);
 }
 
+.bb-zone-drawer__btn--compact {
+  margin-top: 4px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
 .bb-zone-drawer__lock-note {
   margin: 0;
   font-size: 13px;
@@ -781,6 +842,32 @@ body {
   font-size: 13px;
   line-height: 1.5;
   color: #cbd5e1;
+}
+
+.bb-zone-drawer__ex-open {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  background: rgba(6, 182, 212, 0.1);
+  color: #a5f3fc !important;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  width: 100%;
+  transition:
+    box-shadow 0.25s ease,
+    border-color 0.2s ease;
+}
+
+.bb-zone-drawer__ex-open:hover {
+  border-color: rgba(103, 232, 249, 0.55);
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.15);
 }
 
 @media (max-width: 520px) {
