@@ -20,6 +20,8 @@ export default {
   landingHubExpired: "That link expired. Tap the button to try again.",
   landingHubPopupBlocked:
     "Your browser blocked the Telegram window. Allow pop-ups for this site and try again.",
+  landingHubReturnSameTab:
+    "Telegram will open next. After you tap Start in the bot, return to this browser tab to finish sign-in.",
   landingLoginTelegram: "Log in with Telegram",
   landingChannelAria: "Telegram channel",
   landingAboutTitle: "About me",

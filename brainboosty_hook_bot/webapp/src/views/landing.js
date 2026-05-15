@@ -1,5 +1,13 @@
 import brainImg from "@bb-assets/full-glowing-brain.png";
-import { fetchLandingMeta, fetchSiteLoginLink, fetchSiteLoginPoll, SITE_SESSION_STORAGE_KEY, SITE_USER_STORAGE_KEY } from "../api.js";
+import {
+  fetchLandingMeta,
+  fetchSiteLoginLink,
+  fetchSiteLoginPoll,
+  SITE_SESSION_STORAGE_KEY,
+  SITE_USER_STORAGE_KEY,
+  formatApiError,
+  SITE_LOGIN_POLL_STATE_KEY,
+} from "../api.js";
 import { initLandingHeroMotion } from "../lib/landing-hero-motion.js";
 import { initLandingReveal } from "../lib/landing-reveal.js";
 import { getStrings } from "../i18n/index.js";
@@ -12,6 +20,37 @@ function esc(s) {
 }
 
 const LANDING_LANG_KEY = "bb-landing-lang";
+const SITE_POLL_MAX_MS = 16 * 60 * 1000;
+
+function readSitePollState() {
+  try {
+    const raw = sessionStorage.getItem(SITE_LOGIN_POLL_STATE_KEY);
+    if (!raw) return null;
+    const o = JSON.parse(raw);
+    if (!o?.loginToken || typeof o.loginToken !== "string") return null;
+    if (typeof o.startedAt !== "number") return null;
+    if (o.lang !== "en" && o.lang !== "ru") return null;
+    return o;
+  } catch {
+    return null;
+  }
+}
+
+function writeSitePollState(state) {
+  try {
+    sessionStorage.setItem(SITE_LOGIN_POLL_STATE_KEY, JSON.stringify(state));
+  } catch {
+    /* ignore */
+  }
+}
+
+function clearSitePollState() {
+  try {
+    sessionStorage.removeItem(SITE_LOGIN_POLL_STATE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
 
 function getStoredLandingLang() {
   try {
@@ -238,7 +277,6 @@ async function runLanding(lang) {
   };
 
   const onPageHide = () => {
-    clearSitePoll();
     stopReveal();
     stopHero();
     window.removeEventListener("pagehide", onPageHide);
@@ -263,10 +301,46 @@ async function runLanding(lang) {
     return false;
   };
 
+  const beginSiteLoginPoll = (loginToken, tloc) => {
+    clearSitePoll();
+    const tick = async () => {
+      try {
+        const r = await fetchSiteLoginPoll(loginToken);
+        if (r.status === "ready") {
+          clearSitePoll();
+          clearSitePollState();
+          localStorage.setItem(SITE_SESSION_STORAGE_KEY, r.accessToken);
+          localStorage.setItem(
+            SITE_USER_STORAGE_KEY,
+            JSON.stringify({
+              first_name: r.user?.first_name ?? "",
+              last_name: r.user?.last_name ?? "",
+              language_code: r.lang === "en" ? "en" : "ru",
+            }),
+          );
+          window.location.replace("/#map");
+          window.location.reload();
+          return;
+        }
+        if (r.status === "expired" || r.status === "not_found") {
+          clearSitePoll();
+          clearSitePollState();
+          setStartBtnsDisabled(false);
+          if (statusEl) statusEl.textContent = tloc.landingHubExpired;
+        }
+      } catch {
+        /* продолжаем опрос до истечения */
+      }
+    };
+    sitePollTimer = setInterval(tick, 2000);
+    tick();
+  };
+
   startBtns.forEach((startBtn) => {
     startBtn.addEventListener("click", async () => {
       const tloc = getStrings(lang);
       clearSitePoll();
+      clearSitePollState();
       document.getElementById("hub-login")?.scrollIntoView({ behavior: "smooth", block: "start" });
       setStartBtnsDisabled(true);
       if (statusEl) {
@@ -275,51 +349,42 @@ async function runLanding(lang) {
       }
       try {
         const linkData = await fetchSiteLoginLink();
-        if (!openTelegramFromAuthClick(linkData.telegramLink)) {
-          clearSitePoll();
-          setStartBtnsDisabled(false);
-          if (statusEl) {
-            statusEl.hidden = false;
-            statusEl.textContent = tloc.landingHubPopupBlocked;
-          }
+        const loginToken = linkData?.loginToken;
+        const telegramLink = linkData?.telegramLink;
+        if (!loginToken || !telegramLink) {
+          throw new Error(tloc.errorLoad);
+        }
+        writeSitePollState({ loginToken, lang, startedAt: Date.now() });
+
+        if (openTelegramFromAuthClick(telegramLink)) {
+          if (statusEl) statusEl.textContent = tloc.landingHubPolling;
+          beginSiteLoginPoll(loginToken, tloc);
           return;
         }
-        if (statusEl) statusEl.textContent = tloc.landingHubPolling;
-        sitePollTimer = setInterval(async () => {
-          try {
-            const r = await fetchSiteLoginPoll(linkData.loginToken);
-            if (r.status === "ready") {
-              clearSitePoll();
-              localStorage.setItem(SITE_SESSION_STORAGE_KEY, r.accessToken);
-              localStorage.setItem(
-                SITE_USER_STORAGE_KEY,
-                JSON.stringify({
-                  first_name: r.user?.first_name ?? "",
-                  last_name: r.user?.last_name ?? "",
-                  language_code: r.lang === "en" ? "en" : "ru",
-                }),
-              );
-              window.location.replace("/#map");
-              window.location.reload();
-              return;
-            }
-            if (r.status === "expired" || r.status === "not_found") {
-              clearSitePoll();
-              setStartBtnsDisabled(false);
-              if (statusEl) statusEl.textContent = tloc.landingHubExpired;
-            }
-          } catch {
-            /* продолжаем опрос до истечения */
-          }
-        }, 2000);
-      } catch {
+        if (statusEl) statusEl.textContent = tloc.landingHubReturnSameTab;
+        window.location.href = telegramLink;
+      } catch (e) {
         clearSitePoll();
+        clearSitePollState();
         setStartBtnsDisabled(false);
         if (statusEl) {
           statusEl.hidden = false;
-          statusEl.textContent = tloc.errorLoad;
+          statusEl.textContent = formatApiError(e, tloc.errorLoad);
         }
       }
     });
   });
+
+  const pending = readSitePollState();
+  if (pending && pending.lang === lang && Date.now() - pending.startedAt < SITE_POLL_MAX_MS) {
+    document.getElementById("hub-login")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setStartBtnsDisabled(true);
+    if (statusEl) {
+      statusEl.hidden = false;
+      statusEl.textContent = t.landingHubPolling;
+    }
+    beginSiteLoginPoll(pending.loginToken, t);
+  } else if (pending) {
+    clearSitePollState();
+  }
 }

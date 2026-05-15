@@ -4,6 +4,21 @@ import { computeNeuroScore } from "./data/demo-profile.js";
 export const SITE_SESSION_STORAGE_KEY = "bb-site-session";
 export const SITE_USER_STORAGE_KEY = "bb-site-user";
 
+/** Состояние поллинга входа с сайта (переживает переход в t.me в той же вкладке). */
+export const SITE_LOGIN_POLL_STATE_KEY = "bb-site-login-poll";
+
+export function formatApiError(err, fallback = "") {
+  const d = err?.detail;
+  if (typeof d === "string" && d.trim()) return d.trim();
+  if (Array.isArray(d) && d.length) {
+    return d
+      .map((x) => (typeof x === "object" && x?.msg ? x.msg : String(x)))
+      .filter(Boolean)
+      .join("; ");
+  }
+  return fallback || err?.message || "";
+}
+
 function headers(initData, siteToken) {
   const h = { "Content-Type": "application/json" };
   if (initData) {
