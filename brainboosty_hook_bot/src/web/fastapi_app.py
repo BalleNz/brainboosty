@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 
 from aiogram.types import Update
 from fastapi import FastAPI, Request, Response
+from fastapi.responses import RedirectResponse
 
 from brainboosty_hook_bot.src.bot_runtime import (
     BotRuntime,
@@ -43,14 +44,14 @@ async def lifespan(app: FastAPI):
     await start_bot_runtime(_runtime)
     try:
         await install_telegram_webhook(_runtime)
+        logger.info("Telegram webhook OK")
     except Exception:
         logger.exception(
-            "Не удалось зарегистрировать webhook (нужен один запрос к api.telegram.org; "
-            "при блокировке задайте TELEGRAM_PROXY_URL)"
+            "setWebhook не удался (api.telegram.org / TELEGRAM_PROXY_URL). "
+            "Web App и /health всё равно работают; бот не получит апдейты, пока не почините."
         )
-        raise
 
-    logger.info("BrainBoosty API + Telegram webhook ready")
+    logger.info("BrainBoosty API ready")
     yield
 
     if _runtime is not None:
@@ -67,9 +68,23 @@ app.include_router(webapp_router)
 mount_webapp_static(app)
 
 
+@app.get("/")
+async def root() -> RedirectResponse:
+    """Корень домена → Web App (SPA живёт в /webapp/)."""
+    return RedirectResponse(url="/webapp/", status_code=302)
+
+
 @app.get("/health")
 async def health() -> dict[str, str]:
-    return {"status": "ok", "telegram_mode": "webhook"}
+    from brainboosty_hook_bot.src.web.webapp_routes import webapp_dist_dir
+
+    dist = webapp_dist_dir()
+    built = dist.is_dir() and (dist / "index.html").is_file()
+    return {
+        "status": "ok",
+        "telegram_mode": "webhook",
+        "webapp_dist_built": str(built).lower(),
+    }
 
 
 @app.post(settings.TELEGRAM_WEBHOOK_PATH)
