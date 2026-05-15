@@ -1,4 +1,29 @@
 export default {
+  landingKicker: "BrainBoosty · нейробиология без воды",
+  landingTitle: "Прокачай мозг — увидь свою Neural Map",
+  landingTagline:
+    "7 вопросов → персональная карта из 6 зон мозга, NeuroScore и понятные шаги. Всё в Telegram.",
+  landingCta: "Прокачать мозг",
+  landingCtaSub: "Бесплатный старт в боте · 2 минуты",
+  landingNavAbout: "Обо мне",
+  landingNavProject: "Проект",
+  landingNavCta: "В бота",
+  landingAboutTitle: "Обо мне",
+  landingAboutParagraphs: [
+    "Привет, я @androgenautist — автор BrainBoosty.",
+    "Сам прошёл путь от тревожности, тумана в голове и зажатости — к ясности, внутренней силе и уверенности. Сейчас помогаю другим по нейробиологии, гормонам и когнитивным привычкам.",
+    "В канале делюсь рабочими инсайтами без маркетинговой шелухи — только то, что реально меняет состояние.",
+  ],
+  landingChannelLink: "→ Канал @androgenautist",
+  landingProjectTitle: "Что внутри",
+  landingFeatures: [
+    "Когнитивный тест из 7 вопросов — два стиля (развитие / сексуальный профиль)",
+    "Neural Map: 6 зон мозга с NeuroScore и рекомендациями",
+    "История прогресса и сравнение между тестами",
+    "Ежедневные хуки и закрытый канал с упражнениями",
+  ],
+  landingFinalTitle: "Готов увидеть свою карту?",
+  landingFinalSub: "Открой бота — анкета займёт пару минут, первая карта бесплатно.",
   heroBrain: "NEURAL MAP",
   scoreLabel: "NeuroScore",
   coverLine:

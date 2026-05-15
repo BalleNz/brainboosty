@@ -12,7 +12,7 @@ export function renderPremium(root, profile) {
   const t = getStrings(profile.lang);
   root.innerHTML = `
     <section class="bb-section is-visible bb-premium">
-      <div class="mb-3 rounded-full px-5 py-1.5 border border-cyan-400/30 bg-cyan-500/10 text-xs font-bold uppercase tracking-[0.35em] text-cyan-100 text-center">
+      <div class="mb-3 rounded-full px-5 py-1.5 border border-cyan-400/30 bg-cyan-500/10 text-xs font-bold uppercase tracking-[0.35em] text-cyan-100 text-center bb-type-display">
         ${esc(t.premiumBadge)}
       </div>
       <h2 class="text-3xl font-black text-center bg-gradient-to-r from-cyan-100 via-violet-200 to-fuchsia-300 bg-clip-text text-transparent mb-4 neon-cta-title">

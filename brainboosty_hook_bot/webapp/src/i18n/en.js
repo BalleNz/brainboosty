@@ -1,4 +1,29 @@
 export default {
+  landingKicker: "BrainBoosty · neuroscience, no fluff",
+  landingTitle: "Upgrade your brain — see your Neural Map",
+  landingTagline:
+    "7 questions → a personal 6-zone brain map, NeuroScore, and clear next steps. All in Telegram.",
+  landingCta: "Boost my brain",
+  landingCtaSub: "Free start in the bot · 2 minutes",
+  landingNavAbout: "About me",
+  landingNavProject: "The project",
+  landingNavCta: "Open bot",
+  landingAboutTitle: "About me",
+  landingAboutParagraphs: [
+    "Hi, I'm @androgenautist — creator of BrainBoosty.",
+    "I went from anxiety, brain fog, and tension to clarity, inner strength, and confidence. Now I help others with neurobiology, hormones, and cognitive habits.",
+    "On my channel I share actionable insights—no marketing noise, only what actually shifts your state.",
+  ],
+  landingChannelLink: "→ Channel @androgenautist",
+  landingProjectTitle: "What's inside",
+  landingFeatures: [
+    "7-question cognitive test — development or sexual profile",
+    "Neural Map: 6 brain zones with NeuroScore and recommendations",
+    "Progress history and test-to-test comparison",
+    "Daily hooks and a private exercise channel",
+  ],
+  landingFinalTitle: "Ready to see your map?",
+  landingFinalSub: "Open the bot — onboarding takes a few minutes; your first map is free.",
   heroBrain: "NEURAL MAP",
   scoreLabel: "NeuroScore",
   coverLine:

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
@@ -19,6 +18,7 @@ from brainboosty_hook_bot.src.keyboards.inline import PDF_CB_PREFIX, post_teaser
 from brainboosty_hook_bot.src.keyboards.reply import main_reply_kb
 from brainboosty_hook_bot.src.locale import t
 from brainboosty_hook_bot.src.locale.filters import all_lang
+from brainboosty_hook_bot.src.services.about_photo import resolve_about_photo_path
 from brainboosty_hook_bot.src.services.brain_regions_display import (
     format_brain_map_with_comparison,
     snapshot_to_scores,
@@ -30,41 +30,6 @@ from brainboosty_hook_bot.src.utils.flow_chat import flow_remember
 
 router = Router(name="menu")
 logger = logging.getLogger(__name__)
-
-
-def _package_root() -> Path:
-    """Каталог проекта: рядом лежат `src/`, `alembic/`, опционально `images/`."""
-    return Path(__file__).resolve().parents[2]
-
-
-def _resolve_about_photo() -> Path | None:
-    """
-    Фото для блока «О проекте».
-    1) ABOUT_PHOTO_PATH из .env (абсолютный или относительно корня проекта).
-    2) Авто: images/ или src/images/, имя author с типичными расширениями (регистр как в Linux).
-    """
-    root = _package_root()
-    custom = (settings.ABOUT_PHOTO_PATH or "").strip()
-    if custom:
-        p = Path(custom).expanduser()
-        if not p.is_absolute():
-            p = root / p
-        return p if p.is_file() else None
-
-    names = (
-        "author.JPG",
-        "author.jpg",
-        "author.jpeg",
-        "author.JPEG",
-        "author.png",
-        "author.PNG",
-    )
-    for sub in (Path("images"), Path("src") / "images"):
-        for name in names:
-            candidate = root / sub / name
-            if candidate.is_file():
-                return candidate
-    return None
 
 
 async def _fetch_user(session: AsyncSession, tg_id: int) -> User | None:
@@ -209,7 +174,7 @@ async def menu_about(message: Message, session: AsyncSession, locale: str) -> No
     lang = user.locale if user and user.locale in {"ru", "en"} else locale
     show_re = bool(user and user_has_paid_access(user))
 
-    photo_path = _resolve_about_photo()
+    photo_path = resolve_about_photo_path()
     kb = main_reply_kb(lang, paid_access=show_re, show_retest=show_re)
     caption = t(lang, "ABOUT_PROJECT")
 
@@ -228,9 +193,7 @@ async def menu_about(message: Message, session: AsyncSession, locale: str) -> No
         )
     else:
         logger.warning(
-            "About photo not found under %s (images/ or src/images/, author.*). "
-            "Set ABOUT_PHOTO_PATH in .env to an absolute path if the file is elsewhere.",
-            _package_root(),
+            "About photo not found. Add assets/author.jpg (or set ABOUT_PHOTO_PATH in .env).",
         )
         await message.answer(caption, reply_markup=kb, parse_mode="HTML")
 

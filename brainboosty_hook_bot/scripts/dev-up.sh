@@ -93,6 +93,14 @@ build_webapp() {
     return
   fi
   need_cmd npm
+  if [[ -x webapp/scripts/download-fonts.sh ]]; then
+    echo "==> Шрифты woff2 (public/fonts/)"
+    (cd webapp && bash scripts/download-fonts.sh)
+  fi
+  if [[ ! -f assets/author.jpg ]] && [[ -f src/assets/logo.jpg ]]; then
+    cp src/assets/logo.jpg assets/author.jpg
+    echo "==> assets/author.jpg создан из src/assets/logo.jpg (положите своё фото в assets/author.jpg или .png)"
+  fi
   echo "==> Webapp: npm ci && npm run build"
   (cd webapp && npm ci && npm run build)
 }
@@ -144,13 +152,15 @@ echo "==> Docker: ${COMPOSE[*]} up --build -d api"
 "${COMPOSE[@]}" up --build -d api
 
 echo ""
-echo "==> Ожидание API (http://127.0.0.1:${API_PORT}/health)…"
+echo "==> Шаг 1/2: API внутри VPS (Docker → порт ${API_PORT}, без Caddy и DNS)"
+echo "    http://127.0.0.1:${API_PORT}/health"
 if wait_http "http://127.0.0.1:${API_PORT}/health" 40; then
   curl -fsS "http://127.0.0.1:${API_PORT}/health" && echo ""
-  echo "--- webapp bundle ---"
+  echo "--- webapp bundle (локально) ---"
   curl -fsS "http://127.0.0.1:${API_PORT}/api/webapp/health" && echo "" || true
 else
-  echo "    API не ответил — смотрите: ${COMPOSE[*]} logs api"
+  echo "    ✗ Контейнер api не отвечает — сначала чините это: ${COMPOSE[*]} logs api"
+  echo "    Домен ${DOMAIN} заработает только после этого."
 fi
 
 echo ""
@@ -179,7 +189,8 @@ if [[ "$MODE" == "vps" ]]; then
 
   HEALTH_URL="${PUBLIC_URL}/api/webapp/health"
   echo ""
-  echo "==> HTTPS (Caddy + Let's Encrypt, до ~2 мин)…"
+  echo "==> Шаг 2/2: снаружи через домен (Caddy + HTTPS, до ~2 мин)"
+  echo "    ${HEALTH_URL}"
   if wait_http "$HEALTH_URL" 25; then
     curl -fsS "$HEALTH_URL" && echo ""
     echo "    ✓ ${HEALTH_URL}"

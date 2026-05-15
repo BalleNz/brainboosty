@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +16,7 @@ from brainboosty_hook_bot.src.config.config import settings
 from brainboosty_hook_bot.src.database.session import get_session
 from brainboosty_hook_bot.src.locale import normalize_lang
 from brainboosty_hook_bot.src.web.webapp_auth import WebAppAuthError, tg_user_id_from_init, validate_init_data
+from brainboosty_hook_bot.src.services.about_photo import resolve_about_photo_path
 from brainboosty_hook_bot.src.web.webapp_service import (
     cognitive_questions_payload,
     get_user_by_tg_id,
@@ -90,6 +91,34 @@ async def _resolve_user(
 @router.get("/config")
 async def webapp_config() -> dict[str, str]:
     return {"webappUrl": webapp_public_url()}
+
+
+@router.get("/landing")
+async def webapp_landing() -> dict[str, str | bool]:
+    """Публичные ссылки для лендинга (без Telegram initData)."""
+    bot = settings.BOT_USERNAME.strip().lstrip("@")
+    return {
+        "botUrl": f"https://t.me/{bot}?start=site",
+        "botUsername": bot,
+        "channelUrl": settings.premium_channel_url,
+        "hasAuthorPhoto": resolve_about_photo_path() is not None,
+        "webappUrl": webapp_public_url(),
+    }
+
+
+@router.get("/landing/photo")
+async def webapp_landing_photo() -> FileResponse:
+    path = resolve_about_photo_path()
+    if path is None:
+        raise HTTPException(status_code=404, detail="photo_not_found")
+    suffix = path.suffix.lower()
+    if suffix in {".jpg", ".jpeg"}:
+        media = "image/jpeg"
+    elif suffix == ".webp":
+        media = "image/webp"
+    else:
+        media = "image/png"
+    return FileResponse(path, media_type=media)
 
 
 @router.get("/profile")

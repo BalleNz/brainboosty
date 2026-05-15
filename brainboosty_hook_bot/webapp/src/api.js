@@ -63,6 +63,10 @@ function normalizeProfile(raw, fallbackLang) {
   };
 }
 
+export async function fetchLandingMeta() {
+  return apiFetch("/landing", { initData: "" });
+}
+
 export async function fetchBrainProfile(ctx) {
   const data = await apiFetch("/profile", { initData: ctx.initData });
   return normalizeProfile(data, ctx.lang);

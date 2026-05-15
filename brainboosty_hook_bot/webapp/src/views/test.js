@@ -71,7 +71,7 @@ export async function renderTest(root, ctx, profile, { onProfile } = {}) {
         </div>
         <div class="pdf-bar-track"><div class="pdf-bar-gradient pdf-bar-gradient--main" style="clip-path: inset(0 ${(100 - progress).toFixed(1)}% 0 0)"></div></div>
       </div>
-      <h2 class="text-lg font-bold text-cyan-100 mb-2">${esc(q.topic)}</h2>
+      <h2 class="text-lg font-bold text-cyan-100 mb-2 neon-zone-title">${esc(q.topic)}</h2>
       <p class="text-slate-200 mb-4 leading-relaxed">${esc(q.text)}</p>
       <div class="grid gap-2 bb-test-options" id="bb-test-options"></div>
     `;

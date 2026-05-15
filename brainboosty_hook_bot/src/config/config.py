@@ -177,7 +177,10 @@ class Settings(BaseSettings):
 
     ABOUT_PHOTO_PATH: str = Field(
         default="",
-        description="Фото для «О проекте»: абсолютный путь или относительно корня проекта (рядом с src/). Пусто — авто images/author.JPG",
+        description=(
+            "Фото для «О проекте» и лендинга: абсолютный путь или относительно корня проекта. "
+            "Пусто — ищем assets/author.webp,jpg,png … затем images/author.*"
+        ),
     )
 
     PREMIUM_CHANNEL_USERNAME: str = Field(
