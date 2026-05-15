@@ -10,6 +10,7 @@ from aiogram import Bot
 from fastapi import FastAPI, Request, Response
 
 from brainboosty_hook_bot.src.config.config import settings
+from brainboosty_hook_bot.src.utils.telegram_bot_factory import create_telegram_bot
 from brainboosty_hook_bot.src.web.tribute_app import process_tribute_webhook
 from brainboosty_hook_bot.src.web.webapp_routes import mount_webapp_static, router as webapp_router
 
@@ -27,7 +28,7 @@ async def lifespan(app: FastAPI):
     )
     if not (settings.BOT_TOKEN or "").strip():
         raise RuntimeError("BOT_TOKEN is not set — required for payment notifications")
-    _bot = Bot(settings.BOT_TOKEN)
+    _bot = create_telegram_bot(settings.BOT_TOKEN)
     yield
     if _bot is not None:
         await _bot.session.close()

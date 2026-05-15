@@ -31,6 +31,27 @@ sudo sh -c 'echo "127.0.0.1 brainboosty.ai" >> /etc/hosts'
 ./scripts/dev-up.sh local
 ```
 
+## Бот: `TelegramNetworkError: Request timeout`
+
+На части VPS (РФ, некоторые ДЦ) **api.telegram.org** недоступен или режется.
+
+На сервере:
+
+```bash
+curl -4 -v --max-time 15 https://api.telegram.org
+```
+
+- **Таймаут / нет ответа** → VPS в **EU** (Hetzner, DigitalOcean Amsterdam и т.п.) **или** прокси в `.env`:
+
+  ```env
+  TELEGRAM_PROXY_URL=socks5://host:port
+  TELEGRAM_REQUEST_TIMEOUT=90
+  ```
+
+  Пересборка: `docker compose -f docker-compose.yml -f docker-compose.caddy.yml up -d --build bot api`
+
+- **Ответ 200/302** → смотрите `BOT_TOKEN`, логи `docker compose logs bot`.
+
 ## Логи и остановка
 
 ```bash

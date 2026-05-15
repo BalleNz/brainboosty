@@ -25,6 +25,19 @@ class Settings(BaseSettings):
         default="",
         description="Токен Telegram-бота (@BotFather). Пустой допустим только для alembic без polling.",
     )
+    TELEGRAM_PROXY_URL: str = Field(
+        default="",
+        description=(
+            "Прокси до api.telegram.org, если VPS не достучался (таймаут). "
+            "Примеры: socks5://127.0.0.1:1080  http://user:pass@host:3128"
+        ),
+    )
+    TELEGRAM_REQUEST_TIMEOUT: float = Field(
+        default=90.0,
+        ge=15.0,
+        le=300.0,
+        description="Таймаут HTTP-запросов к Telegram API (сек.)",
+    )
     BOT_USERNAME: str = Field(
         default="BrainBoostyHookBot",
         description="Username бота без @ (для реферальных ссылок)",

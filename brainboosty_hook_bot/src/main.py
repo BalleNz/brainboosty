@@ -23,6 +23,7 @@ from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy import select
 
 from brainboosty_hook_bot.src.config.config import settings
+from brainboosty_hook_bot.src.utils.telegram_bot_factory import create_telegram_bot
 from brainboosty_hook_bot.src.locale import normalize_lang, t
 from brainboosty_hook_bot.src.database.models import User
 from brainboosty_hook_bot.src.database.session import async_session_maker, init_db
@@ -77,7 +78,7 @@ async def main() -> None:
     if not (settings.BOT_TOKEN or "").strip():
         raise SystemExit("BOT_TOKEN is not set — add it to .env (see .env.example)")
 
-    bot = Bot(settings.BOT_TOKEN)
+    bot = create_telegram_bot(settings.BOT_TOKEN)
     dp = Dispatcher(storage=_build_fsm_storage())
 
     # Сначала антиспам (ранний выход), затем сессия БД вокруг хендлера.
