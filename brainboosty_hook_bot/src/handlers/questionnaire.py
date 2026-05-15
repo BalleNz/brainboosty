@@ -25,7 +25,7 @@ from brainboosty_hook_bot.src.keyboards.inline import (
     start_lang_pick_kb,
 )
 from brainboosty_hook_bot.src.keyboards.reply import main_reply_kb
-from brainboosty_hook_bot.src.locale import t
+from brainboosty_hook_bot.src.locale import question_skill_message, t
 from brainboosty_hook_bot.src.services import subscription_service
 from brainboosty_hook_bot.src.services.subscription_service import user_has_paid_access
 from brainboosty_hook_bot.src.utils.flow_chat import flow_remember, flow_wipe, remove_reply_keyboard, try_delete_user_message
@@ -119,11 +119,12 @@ async def quest_language_chosen(callback: CallbackQuery, state: FSMContext) -> N
     await state.update_data(quest_lang=code, skill_keys=[], skills_edit_only=False)
     await state.set_state(QuestStates.skill)
     name = callback.from_user.first_name or ("friend" if code == "en" else "друг")
-    m1 = await bot.send_message(chat_id, t(code, "START_NEW_INTRO", name=name))
+    m1 = await bot.send_message(chat_id, t(code, "START_NEW_INTRO", name=name), parse_mode="HTML")
     m2 = await bot.send_message(
         chat_id,
-        t(code, "QUESTION_SKILL"),
+        question_skill_message(code, selected_count=0),
         reply_markup=questionnaire_skill_kb(code, selected=()),
+        parse_mode="HTML",
     )
     await flow_remember(state, m1.message_id, m2.message_id)
     await callback.answer()
@@ -132,7 +133,11 @@ async def quest_language_chosen(callback: CallbackQuery, state: FSMContext) -> N
 @router.message(QuestStates.language)
 async def quest_language_stray(message: Message, state: FSMContext, locale: str) -> None:
     await try_delete_user_message(message)
-    sent = await message.answer(t("ru", "LANG_PROMPT"), reply_markup=start_lang_pick_kb())
+    sent = await message.answer(
+        t(locale, "LANG_PROMPT"),
+        reply_markup=start_lang_pick_kb(),
+        parse_mode="HTML",
+    )
     await flow_remember(state, sent.message_id)
 
 
@@ -185,7 +190,11 @@ async def quest_skill_interaction(
         await flow_wipe(bot, chat_id, state, extra_ids=(callback.message.message_id,))
         await state.update_data(skill_keys=list(skill_keys))
         await state.set_state(QuestStates.age)
-        sent = await bot.send_message(chat_id, t(lang, "QUESTION_AGE"))
+        sent = await bot.send_message(
+            chat_id,
+            t(lang, "QUESTION_AGE"),
+            parse_mode="HTML",
+        )
         await flow_remember(state, sent.message_id)
         await callback.answer()
         return
@@ -195,18 +204,44 @@ async def quest_skill_interaction(
         await callback.answer(t(lang, "ERR_UNKNOWN_OPTION"), show_alert=True)
         return
 
+    edit_only = bool(data.get("skills_edit_only"))
+    max_skills = 2 if edit_only else 1
+
     if key in skill_keys:
         skill_keys = [k for k in skill_keys if k != key]
-    elif len(skill_keys) >= 2:
-        await callback.answer(t(lang, "SKILLS_MAX_TWO"), show_alert=True)
-        return
+    elif len(skill_keys) >= max_skills:
+        if max_skills == 1:
+            skill_keys = [key]
+        else:
+            await callback.answer(t(lang, "SKILLS_MAX_TWO"), show_alert=True)
+            return
     else:
         skill_keys = [*skill_keys, key]
 
     await state.update_data(skill_keys=skill_keys)
+    if not edit_only and len(skill_keys) == 1:
+        bot = callback.bot
+        chat_id = callback.message.chat.id
+        await flow_wipe(bot, chat_id, state, extra_ids=(callback.message.message_id,))
+        await state.set_state(QuestStates.age)
+        sent = await bot.send_message(
+            chat_id,
+            t(lang, "QUESTION_AGE"),
+            parse_mode="HTML",
+        )
+        await flow_remember(state, sent.message_id)
+        await callback.answer()
+        return
+
     try:
-        await callback.message.edit_reply_markup(
-            reply_markup=questionnaire_skill_kb(lang, selected=tuple(skill_keys)),
+        await callback.message.edit_text(
+            question_skill_message(lang, selected_count=len(skill_keys), max_skills=max_skills),
+            reply_markup=questionnaire_skill_kb(
+                lang,
+                selected=tuple(skill_keys),
+                show_done_button=edit_only,
+            ),
+            parse_mode="HTML",
         )
     except TelegramBadRequest:
         pass
@@ -221,7 +256,11 @@ async def quest_skill_text_instead_of_button(message: Message, state: FSMContext
     sel = tuple(_normalize_skill_keys_list(data.get("skill_keys")))
     sent = await message.answer(
         t(lang, "QUEST_STAY_ON_STEP"),
-        reply_markup=questionnaire_skill_kb(lang, selected=sel),
+        reply_markup=questionnaire_skill_kb(
+            lang,
+            selected=sel,
+            show_done_button=bool(data.get("skills_edit_only")),
+        ),
     )
     await flow_remember(state, sent.message_id)
 
@@ -247,7 +286,12 @@ async def quest_age_entered(message: Message, state: FSMContext, locale: str) ->
 
     await state.update_data(age=age)
     await state.set_state(QuestStates.time)
-    sent = await bot.send_message(chat_id, t(lang, "QUESTION_TIME"), reply_markup=questionnaire_time_kb(lang))
+    sent = await bot.send_message(
+        chat_id,
+        t(lang, "QUESTION_TIME"),
+        reply_markup=questionnaire_time_kb(lang),
+        parse_mode="HTML",
+    )
     await flow_remember(state, sent.message_id)
 
 

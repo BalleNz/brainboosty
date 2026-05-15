@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import html
+
 RU_SEXUAL = [
     "1. Планирование секса\nКак ты обычно подходишь к сексуальной жизни?\nA) Заранее продумываю всё: когда, где, какие фантазии, игрушки\nB) В общих чертах знаю, чего хочу, но гибко\nC) Планирую только если очень сильно тянет\nD) Полностью спонтанно, без планов",
     "2. Реакция на отказ или неудачу в сексе\nКогда партнёр отказывает или секс идёт не так:\nA) Сильная эмоциональная реакция (обида, злость, резкое падение возбуждения)\nB) Заметно расстраиваюсь, но быстро отпускаю\nC) Реагирую умеренно\nD) Почти не задевает, остаюсь спокойным",
@@ -44,13 +46,36 @@ EN_DEV = [
 
 NUM = 7
 
+_SEXUAL_Q_EMOJI = ("🔥", "💥", "🌡️", "👀", "💬", "🌌", "⚡")
+_DEV_Q_EMOJI = ("🎯", "💥", "🫀", "👥", "💬", "🌐", "⚖️")
 
-def _split_stem_and_options(legacy_block: str) -> tuple[str, str]:
-    """Из строки вида «1. Тема\\nВопрос?\\nA)…» делает тема+вопрос без номера и блок вариантов."""
+
+def _question_emoji(variant: str, q_index_1_based: int) -> str:
+    i = q_index_1_based - 1
+    row = _SEXUAL_Q_EMOJI if variant == "sexual" else _DEV_Q_EMOJI
+    return row[i]
+
+
+def _format_options_html(options_block: str) -> str:
+    """Каждая строка «A) …» → «<b>A)</b> …»."""
+    lines_out: list[str] = []
+    for raw in options_block.strip().split("\n"):
+        line = raw.strip()
+        if len(line) >= 2 and line[0] in "ABCD" and line[1] == ")":
+            paren = line.index(")") + 1
+            prefix = line[:paren]
+            rest = line[paren:].lstrip()
+            lines_out.append(f"<b>{html.escape(prefix)}</b> {html.escape(rest)}")
+        else:
+            lines_out.append(html.escape(line))
+    return "\n".join(lines_out)
+
+
+def _split_topic_question_options(legacy_block: str) -> tuple[str, str, str]:
+    """Из строки «1. Тема\\nВопрос?\\nA)…» — тема без номера, строка вопроса, блок вариантов."""
     head, question, opts = legacy_block.split("\n", 2)
     topic = head.split(". ", 1)[1]
-    stem = f"{topic}\n\n{question}"
-    return stem.strip(), opts.strip()
+    return topic.strip(), question.strip(), opts.strip()
 
 
 def cognitive_question_body(lang: str, variant: str, q_index_1_based: int) -> str:
@@ -60,6 +85,11 @@ def cognitive_question_body(lang: str, variant: str, q_index_1_based: int) -> st
         legacy = (EN_SEXUAL if lg == "en" else RU_SEXUAL)[idx]
     else:
         legacy = (EN_DEV if lg == "en" else RU_DEV)[idx]
-    stem, options = _split_stem_and_options(legacy)
-    header = f"<b>Question {q_index_1_based}/{NUM}</b>" if lg == "en" else f"<b>Вопрос {q_index_1_based}/{NUM}</b>"
-    return f"{header}\n\n{stem}\n\n{options}"
+    topic, question, options = _split_topic_question_options(legacy)
+    header_plain = f"Вопрос {q_index_1_based}/{NUM}" if lg == "ru" else f"Question {q_index_1_based}/{NUM}"
+    header = f"🧠 <b>{html.escape(header_plain)}</b>"
+    emoji = _question_emoji(variant, q_index_1_based)
+    topic_line = f"{emoji} <b>{html.escape(topic)}</b>"
+    options_html = _format_options_html(options)
+    q_html = html.escape(question)
+    return f"{header}\n\n{topic_line}\n\n{q_html}\n\n{options_html}"

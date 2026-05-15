@@ -7,9 +7,11 @@ from typing import Any
 from fpdf import FPDF
 from unidecode import unidecode
 
+from brainboosty_hook_bot.src.config.config import settings
 from brainboosty_hook_bot.src.locale import t
-from brainboosty_hook_bot.src.services import assistant_service
-from brainboosty_hook_bot.src.services.brain_map import recommendation_for_goals
+from brainboosty_hook_bot.src.services.brain_pdf import build_brain_map_html
+from brainboosty_hook_bot.src.services.brain_region_keys import REGION_KEYS
+from brainboosty_hook_bot.src.services.brain_pdf_playwright import render_html_to_pdf_bytes, tribute_qr_data_url
 
 _DEJAVU_REGULAR = Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
 _DEJAVU_BOLD = Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf")
@@ -59,96 +61,31 @@ class BrainMapPDF(FPDF):
         self.cell(0, 10, _pdf_text(self, t(self.lang, "PDF_FOOTER")), align="C")
 
 
-def _region_keys_for_pdf(scores: dict[str, float], *, paid: bool) -> list[str]:
-    """Как в PNG-инфографике: платно — фиксированный порядок; бесплатно — от слабых к сильным."""
-    if paid:
-        return list(assistant_service.REGION_KEYS)
-    return [k for k, _ in sorted(scores.items(), key=lambda x: x[1])]
-
-
-def build_brain_map_pdf(
+async def build_brain_map_pdf(
     *,
     lang: str,
     scores: dict[str, float],
     test_variant: str,
     goal_keys: list[str],
     paid: bool = True,
+    user_display_name: str = "",
+    detail_json: dict[str, Any] | None = None,
 ) -> bytes:
-    """PDF с прогресс-барами. При paid=False — две нижние зоны без процентов (как тизер), без полных рекомендаций."""
-    pdf = BrainMapPDF(orientation="P", unit="mm", format="A4")
-    _register_dejavu_if_available(pdf)
-    pdf.lang = lang
-    pdf.set_auto_page_break(auto=True, margin=20)
-    pdf.add_page()
-
-    fam = getattr(pdf, "_font_main", "helvetica")
-
-    # === ШАПКА ===
-    vlabel = "Сексуальная карта мозга 🔥" if test_variant == "sexual" else "Карта развития мозга 🧠"
-    pdf.set_font(fam, "B", 14)
-    pdf.set_text_color(100, 50, 200)  # Фиолетовый акцент
-    pdf.cell(0, 8, _pdf_text(pdf, vlabel), ln=True, align="C")
-    pdf.ln(8)
-
-    # === ЗОНЫ МОЗГА ===
-    pdf.set_font(fam, "B", 13)
-    pdf.set_text_color(25, 25, 112)
-    pdf.cell(0, 10, _pdf_text(pdf, t(lang, "PDF_SECTION_ZONES")), ln=True)
-    pdf.ln(2)
-
-    keys = _region_keys_for_pdf(scores, paid=paid)
-    bar_width = 170.0
-    pdf.set_font(fam, "", 11)
-    for i, key in enumerate(keys):
-        name = t(lang, f"BRAIN_RL_{key}")
-        value = float(scores.get(key, 0.0))
-        locked = (not paid) and i >= 4
-
-        pdf.set_text_color(0, 0, 0)
-        if locked:
-            lock_txt = t(lang, "BRAIN_MAP_PHOTO_LOCKED")
-            pdf.cell(0, 8, _pdf_text(pdf, f"{name}: {lock_txt}"), ln=True)
-        else:
-            pdf.cell(0, 8, _pdf_text(pdf, f"{name}: {value:.1f}%"), ln=True)
-
-        y_bar = pdf.get_y()
-        if locked:
-            fill_width = bar_width * 0.22
-            pdf.set_fill_color(180, 185, 195)
-            pdf.rect(10, y_bar, fill_width, 6, "F")
-            pdf.set_fill_color(220, 224, 230)
-            pdf.rect(10 + fill_width, y_bar, bar_width - fill_width, 6, "F")
-        else:
-            fill_width = (value / 100.0) * bar_width
-            pdf.set_fill_color(100, 50, 200)
-            pdf.rect(10, y_bar, fill_width, 6, "F")
-            pdf.set_fill_color(230, 230, 230)
-            pdf.rect(10 + fill_width, y_bar, bar_width - fill_width, 6, "F")
-
-        pdf.ln(10)
-
-    # === РЕКОМЕНДАЦИИ ===
-    pdf.ln(5)
-    pdf.set_font(fam, "B", 13)
-    pdf.set_text_color(25, 25, 112)
-    pdf.cell(0, 10, _pdf_text(pdf, t(lang, "PDF_SECTION_REC")), ln=True)
-
-    pdf.set_font(fam, "", 11)
-    pdf.set_text_color(0, 0, 0)
-    if paid:
-        rec = recommendation_for_goals(lang, goal_keys)
-    else:
-        rec = t(lang, "BRAIN_MAP_PHOTO_TEASER_HINT")
-    pdf.multi_cell(0, 6, _pdf_text(pdf, rec))
-
-    # Финальный футер
-    pdf.ln(10)
-    pdf.set_font(fam, "", 9)
-    pdf.set_text_color(100, 100, 100)
-    pdf.multi_cell(0, 5, _pdf_text(pdf, t(lang, "PDF_FOOTER")))
-
-    out = pdf.output(dest="S")
-    return bytes(out) if isinstance(out, (bytes, bytearray)) else out.encode("latin-1")
+    """Cyber-neon PDF (HTML + Playwright async). goal_keys зарезервированы для будущих блоков / совместимости API."""
+    _ = goal_keys
+    tribute_url = (settings.TRIBUTE_APP_URL or "").strip() or "https://t.me/tribute/app"
+    qr = tribute_qr_data_url(tribute_url)
+    html = build_brain_map_html(
+        lang=lang,
+        scores=scores,
+        test_variant=test_variant,
+        paid=paid,
+        user_display_name=user_display_name,
+        tribute_url=tribute_url,
+        qr_data_url=qr,
+        detail_json=detail_json,
+    )
+    return await render_html_to_pdf_bytes(html)
 
 
 def build_shared_test_history_pdf(*, lang: str, rows: list[dict[str, Any]]) -> bytes:
@@ -192,7 +129,7 @@ def build_shared_test_history_pdf(*, lang: str, rows: list[dict[str, Any]]) -> b
         deltas: dict[str, float] | None = row.get("deltas")
         pdf.set_font(fam, "", 10)
         pdf.set_text_color(0, 0, 0)
-        for key in assistant_service.REGION_KEYS:
+        for key in REGION_KEYS:
             name = t(lang, f"BRAIN_RL_{key}")
             value = float(scores.get(key, 0.0))
             if deltas and key in deltas:

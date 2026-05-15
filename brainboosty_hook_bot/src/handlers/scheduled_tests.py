@@ -32,6 +32,7 @@ from brainboosty_hook_bot.src.services.shared_test_service import (
     question_body_html,
     questions_list,
     snapshot_test_variant,
+    test_pack_intro_html,
     user_completed_shared,
 )
 from brainboosty_hook_bot.src.services.subscription_service import user_has_paid_access
@@ -73,10 +74,9 @@ async def tests_reply_entry(message: Message, session: AsyncSession, locale: str
         await message.answer(t(locale, "NOT_REGISTERED"))
         return
     lang = normalize_user_lang(user, locale)
-    if not user_has_paid_access(user):
-        await message.answer(t(lang, "TESTS_LOCKED"))
-        return
-    await message.answer(t(lang, "TESTS_HUB_TEXT"), reply_markup=tests_hub_inline_kb(lang))
+    paid = user_has_paid_access(user)
+    hub_text = t(lang, "TESTS_HUB_TEXT") if paid else t(lang, "TESTS_HUB_TEXT_FREE")
+    await message.answer(hub_text, reply_markup=tests_hub_inline_kb(lang, paid_access=paid))
 
 
 @router.callback_query(F.data.startswith(STEST_HUB_PREFIX))
@@ -95,11 +95,17 @@ async def tests_hub_callback(
         await callback.answer(t(locale, "NOT_REGISTERED"), show_alert=True)
         return
     lang = normalize_user_lang(user, locale)
-    if not user_has_paid_access(user):
-        await callback.answer(t(lang, "TESTS_LOCKED"), show_alert=True)
-        return
+    paid = user_has_paid_access(user)
 
     suffix = callback.data.removeprefix(STEST_HUB_PREFIX)
+    if suffix == "day" and not paid:
+        await callback.answer(t(lang, "TESTS_DAILY_PREMIUM"), show_alert=True)
+        return
+
+    if suffix == "pdf" and not paid:
+        await callback.answer(t(lang, "TESTS_PDF_PREMIUM"), show_alert=True)
+        return
+
     if suffix == "pdf":
         await callback.answer()
         await callback.message.answer(t(lang, "PDF_GENERATING"))
@@ -143,10 +149,13 @@ async def tests_hub_callback(
         st_nq=len(qs),
         st_lang=lang,
     )
+    intro = test_pack_intro_html(st.content_json, lang)
+    qbody = question_body_html(qs[0], lang)
+    first_text = f"{intro}\n\n{qbody}" if intro else qbody
     sent = await bot.send_message(
         chat_id,
-        question_body_html(qs[0], lang),
-        reply_markup=scheduled_test_answer_kb(st.id, 1),
+        first_text,
+        reply_markup=scheduled_test_answer_kb(lang, st.id, 1),
         parse_mode="HTML",
     )
     await flow_remember(state, sent.message_id)
@@ -173,12 +182,19 @@ async def _finalize_scheduled_test(
         return
 
     computing = await bot.send_message(chat_id, t(lang, "TESTS_COMPUTING"))
+    meta_block = st.content_json.get("meta") if isinstance(st.content_json, dict) else None
     try:
-        scores, source = await assistant_service.compute_region_scores_dynamic(qs, answers, lang=lang)
+        raw_scores, source, score_detail = await assistant_service.compute_region_scores_dynamic(
+            qs,
+            answers,
+            lang=lang,
+            test_meta=meta_block if isinstance(meta_block, dict) else None,
+        )
     except Exception as exc:  # noqa: BLE001
         logger.exception("scheduled test scoring: %s", exc)
-        scores = assistant_service.fallback_region_scores_n(answers, n)
+        raw_scores = assistant_service.fallback_region_scores_n(answers, n)
         source = "fallback"
+        score_detail = None
 
     prev_stmt = (
         select(BrainRegionSnapshot)
@@ -193,6 +209,14 @@ async def _finalize_scheduled_test(
         else None
     )
 
+    scores = assistant_service.merge_scheduled_into_profile(previous_scores, raw_scores, kind=kind)
+
+    detail_out: dict | None = None
+    if isinstance(score_detail, dict) and score_detail:
+        detail_out = {"shared_score": score_detail}
+    if isinstance(meta_block, dict):
+        detail_out = {**(detail_out or {}), "shared_test_meta": meta_block}
+
     tv = snapshot_test_variant(kind, st.period_key)
     if len(tv) > 32:
         tv = tv[:32]
@@ -206,6 +230,7 @@ async def _finalize_scheduled_test(
         temporoparietal_junction=scores["temporoparietal_junction"],
         amygdala=scores["amygdala"],
         frontal_gyrus=scores["frontal_gyrus"],
+        detail_json=detail_out,
     )
     session.add(snap)
     await session.flush()
@@ -232,12 +257,99 @@ async def _finalize_scheduled_test(
             lines.append(f"{name}: {v:.1f}% ({d:+.1f})")
         else:
             lines.append(f"{name}: {v:.1f}%")
+    lines.append("")
+    lines.append(t(lang, "TEST_RESULT_MODEL_DISCLAIMER"))
 
     await bot.send_message(
         chat_id,
         "\n".join(lines),
-        reply_markup=main_reply_kb(lang, paid_access=True, show_retest=True),
+        reply_markup=main_reply_kb(lang, paid_access=user_has_paid_access(user), show_retest=True),
+        parse_mode="HTML",
     )
+
+
+async def _scheduled_test_go_back(
+    callback: CallbackQuery,
+    state: FSMContext,
+    session: AsyncSession,
+    locale: str,
+    *,
+    sid_back: int,
+) -> None:
+    if callback.message is None or callback.from_user is None:
+        await callback.answer()
+        return
+
+    data = await state.get_data()
+    if int(data.get("st_sid") or 0) != sid_back:
+        await callback.answer(t(locale, "ERR_START_OVER"), show_alert=True)
+        await state.clear()
+        return
+
+    cq = data.get("st_cq")
+    st_kind = data.get("st_kind")
+    answers_obj = data.get("st_answers") or {}
+    if not isinstance(cq, int) or st_kind not in ("daily", "weekly"):
+        await callback.answer(t(locale, "ERR_START_OVER"), show_alert=True)
+        await state.clear()
+        return
+
+    user = (await session.execute(select(User).where(User.tg_id == callback.from_user.id))).scalar_one_or_none()
+    if user is None:
+        await callback.answer(t(locale, "NOT_REGISTERED"), show_alert=True)
+        return
+    lang = str(data.get("st_lang") or normalize_user_lang(user, locale))
+
+    answers: dict[int, str] = {}
+    for k, v in answers_obj.items():
+        try:
+            ki = int(k) if isinstance(k, str) and k.isdigit() else int(k)
+            if isinstance(v, str):
+                answers[ki] = v
+        except (TypeError, ValueError):
+            continue
+
+    bot = callback.bot
+    chat_id = callback.message.chat.id
+    question_mid = callback.message.message_id
+
+    if cq == 1:
+        await callback.answer()
+        await delete_one(bot, chat_id, question_mid)
+        await flow_wipe(bot, chat_id, state, extra_ids=(question_mid,))
+        await state.clear()
+        paid = user_has_paid_access(user)
+        hub_text = t(lang, "TESTS_HUB_TEXT") if paid else t(lang, "TESTS_HUB_TEXT_FREE")
+        await bot.send_message(chat_id, hub_text, reply_markup=tests_hub_inline_kb(lang, paid_access=paid))
+        return
+
+    prev = cq - 1
+    answers.pop(prev, None)
+    await state.update_data(
+        st_cq=prev,
+        st_answers={str(i): answers[i] for i in sorted(answers)},
+    )
+    await callback.answer()
+    await delete_one(bot, chat_id, question_mid)
+    await flow_wipe(bot, chat_id, state, extra_ids=(question_mid,))
+
+    st_row = (await session.execute(select(SharedTest).where(SharedTest.id == sid_back))).scalar_one_or_none()
+    if st_row is None:
+        await state.clear()
+        await bot.send_message(chat_id, t(lang, "TESTS_ERR"))
+        return
+    qs = questions_list(st_row.content_json)
+    if prev < 1 or prev > len(qs):
+        await state.clear()
+        await bot.send_message(chat_id, t(lang, "TESTS_ERR"))
+        return
+    sent = await bot.send_message(
+        chat_id,
+        question_body_html(qs[prev - 1], lang),
+        reply_markup=scheduled_test_answer_kb(lang, sid_back, prev),
+        parse_mode="HTML",
+    )
+    await flow_remember(state, sent.message_id)
 
 
 @router.callback_query(ScheduledTestStates.running, F.data.startswith(STEST_ANS_PREFIX))
@@ -250,6 +362,13 @@ async def scheduled_test_answer_step(
     if callback.from_user is None or callback.message is None or callback.data is None:
         await callback.answer()
         return
+
+    if callback.data.startswith(STEST_ANS_PREFIX) and callback.data.endswith(":back"):
+        rest = callback.data.removeprefix(STEST_ANS_PREFIX)
+        parts = rest.split(":")
+        if len(parts) == 2 and parts[1] == "back" and parts[0].isdigit():
+            await _scheduled_test_go_back(callback, state, session, locale, sid_back=int(parts[0]))
+            return
 
     parsed = _parse_scheduled_answer_cb(callback.data)
     if parsed is None:
@@ -311,7 +430,7 @@ async def scheduled_test_answer_step(
         sent = await bot.send_message(
             chat_id,
             question_body_html(qs2[nxt - 1], lang),
-            reply_markup=scheduled_test_answer_kb(sid, nxt),
+            reply_markup=scheduled_test_answer_kb(lang, sid, nxt),
             parse_mode="HTML",
         )
         await flow_remember(state, sent.message_id)

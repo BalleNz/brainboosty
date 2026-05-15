@@ -28,5 +28,4 @@ async def user_is_channel_member(bot: Bot, user_id: int) -> bool:
         ChatMemberStatus.MEMBER,
         ChatMemberStatus.ADMINISTRATOR,
         ChatMemberStatus.CREATOR,
-        ChatMemberStatus.OWNER,
     )

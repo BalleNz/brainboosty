@@ -25,7 +25,26 @@ logger = logging.getLogger(__name__)
 
 Kind = Literal["daily", "weekly"]
 
+_META_DAILY_FB: dict[str, Any] = {
+    "title_ru": "Мини‑чек саморегуляции",
+    "title_en": "Mini self‑regulation check",
+    "emoji": "⚡",
+    "focus_regions": ["prefrontal_cortex", "amygdala"],
+    "focus_note_ru": "Короткая проверка планирования и стресс‑реакций.",
+    "focus_note_en": "A brief check of planning and stress reactions.",
+}
+
+_META_WEEKLY_FB: dict[str, Any] = {
+    "title_ru": "Недельный профиль внимания и социального контекста",
+    "title_en": "Weekly attention & social context profile",
+    "emoji": "🧭",
+    "focus_regions": ["prefrontal_cortex", "temporoparietal_junction", "insular_cortex"],
+    "focus_note_ru": "Глубже про фокус, эмпатию и телесные сигналы.",
+    "focus_note_en": "Deeper focus on attention, empathy, and bodily signals.",
+}
+
 _FALLBACK_DAILY: dict[str, Any] = {
+    "meta": _META_DAILY_FB,
     "questions": [
         {
             "id": 1,
@@ -75,6 +94,7 @@ _FALLBACK_DAILY: dict[str, Any] = {
 }
 
 _FALLBACK_WEEKLY: dict[str, Any] = {
+    "meta": _META_WEEKLY_FB,
     "questions": [
         {
             "id": i,
@@ -117,7 +137,7 @@ async def _build_new_content_json(kind: Kind) -> dict[str, Any]:
         return raw
     try:
         data = await assistant_service.generate_shared_test_json(kind)
-        return {"questions": data["questions"]}
+        return {"meta": data["meta"], "questions": data["questions"]}
     except Exception as exc:  # noqa: BLE001
         logger.warning("Shared test generation failed, using fallback: %s", exc)
         raw = _FALLBACK_DAILY if kind == "daily" else _FALLBACK_WEEKLY
@@ -152,6 +172,26 @@ def questions_list(content_json: dict[str, Any]) -> list[dict[str, Any]]:
     if not isinstance(qs, list):
         return []
     return qs
+
+
+def test_pack_intro_html(content_json: dict[str, Any], lang: str) -> str:
+    """Заголовок набора: эмодзи, название, фокус зон (для первого сообщения теста)."""
+    lg = lang if lang in {"ru", "en"} else "ru"
+    meta = content_json.get("meta") if isinstance(content_json.get("meta"), dict) else {}
+    emoji = str(meta.get("emoji", "🧠")).strip() or "🧠"
+    title = meta.get("title_ru" if lg == "ru" else "title_en", "")
+    fn = meta.get("focus_note_ru" if lg == "ru" else "focus_note_en", "")
+    fr = meta.get("focus_regions")
+    lines: list[str] = []
+    if isinstance(title, str) and title.strip():
+        lines.append(f"{emoji} <b>{title.strip()}</b>")
+    if isinstance(fr, list) and fr:
+        keys = ", ".join(str(x) for x in fr)
+        label = "Фокус зон" if lg == "ru" else "Brain focus"
+        lines.append(f"<i>{label}: {keys}</i>")
+    if isinstance(fn, str) and fn.strip():
+        lines.append(fn.strip())
+    return "\n\n".join(lines) if lines else ""
 
 
 def question_body_html(q: dict[str, Any], lang: str) -> str:

@@ -130,6 +130,10 @@ class Settings(BaseSettings):
         default="https://t.me/tribute/app?startapp=sUmL_pc_BRAINBOOST",
         description="Tribute с промокодом −15% на пробный месяц",
     )
+    TRIBUTE_APP_URL_FOREVER_DISC: str = Field(
+        default="https://t.me/tribute/app?startapp=sUmL_pc_32R2RCUK15",
+        description="Tribute Forever 2490 ₽ (вместо 3990); кнопка «Купить в Трибьют» при активном окне скидки после теста",
+    )
     TRIBUTE_PAY_URL_MONTH: str = Field(default="", description="Устарело: используйте TRIBUTE_APP_URL")
     TRIBUTE_PAY_URL_FOREVER: str = Field(default="", description="Устарело")
     TRIBUTE_PAY_URL_FOREVER_DISCOUNT: str = Field(default="", description="Устарело")
@@ -142,6 +146,24 @@ class Settings(BaseSettings):
     PREMIUM_CHANNEL_USERNAME: str = Field(
         default="androgenautist",
         description="Публичный username канала без @ (проверка подписки и ссылка t.me)",
+    )
+
+    VIP_PRIVATE_CHANNEL_CHAT_ID: str = Field(
+        default="",
+        description=(
+            "Числовой ID приватного канала/чата (-100…), куда бот шлёт одноразовую invite после оплаты Stars "
+            "(Forever). Бот — админ канала с правом создавать пригласительные ссылки."
+        ),
+    )
+    STARS_FOREVER_FULL: int = Field(
+        default=3900,
+        ge=1,
+        description="Цена Forever в Telegram Stars (полная), валюта XTR, 1 = 1 ⭐",
+    )
+    STARS_FOREVER_DISCOUNT: int = Field(
+        default=2490,
+        ge=1,
+        description="Цена Forever в Stars при активном окне скидки после теста (как для Tribute)",
     )
 
     def _with_v1_suffix(self, base: str) -> str:

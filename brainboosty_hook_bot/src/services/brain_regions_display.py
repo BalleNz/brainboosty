@@ -52,4 +52,6 @@ def format_brain_map_with_comparison(
     lines.append(
         t(lang, "BRAIN_MAP_COMPARISON_FOOTER") if previous is not None else t(lang, "BRAIN_MAP_FIRST_FOOTER"),
     )
+    lines.append("")
+    lines.append(t(lang, "TEST_RESULT_MODEL_DISCLAIMER"))
     return "\n".join(lines)

@@ -1,45 +1,94 @@
-"""Отправка полной «карты мозга» (фото + текст), как для платного доступа."""
+"""Отправка PDF карты мозга в чат (без инфографики — только документ)."""
 
 from __future__ import annotations
 
 import asyncio
 import logging
+import re
 
 from aiogram import Bot
 from aiogram.types import BufferedInputFile, InlineKeyboardMarkup
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from unidecode import unidecode
 
 from brainboosty_hook_bot.src.database.models import BrainRegionSnapshot, User
 from brainboosty_hook_bot.src.locale import t
-from brainboosty_hook_bot.src.services.brain_map_image import build_brain_map_infographic_png
 from brainboosty_hook_bot.src.services.pdf_report import build_brain_map_pdf
-from brainboosty_hook_bot.src.services.brain_regions_display import format_brain_map_with_comparison, snapshot_to_scores
+from brainboosty_hook_bot.src.services.brain_regions_display import snapshot_to_scores
 from brainboosty_hook_bot.src.utils.flow_chat import delete_one
 
 logger = logging.getLogger(__name__)
 
 
-def _brain_title(lang: str, variant: str) -> str:
-    if variant == "sexual":
-        return t(lang, "BRAIN_MAP_TITLE_SEXUAL_BLOCK")
-    return t(lang, "BRAIN_MAP_TITLE_DEVELOPMENT_BLOCK")
-
-
-async def _fetch_latest_two_snapshots(
-    session: AsyncSession,
-    user_id: int,
-) -> tuple[BrainRegionSnapshot, BrainRegionSnapshot | None]:
+async def _fetch_latest_snapshot(session: AsyncSession, user_id: int) -> BrainRegionSnapshot | None:
     stmt = (
         select(BrainRegionSnapshot)
         .where(BrainRegionSnapshot.user_id == user_id)
         .order_by(BrainRegionSnapshot.created_at.desc())
-        .limit(2)
+        .limit(1)
     )
-    rows = list((await session.execute(stmt)).scalars().all())
-    if not rows:
-        raise ValueError("no brain snapshots for user")
-    return rows[0], rows[1] if len(rows) > 1 else None
+    return (await session.execute(stmt)).scalar_one_or_none()
+
+
+async def _count_snapshots(session: AsyncSession, user_id: int) -> int:
+    q = await session.execute(
+        select(func.count()).select_from(BrainRegionSnapshot).where(BrainRegionSnapshot.user_id == user_id),
+    )
+    return int(q.scalar_one() or 0)
+
+
+def _pdf_filename_slug(user: User) -> str:
+    raw = (user.username or "").strip().lstrip("@") or (user.first_name or "").strip() or "user"
+    slug = unidecode(raw).lower()
+    slug = re.sub(r"[^a-z0-9._-]+", "_", slug).strip("._-")[:48]
+    return slug or "user"
+
+
+async def deliver_brain_map_pdf(
+    bot: Bot,
+    chat_id: int,
+    session: AsyncSession,
+    user: User,
+    lang: str,
+    *,
+    scores: dict[str, float],
+    test_variant: str,
+    paid: bool,
+    reply_markup: InlineKeyboardMarkup | None = None,
+    detail_json: dict | None = None,
+) -> list[int]:
+    """Сообщение о генерации → PDF с именем `{slug}_brainmap_{n}.pdf` → удаление статуса. Возвращает id для trial-delete."""
+    status_msg = await bot.send_message(chat_id, t(lang, "PDF_BRAIN_MAP_GENERATING"))
+    status_id = status_msg.message_id
+    gen = await _count_snapshots(session, user.id)
+    slug = _pdf_filename_slug(user)
+    fname = f"{slug}_brainmap_{gen}.pdf"
+    goal_keys = list(user.goals) if isinstance(user.goals, list) else []
+    try:
+        pdf_bytes = await build_brain_map_pdf(
+            lang=lang,
+            scores=scores,
+            test_variant=test_variant,
+            goal_keys=goal_keys,
+            paid=paid,
+            user_display_name=user.first_name,
+            detail_json=detail_json,
+        )
+        doc = await bot.send_document(
+            chat_id,
+            BufferedInputFile(pdf_bytes, filename=fname),
+            caption=t(lang, "PDF_CAPTION"),
+            reply_markup=reply_markup,
+        )
+        try:
+            await bot.delete_message(chat_id, status_id)
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("delete PDF status message: %s", exc)
+        return [doc.message_id]
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Brain map PDF failed: %s", exc)
+        return [status_id]
 
 
 async def send_full_brain_result_pack(
@@ -51,47 +100,25 @@ async def send_full_brain_result_pack(
     *,
     reply_markup: InlineKeyboardMarkup | None = None,
 ) -> list[int]:
-    """Фото (полная версия) + карточка сравнения + PDF. Возвращает id сообщений для отложенного удаления."""
-    latest, previous = await _fetch_latest_two_snapshots(session, user.id)
+    """Только PDF (инфографика и текстовая карточка не отправляются)."""
+    latest = await _fetch_latest_snapshot(session, user.id)
+    if latest is None:
+        raise ValueError("no brain snapshots for user")
     v = latest.test_variant if latest.test_variant in ("sexual", "development") else "development"
     scores = snapshot_to_scores(latest)
-    previous_scores = snapshot_to_scores(previous) if previous is not None else None
-    title = _brain_title(lang, v)
-    ids: list[int] = []
-    try:
-        png = build_brain_map_infographic_png(scores, lang, paid=True, test_variant=v)
-        cap = t(lang, "BRAIN_MAP_PHOTO_CAPTION_PAID")
-        msg = await bot.send_photo(
-            chat_id,
-            BufferedInputFile(png, filename="brain-map.png"),
-            caption=cap,
-        )
-        ids.append(msg.message_id)
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("Brain map infographic failed: %s", exc)
-    card = format_brain_map_with_comparison(scores, previous_scores, title=title, lang=lang)
-    msg2 = await bot.send_message(chat_id, card, reply_markup=reply_markup)
-    ids.append(msg2.message_id)
-
-    goal_keys = list(user.goals) if isinstance(user.goals, list) else []
-    try:
-        pdf_bytes = build_brain_map_pdf(
-            lang=lang,
-            scores=scores,
-            test_variant=v,
-            goal_keys=goal_keys,
-            paid=True,
-        )
-        msg_doc = await bot.send_document(
-            chat_id,
-            BufferedInputFile(pdf_bytes, filename="brainboosty-brain-map.pdf"),
-            caption=t(lang, "PDF_CAPTION"),
-        )
-        ids.append(msg_doc.message_id)
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("Brain map PDF failed: %s", exc)
-
-    return ids
+    detail = latest.detail_json if isinstance(latest.detail_json, dict) else None
+    return await deliver_brain_map_pdf(
+        bot,
+        chat_id,
+        session,
+        user,
+        lang,
+        scores=scores,
+        test_variant=v,
+        paid=True,
+        reply_markup=reply_markup,
+        detail_json=detail,
+    )
 
 
 async def schedule_delete_messages(bot: Bot, chat_id: int, message_ids: list[int], delay_sec: float) -> None:

@@ -1,27 +1,19 @@
-"""Оплата Telegram Stars и кнопки на Tribute; выдача подписки."""
+"""Оплата через Tribute (Mini App), скидки по каналу и реферальные сценарии."""
 
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from aiogram import Bot, F, Router
+from aiogram.enums import ContentType
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.filters import BaseFilter
-from aiogram.types import (
-    CallbackQuery,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    LabeledPrice,
-    Message,
-    PreCheckoutQuery,
-)
+from aiogram.types import CallbackQuery, InlineKeyboardMarkup, LabeledPrice, Message, PreCheckoutQuery
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from brainboosty_hook_bot.src.config.config import settings
 from brainboosty_hook_bot.src.database.models import User
-from brainboosty_hook_bot.src.keyboards.reply import main_reply_kb
 from brainboosty_hook_bot.src.keyboards.inline import (
     ACCESS_CHANNEL_15_PITCH_CB,
     ACCESS_CH15_NO_CB,
@@ -30,12 +22,13 @@ from brainboosty_hook_bot.src.keyboards.inline import (
     ACCESS_SHOW_REF_CB,
     PAY_BACK_TARIFF_CB,
     PAY_PLAN_PREFIX,
-    PAY_STARS_PREFIX,
+    PAY_STARS_FOREVER_CB,
     SUB_OFFER_CB,
     VERIFY_CH_PROMO_CB,
     access_postpone_discount_kb,
     access_show_ref_kb,
     access_tariff_choice_kb,
+    access_tribute_buy_step_kb,
     access_verify_promo_kb,
 )
 from brainboosty_hook_bot.src.locale import t
@@ -47,16 +40,54 @@ logger = logging.getLogger(__name__)
 
 router = Router(name="payments")
 
-
-class _HasSuccessfulPayment(BaseFilter):
-    async def __call__(self, message: Message) -> bool:
-        return message.successful_payment is not None
+STARS_INVOICE_PAYLOAD_PREFIX = "bbfs"
 
 
-PAYLOAD_XTR_MONTH = "bb_xtr_m790"
-PAYLOAD_XTR_MONTH_DISC = "bb_xtr_m672"
-PAYLOAD_XTR_FOREVER_FULL = "bb_xtr_f3900"
-PAYLOAD_XTR_FOREVER_DISC = "bb_xtr_f2490"
+def _forever_stars_amount(user: User) -> int:
+    if subscription_service.discount_active(user):
+        return int(settings.STARS_FOREVER_DISCOUNT)
+    return int(settings.STARS_FOREVER_FULL)
+
+
+def _stars_invoice_payload(user: User, amount: int) -> str:
+    return f"{STARS_INVOICE_PAYLOAD_PREFIX}:{user.id}:{amount}"
+
+
+def _parse_stars_payload(payload: str) -> tuple[int, int] | None:
+    parts = (payload or "").split(":")
+    if len(parts) != 3 or parts[0] != STARS_INVOICE_PAYLOAD_PREFIX:
+        return None
+    try:
+        return int(parts[1]), int(parts[2])
+    except ValueError:
+        return None
+
+
+def _vip_channel_id() -> int | None:
+    raw = (settings.VIP_PRIVATE_CHANNEL_CHAT_ID or "").strip()
+    if not raw:
+        return None
+    try:
+        return int(raw)
+    except ValueError:
+        return None
+
+
+async def _vip_invite_block_html(bot: Bot, lang: str) -> str:
+    cid = _vip_channel_id()
+    if cid is None:
+        return t(lang, "STARS_VIP_SKIP_CONFIGURE_HTML")
+    try:
+        link = await bot.create_chat_invite_link(
+            chat_id=cid,
+            name=f"stars-{datetime.now(timezone.utc).timestamp():.0f}",
+            member_limit=1,
+            expire_date=datetime.now(timezone.utc) + timedelta(days=7),
+        )
+        return t(lang, "STARS_VIP_INVITE_HTML", url=link.invite_link)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("create_chat_invite_link VIP channel: %s", exc)
+        return t(lang, "STARS_VIP_INVITE_FAILED_HTML")
 
 
 def access_pricing_html(lang: str, user: User) -> str:
@@ -77,55 +108,6 @@ def _show_channel_15_offer(user: User) -> bool:
     if user.lifetime_subscription or subscription_service.user_has_paid_access(user):
         return False
     return not subscription_service.channel_month_15_discount_active(user)
-
-
-def build_access_payment_method_keyboard(user: User, lang: str, plan: str) -> InlineKeyboardMarkup:
-    """Шаг 2: Stars, Tribute, опционально −15% / канал, назад к тарифам."""
-    rows: list[list[InlineKeyboardButton]] = []
-    if plan == "month":
-        rows.append(
-            [InlineKeyboardButton(text=t(lang, "BTN_STARS_MONTH"), callback_data=f"{PAY_STARS_PREFIX}month")],
-        )
-    elif plan == "forever":
-        rows.append(
-            [InlineKeyboardButton(text=t(lang, "BTN_STARS_FOREVER"), callback_data=f"{PAY_STARS_PREFIX}forever")],
-        )
-    app = settings.TRIBUTE_APP_URL.strip()
-    if app:
-        rows.append([InlineKeyboardButton(text=t(lang, "BTN_TRIBUTE_APP"), url=app)])
-    if plan == "month" and settings.TRIBUTE_APP_URL_PROMO_15.strip():
-        rows.append(
-            [
-                InlineKeyboardButton(
-                    text=t(lang, "BTN_TRIBUTE_MONTH_15"),
-                    url=settings.TRIBUTE_APP_URL_PROMO_15.strip(),
-                ),
-            ],
-        )
-    if plan == "month" and _show_channel_15_offer(user):
-        rows.append(
-            [
-                InlineKeyboardButton(
-                    text=t(lang, "BTN_ACCESS_CHANNEL_15_OFFER"),
-                    callback_data=ACCESS_CHANNEL_15_PITCH_CB,
-                ),
-            ],
-        )
-    rows.append([InlineKeyboardButton(text=t(lang, "BTN_PAY_STEP_BACK"), callback_data=PAY_BACK_TARIFF_CB)])
-    return InlineKeyboardMarkup(inline_keyboard=rows)
-
-
-def access_payment_step_html(lang: str, user: User, plan: str) -> str:
-    lg = lang if lang in {"ru", "en"} else (user.locale if user.locale in {"ru", "en"} else "ru")
-    if plan == "month":
-        body = t(lg, "PAY_STEP2_MONTH_INTRO_HTML")
-        return body
-    if plan == "forever":
-        if subscription_service.discount_active(user):
-            tl = subscription_service.test_discount_time_left_phrase(lg, user)
-            return t(lg, "PAY_STEP2_FOREVER_INTRO_DISC_HTML", time_left=tl or "—")
-        return t(lg, "PAY_STEP2_FOREVER_INTRO_HTML")
-    return t(lg, "ACCESS_PRICING_BODY")
 
 
 async def _edit_payment_flow_message(
@@ -182,6 +164,33 @@ def _referral_followup_text(user: User, lang: str, tg_id: int) -> str:
     )
 
 
+def _plan_tribute_checkout(user: User, lang: str, plan: str) -> tuple[str, str, str]:
+    """URL Tribute, подпись цены для кнопки и HTML второго шага (month|forever)."""
+    base = (settings.TRIBUTE_APP_URL or "").strip()
+    if plan == "month":
+        promo = (settings.TRIBUTE_APP_URL_PROMO_15 or "").strip()
+        if subscription_service.channel_month_15_discount_active(user) and promo:
+            url, price = promo, t(lang, "PAY_PRICE_MONTH_PROMO")
+        else:
+            url, price = base or promo, t(lang, "PAY_PRICE_MONTH_FULL")
+        intro = t(lang, "PAY_STEP2_MONTH_INTRO_HTML")
+        return url, price, intro
+    if plan == "forever":
+        disc = (settings.TRIBUTE_APP_URL_FOREVER_DISC or "").strip()
+        if subscription_service.discount_active(user) and disc:
+            url, price = disc, t(lang, "PAY_PRICE_FOREVER_DISC")
+            tl = subscription_service.test_discount_time_left_phrase(lang, user)
+            if tl is None:
+                intro = t(lang, "PAY_STEP2_FOREVER_INTRO_HTML")
+            else:
+                intro = t(lang, "PAY_STEP2_FOREVER_INTRO_DISC_HTML", time_left=tl)
+        else:
+            url, price = base or disc, t(lang, "PAY_PRICE_FOREVER_FULL")
+            intro = t(lang, "PAY_STEP2_FOREVER_INTRO_HTML")
+        return url, price, intro
+    return base, "", ""
+
+
 async def send_subscription_offer(
     bot: Bot,
     chat_id: int,
@@ -189,7 +198,7 @@ async def send_subscription_offer(
     user: User,
     lang: str,
 ) -> None:
-    """Одно сообщение с тарифами (кнопка «Доступ», после теста, из тизера)."""
+    """Сообщение с ценами: шаг 1 — «Пробный период» / «Навсегда» / «Пока не готов»."""
     _ = session
     lg = lang if lang in {"ru", "en"} else (user.locale if user.locale in {"ru", "en"} else "ru")
     try:
@@ -231,7 +240,7 @@ async def access_plan_selected_handler(
     if callback.from_user is None or callback.message is None:
         await callback.answer()
         return
-    plan = callback.data.removeprefix(PAY_PLAN_PREFIX)
+    plan = callback.data[len(PAY_PLAN_PREFIX) :] if callback.data else ""
     if plan not in ("month", "forever"):
         await callback.answer()
         return
@@ -241,14 +250,25 @@ async def access_plan_selected_handler(
         await callback.answer(t(locale, "NOT_REGISTERED"), show_alert=True)
         return
     lang = user.locale if user.locale in {"ru", "en"} else locale
-    text = access_payment_step_html(lang, user, plan)
-    kb = build_access_payment_method_keyboard(user, lang, plan)
-    await _edit_payment_flow_message(callback.message, lang=lang, text=text, reply_markup=kb)
+    url, price, intro_html = _plan_tribute_checkout(user, lang, plan)
+    stars_amt = _forever_stars_amount(user) if plan == "forever" else None
+    await _edit_payment_flow_message(
+        callback.message,
+        lang=lang,
+        text=intro_html,
+        reply_markup=access_tribute_buy_step_kb(
+            lang,
+            buy_url=url,
+            price_display=price,
+            plan=plan,
+            forever_stars_amount=stars_amt,
+        ),
+    )
     await callback.answer()
 
 
 @router.callback_query(F.data == PAY_BACK_TARIFF_CB)
-async def access_pay_back_tariff_handler(
+async def pay_back_tariff_handler(
     callback: CallbackQuery,
     session: AsyncSession,
     locale: str,
@@ -262,13 +282,11 @@ async def access_pay_back_tariff_handler(
         await callback.answer(t(locale, "NOT_REGISTERED"), show_alert=True)
         return
     lang = user.locale if user.locale in {"ru", "en"} else locale
-    lg = lang if lang in {"ru", "en"} else (user.locale if user.locale in {"ru", "en"} else "ru")
-    text = access_pricing_html(lg, user)
     await _edit_payment_flow_message(
         callback.message,
         lang=lang,
-        text=text,
-        reply_markup=access_tariff_choice_kb(lg),
+        text=access_pricing_html(lang, user),
+        reply_markup=access_tariff_choice_kb(lang),
     )
     await callback.answer()
 
@@ -303,7 +321,7 @@ async def access_channel_15_pitch_handler(
     session: AsyncSession,
     locale: str,
 ) -> None:
-    """Повторно открыть сценарий −15% на месяц (как после «Пока не готов»), если промо ещё не активировано."""
+    """Старые сообщения с кнопкой −15% / канал; для новых воронок кнопка не показывается."""
     if callback.from_user is None or callback.message is None:
         await callback.answer()
         return
@@ -425,114 +443,109 @@ async def access_show_ref_handler(
     await callback.answer()
 
 
-@router.callback_query(F.data.startswith(PAY_STARS_PREFIX))
-async def stars_pay_callback(callback: CallbackQuery, session: AsyncSession, locale: str) -> None:
-    if callback.from_user is None or callback.message is None:
+@router.callback_query(F.data == PAY_STARS_FOREVER_CB)
+async def pay_stars_forever_handler(
+    callback: CallbackQuery,
+    session: AsyncSession,
+    locale: str,
+) -> None:
+    if callback.from_user is None:
         await callback.answer()
         return
-
-    kind = callback.data.removeprefix(PAY_STARS_PREFIX)
     result = await session.execute(select(User).where(User.tg_id == callback.from_user.id))
     user = result.scalar_one_or_none()
     if user is None:
         await callback.answer(t(locale, "NOT_REGISTERED"), show_alert=True)
         return
-
     lang = user.locale if user.locale in {"ru", "en"} else locale
-
-    if kind == "month":
-        use_disc = subscription_service.channel_month_15_discount_active(user) and await user_is_channel_member(
-            callback.bot,
-            callback.from_user.id,
-        )
-        if use_disc:
-            await callback.bot.send_invoice(
-                chat_id=callback.from_user.id,
-                title=t(lang, "INV_MONTH_DISC_TITLE"),
-                description=t(lang, "INV_MONTH_DISC_DESC"),
-                payload=PAYLOAD_XTR_MONTH_DISC,
-                provider_token="",
-                currency="XTR",
-                prices=[LabeledPrice(label=t(lang, "INV_MONTH_LABEL_DISC"), amount=672)],
-            )
-        else:
-            await callback.bot.send_invoice(
-                chat_id=callback.from_user.id,
-                title=t(lang, "INV_MONTH_TITLE"),
-                description=t(lang, "INV_MONTH_DESC"),
-                payload=PAYLOAD_XTR_MONTH,
-                provider_token="",
-                currency="XTR",
-                prices=[LabeledPrice(label=t(lang, "INV_MONTH_LABEL"), amount=790)],
-            )
-    elif kind == "forever":
-        disc = subscription_service.discount_active(user)
-        if disc:
-            tl = subscription_service.test_discount_time_left_phrase(lang, user)
-            desc = t(lang, "INV_FOREVER_DISC_DESC", time_left=tl or "—")
-            await callback.bot.send_invoice(
-                chat_id=callback.from_user.id,
-                title=t(lang, "INV_FOREVER_DISC_TITLE"),
-                description=desc,
-                payload=PAYLOAD_XTR_FOREVER_DISC,
-                provider_token="",
-                currency="XTR",
-                prices=[LabeledPrice(label=t(lang, "INV_FOREVER_LABEL"), amount=2490)],
-            )
-        else:
-            await callback.bot.send_invoice(
-                chat_id=callback.from_user.id,
-                title=t(lang, "INV_FOREVER_TITLE"),
-                description=t(lang, "INV_FOREVER_DESC"),
-                payload=PAYLOAD_XTR_FOREVER_FULL,
-                provider_token="",
-                currency="XTR",
-                prices=[LabeledPrice(label=t(lang, "INV_FOREVER_LABEL"), amount=3900)],
-            )
-    else:
-        await callback.answer()
+    if user.lifetime_subscription:
+        await callback.answer(t(lang, "STARS_PAY_ALREADY_LIFETIME"), show_alert=True)
         return
-
+    amt = _forever_stars_amount(user)
+    payload = _stars_invoice_payload(user, amt)
     try:
-        await callback.message.edit_reply_markup(reply_markup=None)
+        await callback.bot.send_invoice(
+            chat_id=callback.from_user.id,
+            title=t(lang, "INV_STARS_FOREVER_TITLE"),
+            description=t(lang, "INV_STARS_FOREVER_DESC"),
+            payload=payload,
+            currency="XTR",
+            prices=[LabeledPrice(label=t(lang, "INV_STARS_FOREVER_PRICE_LABEL"), amount=amt)],
+            provider_token="",
+        )
     except Exception as exc:  # noqa: BLE001
-        logger.debug("clear payment inline kb: %s", exc)
-
+        logger.warning("send_invoice Stars Forever: %s", exc)
+        await callback.bot.send_message(callback.from_user.id, t(lang, "STARS_INVOICE_SEND_FAIL"))
     await callback.answer()
 
 
 @router.pre_checkout_query()
-async def pre_checkout_handler(pre_checkout_query: PreCheckoutQuery) -> None:
+async def stars_forever_pre_checkout(
+    pre_checkout_query: PreCheckoutQuery,
+    session: AsyncSession,
+    locale: str,
+) -> None:
+    _ = locale
+    if pre_checkout_query.from_user is None:
+        await pre_checkout_query.answer(ok=False, error_message=t("ru", "STARS_PRECHECK_FAIL")[:250])
+        return
+    parsed = _parse_stars_payload(pre_checkout_query.invoice_payload or "")
+    if parsed is None:
+        await pre_checkout_query.answer(ok=False, error_message=t("ru", "STARS_PRECHECK_FAIL")[:250])
+        return
+    uid_int, claimed_amt = parsed
+    result = await session.execute(select(User).where(User.id == uid_int))
+    user = result.scalar_one_or_none()
+    if user is None or user.tg_id != pre_checkout_query.from_user.id:
+        await pre_checkout_query.answer(ok=False, error_message=t("ru", "STARS_PRECHECK_FAIL")[:250])
+        return
+    lg = user.locale if user.locale in {"ru", "en"} else "ru"
+    expected = _forever_stars_amount(user)
+    if claimed_amt != expected or pre_checkout_query.total_amount != expected:
+        await pre_checkout_query.answer(ok=False, error_message=t(lg, "STARS_PRECHECK_FAIL")[:250])
+        return
+    if user.lifetime_subscription:
+        await pre_checkout_query.answer(
+            ok=False,
+            error_message=t(lg, "STARS_PAY_ALREADY_LIFETIME")[:250],
+        )
+        return
+    if (pre_checkout_query.currency or "").upper() != "XTR":
+        await pre_checkout_query.answer(ok=False, error_message=t(lg, "STARS_PRECHECK_FAIL")[:250])
+        return
     await pre_checkout_query.answer(ok=True)
 
 
-@router.message(_HasSuccessfulPayment())
-async def successful_payment_handler(message: Message, session: AsyncSession, locale: str) -> None:
+@router.message(F.content_type == ContentType.SUCCESSFUL_PAYMENT)
+async def stars_forever_successful_payment(
+    message: Message,
+    session: AsyncSession,
+    locale: str,
+) -> None:
+    _ = locale
     if message.from_user is None or message.successful_payment is None:
         return
-
-    pay = message.successful_payment
-    payload = pay.invoice_payload
-
-    result = await session.execute(select(User).where(User.tg_id == message.from_user.id))
+    sp = message.successful_payment
+    if (sp.currency or "").upper() != "XTR":
+        return
+    parsed = _parse_stars_payload(sp.invoice_payload or "")
+    if parsed is None:
+        return
+    uid_int, claimed_amt = parsed
+    result = await session.execute(select(User).where(User.id == uid_int))
     user = result.scalar_one_or_none()
-    if user is None:
-        await message.answer(t(locale, "NOT_REGISTERED"))
+    if user is None or user.tg_id != message.from_user.id:
         return
-
-    lang = user.locale if user.locale in {"ru", "en"} else locale
-
-    if payload in (PAYLOAD_XTR_MONTH, PAYLOAD_XTR_MONTH_DISC):
-        subscription_service.grant_monthly(user)
-    elif payload in (PAYLOAD_XTR_FOREVER_FULL, PAYLOAD_XTR_FOREVER_DISC):
+    if claimed_amt != sp.total_amount:
+        return
+    allowed = {int(settings.STARS_FOREVER_FULL), int(settings.STARS_FOREVER_DISCOUNT)}
+    if claimed_amt not in allowed:
+        return
+    lang = user.locale if user.locale in {"ru", "en"} else "ru"
+    if not user.lifetime_subscription:
         subscription_service.grant_lifetime(user)
-    else:
-        logger.warning("Unknown payment payload: %s", payload)
-        await message.answer(t(lang, "PAYMENT_UNKNOWN"))
-        return
-
-    paid = subscription_service.user_has_paid_access(user)
+    vip_block = await _vip_invite_block_html(message.bot, lang)
     await message.answer(
-        t(lang, "PAYMENT_SUCCESS"),
-        reply_markup=main_reply_kb(lang, paid_access=paid, show_retest=paid),
+        t(lang, "PAYMENT_STARS_FOREVER_OK", vip_block=vip_block),
+        parse_mode="HTML",
     )

@@ -1,5 +1,7 @@
 .env
 *.db
+*.xml
+*.idea
 *.sqlite
 *.sqlite3
 __pycache__/
@@ -12,3 +14,8 @@ venv/
 .pytest_cache/
 .mypy_cache/
 *.log
+/brainboosty_hook_bot.egg-info/top_level.txt
+/brainboosty_hook_bot.egg-info/SOURCES.txt
+/alembic/script.py.mako
+/brainboosty_hook_bot.egg-info/PKG-INFO
+/brainboosty_hook_bot.egg-info/dependency_links.txt

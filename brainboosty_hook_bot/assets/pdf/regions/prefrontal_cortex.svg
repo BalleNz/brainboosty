@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 400">
+  <defs>
+    <filter id="n" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feColorMatrix in="b" type="matrix" values="0 0 0 0 0  0 0 0 0 0.9  0 0 0 0 1  0 0 0 1 0" result="g"/>
+      <feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <ellipse cx="160" cy="200" rx="118" ry="150" fill="#1e1e2e" stroke="#3f3f55" stroke-width="2"/>
+  <path d="M160 70 C95 90 70 160 85 230 C100 300 130 340 160 345 C190 340 220 300 235 230 C250 160 225 90 160 70Z" fill="#252536" stroke="#3a3a52" stroke-width="1.5"/>
+  <ellipse cx="160" cy="125" rx="52" ry="38" fill="#22d3ee" fill-opacity="0.35" stroke="#22d3ee" stroke-width="2" filter="url(#n)"/>
+</svg>

@@ -12,20 +12,36 @@ RU: dict[str, str] = {
     "SKILLS_BTN_DONE": "➡️ Далее",
     "SKILLS_MAX_TWO": "Можно выбрать не больше двух навыков.",
     "SKILLS_NEED_ONE": "Выбери хотя бы один навык.",
+
     "SKILLS_UPDATED": "Навыки обновлены.",
-    "SKILLS_REPICK_INTRO": "Выбери до двух навыков и нажми «Далее», чтобы сохранить.",
+    "SKILLS_REPICK_INTRO": "Выбери до двух навыков (⮕ у выбранных) и нажми «Далее», чтобы сохранить.",
     "SKILLS_FINISH_COGNITIVE_FIRST": "Сначала заверши тест в боте, затем снова отправь /skills.",
     "NOT_REGISTERED": "Сначала завершите регистрацию: /start",
     "START_ALREADY": "👋 С возвращением, {name}!\n\nЯ продолжу присылать «хуки» для мозга 🧠✨\nТвоя ссылка:\n{ref_link}",
     "START_UNFINISHED_TEST": "Тест ещё не завершён. Нажми «Продолжить тест» — вернёмся к вопросам (если сессия ещё в памяти бота) или к выбору стиля.",
     "BTN_RESUME_TEST": "▶️ Продолжить тест",
-    "START_NEW_INTRO": "🧠 Привет, {name}! Я — BrainBoosty Hook Bot.\n\nКаждый день — короткие практики и инсайты. Сначала анкета, затем тест из 7 вопросов (на выбор стилистика).",
-    "QUESTION_SKILL": "🎯 Шаг 1/3. Выбери до двух навыков (повторное нажатие снимает выбор). Когда готово — «Далее».",
-    "QUESTION_AGE": "🎂 Шаг 2/3. Сколько полных лет? Числом (например, 24).",
-    "QUESTION_TIME": "⏱ Шаг 3/3. Сколько минут в день готов уделять?",
-    "QUEST_TIME_1_5": "1–5 мин",
-    "QUEST_TIME_5_15": "5–15 мин",
-    "QUEST_TIME_15P": "15+ мин",
+    "BTN_TEST_BACK": "Назад",
+    "START_NEW_INTRO": (
+        "🧠 <b>Привет!</b>\n\n"
+        "Я Андрогенный Аутист. Помогаю вернуть ясность ума, уверенность и силу; делюсь инсайтами по нейробиологии, "
+        'гормонам и развитию мозга — больше <a href="https://t.me/androgenautist">в канале</a>.\n\n'
+        "Пройдём быстрый тест из 7 вопросов — и ты получишь реальную карту своего мозга: где ты <u>уже сильный</u>, "
+        "а где скрыт огромный <u>потенциал для роста</u>.\n\n"
+        "Хочешь посмотреть, что покажет твой мозг?"
+    ),
+    "QUESTION_SKILL_LEAD": "🧠 Выбери навык, который хочешь прокачать в первую очередь",
+    "QUESTION_SKILL_LEAD_CMD": "🧠 Выбери до двух навыков для прокачки",
+    "QUESTION_SKILL_COUNT": "Выбрано: {n} из {max}",
+    "QUESTION_AGE": (
+        "🎂 <b>Подскажи, сколько тебе полных лет?</b>\n\n"
+        "<blockquote>Это поможет мне сделать рекомендации по прокачке максимально персональными для твоего возраста.</blockquote>"
+    ),
+    "QUESTION_TIME": (
+        "⏰ Чтобы я подобрал тебе индивидуальный план — сколько минут в день ты <u>реально</u> можешь уделять?"
+    ),
+    "QUEST_TIME_1_5": "🕒 1–5 минут",
+    "QUEST_TIME_5_15": "⏳ 5–15 минут",
+    "QUEST_TIME_15P": "🔥 15+ минут",
     "AGE_INVALID": "Введи возраст числом от 5 до 120.",
     "QUEST_STAY_ON_STEP": "Продолжаем анкету 😊",
     "COGNITIVE_STAY_ON_STEP": "Продолжаем тест 😊",
@@ -41,6 +57,9 @@ RU: dict[str, str] = {
     "REPLY_RETAKE_TEST": "🔄 Перепройти тест",
     "REPLY_TESTS": "📋 Тесты",
     "TESTS_HUB_TEXT": "Общие тесты: один набор вопросов на всех на сегодня или на календарную неделю. История и влияние на зоны — в PDF.",
+    "TESTS_HUB_TEXT_FREE": "Общие тесты: без подписки доступен только недельный набор (обновляется раз в неделю). Ежедневный тест и PDF истории — с подпиской.",
+    "TESTS_DAILY_PREMIUM": "Ежедневный тест доступен с активной подпиской.",
+    "TESTS_PDF_PREMIUM": "PDF истории тестов — с активной подпиской.",
     "TESTS_BTN_DAILY": "▶️ Сегодняшний тест",
     "TESTS_BTN_WEEKLY": "▶️ Недельный тест",
     "TESTS_BTN_HISTORY_PDF": "📄 История тестов (PDF)",
@@ -107,21 +126,28 @@ RU: dict[str, str] = {
     ),
     "BTN_ACCESS_CHANNEL_15_OFFER": "получить −15%",
     "BTN_ACCESS_NOT_READY": "Пока не готов",
-    "BTN_ACCESS_PLAN_MONTH": "Пробный месяц",
+    "BTN_BUY_IN_TRIBUTE": "Купить в Трибьют",
+    "BTN_BUY_FOR": "Купить за {price}",
+    "BTN_ACCESS_PLAN_MONTH": "Пробный период",
     "BTN_ACCESS_PLAN_FOREVER": "Навсегда",
     "BTN_PAY_STEP_BACK": "← Тарифы",
+    "PAY_PRICE_MONTH_FULL": "790 ₽",
+    "PAY_PRICE_MONTH_PROMO": "672 ₽",
+    "PAY_PRICE_FOREVER_FULL": "3 990 ₽",
+    "PAY_PRICE_FOREVER_DISC": "2 490 ₽",
     "PAY_STEP2_MONTH_INTRO_HTML": (
-        "<b>Пробный месяц</b> — 790 ₽ (или 672 ⭐ при скидке канала).\n\n"
-        "Выберите способ оплаты:"
+        "<b>Пробный период</b> — оплата в Tribute.\n\n"
+        "Если активна скидка канала (−15%), откроется ссылка с промокодом и цена на кнопке будет ниже.\n\n"
+        "Нажми кнопку ниже:"
     ),
     "PAY_STEP2_FOREVER_INTRO_HTML": (
-        "<b>Forever</b> — полная цена 3 990 ₽ / 3 900 ⭐.\n\n"
-        "Выберите способ оплаты:"
+        "<b>Навсегда</b> — полная цена 3 990 ₽, оплата в Tribute.\n\n"
+        "Нажми кнопку ниже:"
     ),
     "PAY_STEP2_FOREVER_INTRO_DISC_HTML": (
-        "<b>Forever со скидкой после теста</b> — до конца: <b>{time_left}</b>.\n"
-        "2 490 ₽ / 2 490 ⭐ вместо 3 990.\n\n"
-        "Выберите способ оплаты:"
+        "<b>Навсегда со скидкой после теста</b> — до конца: <b>{time_left}</b>.\n"
+        "2 490 ₽ вместо 3 990.\n\n"
+        "Нажми кнопку ниже:"
     ),
     "ACCESS_ALREADY_PREMIUM": "У тебя уже есть полный доступ. Пользуйся кнопками меню ниже 👇",
     "ACCESS_POSTPONE_DISCOUNT_PITCH": (
@@ -134,8 +160,8 @@ RU: dict[str, str] = {
     "BTN_ACCESS_CH15_YES": "Да, хочу скидку 15%",
     "BTN_ACCESS_CH15_NO": "Не надо",
     "ACCESS_SUBSCRIBE_FOR_PROMO": (
-        "Отлично.\n\n"
-        "Подпишись на канал @androgenautist и нажми «Проверить подписку» — тогда откроется скидка 15% на месяц (672 ⭐) на 7 дней, пока ты остаёшься подписчиком."
+        "<b>Отлично.</b>\n\n"
+        "Подпишись на канал @androgenautist и нажми «Проверить подписку» — тогда откроется скидка на пробный период — 15% на 7 дней, пока ты остаёшься подписчиком."
     ),
     "BTN_VERIFY_CH_PROMO": "✅ Проверить подписку",
     "ACCESS_PROMO_GRANTED": (
@@ -156,10 +182,13 @@ RU: dict[str, str] = {
     "INV_MONTH_DISC_TITLE": "Brainboosty — месяц (−15%)",
     "INV_MONTH_DISC_DESC": "Пробный месяц полного доступа по промокоду канала (672 ⭐).",
     "INV_MONTH_LABEL_DISC": "Месяц 672 ⭐",
-    "BRAIN_MAP_TITLE_SEXUAL_BLOCK": "СЕКСУАЛЬНАЯ КАРТА МОЗГА:",
+    "BRAIN_MAP_TITLE_SEXUAL_BLOCK": "Сексуальная карта мозга:",
     "BRAIN_MAP_TITLE_DEVELOPMENT_BLOCK": "РАЗВИТИЕ ОТДЕЛОВ МОЗГА:",
     "BRAIN_MAP_FIRST_FOOTER": "Не медицинское заключение.",
     "BRAIN_MAP_COMPARISON_FOOTER": "Стрелки — изменение к прошлому прохождению (п.п.).",
+    "TEST_RESULT_MODEL_DISCLAIMER": (
+        "<tg-spoiler>Это упрощённая практическая модель. В реальности все зоны мозга работают как единая сеть.</tg-spoiler>"
+    ),
     "RETEST_INTRO": "Выбери стилистику — 7 вопросов. Сравним с прошлым результатом.",
     "RETEST_SAVED": "✅ Результат сохранён. Стрелки — к прошлому прохождению.",
     "RETEST_LOCKED": "Повторное прохождение теста доступно с полной подпиской. Открой «⭐ Доступ».",
@@ -191,17 +220,38 @@ RU: dict[str, str] = {
     "BTN_CHECK_CHANNEL_SUB": "✅ Я подписался — проверить",
     "CHANNEL_SUB_OK": "Доступ на 15 минут открыт — смотри сообщения выше.",
     "CHANNEL_SUB_NOT_MEMBER": "Подписка не видна. Зайди в канал и нажми «Подписаться», затем снова проверь.",
-    "CHANNEL_TRIAL_UNLOCKED": "⏱ Выше — полная карта и кнопка PDF. Эти сообщения исчезнут через 15 минут. Успей скачать PDF.",
+    "CHANNEL_TRIAL_UNLOCKED": "⏱ Выше — PDF с картой мозга. Сообщение исчезнет через 15 минут — успей скачать.",
     "CHANNEL_TRIAL_DEBOUNCE": "Уже отправил полный доступ — загляни выше.",
     "CHANNEL_TRIAL_ALREADY_FULL_ACCESS": "У тебя уже полный доступ.",
     "PDF_NEED_SUBSCRIPTION": "PDF доступен при полной подписке или в 15-минутном окне после подписки на канал (кнопка после теста).",
     "LANG_SWITCH": "🌐 Язык: {lang}",
-    "LANG_PROMPT": "Выберите язык / Choose language:",
+    "LANG_PROMPT": (
+        "👋 <b>Чтобы я мог общаться с тобой максимально комфортно, выбери язык:</b>\n\n"
+        "🇷🇺 Русский\n"
+        "🇬🇧 English"
+    ),
     "LANG_RU": "🇷🇺 Русский",
     "LANG_EN": "🇬🇧 English",
     "PDF_GENERATING": "📄 Готовлю PDF…",
+    "PDF_BRAIN_MAP_GENERATING": "Генерация PDF файла с картой твоего мозга…",
     "PDF_CAPTION": "Ваша карта мозга (PDF). Можно сохранить или переслать.",
-    "TEASER_PREMIUM_ZONES": "\n🔒 <b>Премиум-зоны:</b> персональные рекомендации по прокачке + 30-дневный план — после оплаты.",
+    "TEASER_TITLE_SEXUAL_HTML": "🧠 <b>Твоя сексуальная карта мозга готова</b>",
+    "TEASER_TITLE_GENERAL_HTML": "🧠 <b>Твоя карта мозга готова</b>",
+    "TEASER_OPEN_ZONES_HEADER": "<b>Открытые зоны:</b>",
+    "TEASER_GROWTH_HEADER": "📌 <b>Зоны роста (что можно прокачать уже сейчас):</b>",
+    "TEASER_CLOSER_TAGLINE": "<b>Я сделаю тебя лучше.</b>",
+    "TEASER_CLOSER_GET_HEADER": "<b>Получи:</b>",
+    "TEASER_CLOSER_ITEM_PLAN": "• Персональный 30-дневный план прокачки именно <u>твоих</u> слабых зон",
+    "TEASER_CLOSER_ITEM_TRACKER_SEX": "• Трекер прогресса мозга и сексуальности",
+    "TEASER_CLOSER_ITEM_TRACKER_GEN": "• Трекер прогресса мозга и когнитивных навыков",
+    "TEASER_CLOSER_ITEM_EXERCISES": "• 50+ проверенных упражнений",
+    "TEASER_CLOSER_ITEM_CHANNEL_SEX": "• Закрытый канал для сексуального развития",
+    "TEASER_CLOSER_ITEM_CHANNEL_GEN": "• Закрытый канал для развития всех отделов мозга",
+    "TEASER_LIFETIME_SPOILER": "<tg-spoiler><b>⭐ Пожизненный доступ — всего {price} ₽</b></tg-spoiler>",
+    "TEASER_REFUND_LINE": "<i>Не понравится — верну 100% денег в течение 7 дней</i>",
+    "TEASER_CTA_ACCESS": "👇 <b>Выбрать доступ и открыть все зоны</b>",
+    "TEASER_LOCKED_RL_prefrontal_cortex": "Префронтальная кора (контроль + личность)",
+    "TEASER_LOCKED_RL_frontal_gyrus": "Лобная извилина (уверенность в словах)",
     "BRAIN_RL_prefrontal_cortex": "Префронтальная кора (личность)",
     "BRAIN_RL_brain_lobes": "Доли мозга (образы)",
     "BRAIN_RL_insular_cortex": "Островковая кора",
@@ -209,14 +259,11 @@ RU: dict[str, str] = {
     "BRAIN_RL_amygdala": "Амигдала (эмоции)",
     "BRAIN_RL_frontal_gyrus": "Лобная извилина (речь)",
     "LOCKED_LINE": "🔒 {name} — в полной версии",
-    "TEASER_HEADER": "🧠 <b>Ваша карта развития мозга готова</b>",
-    "TEASER_GROWTH": "📌 <b>Зоны роста (фрагмент):</b>",
-    "TEASER_SELL": "\n💡 Хотите <b>полную программу</b> под ваши зоны?\n• Трекер прогресса\n• Канал с 50+ упражнениями для мозга\n• Канал для сексуального развития\n• Персональный 30-дневный план\n\nПожизненный доступ — <b>{price} ₽</b>\n\n👇 Ниже — оплата.",
     "STATUS_HIGH": "🟢 высокий",
     "STATUS_MED": "🟡 средний",
     "STATUS_LOW": "🔴 зона роста",
     "REF_LINK_LABEL": "📎 Ссылка для друзей:",
-    "SKILL_sexual_diversity": "🔞 СЕКС РАЗВИТИЕ",
+    "SKILL_sexual_diversity": "Сексуальное развитие",
     "SKILL_self_control": "Уверенность",
     "SKILL_sociability": "Социальность",
     "SKILL_speech": "Речь",
@@ -239,10 +286,21 @@ RU: dict[str, str] = {
     "SUB_FOREVER_TITLE_HTML": "<b>2) Forever</b>",
     "SUB_FOREVER_DISC_LINES": "После теста: <s>3 990 ₽</s> → <b>2 490 ₽</b> <i>(−1 500 ₽)</i>\nЗвёзды: <s>3 900 ⭐</s> → <b>2 490 ⭐</b>",
     "SUB_FOREVER_FULL_LINE": "<b>3 990 ₽</b> / <b>3 900 ⭐</b>",
-    "BTN_STARS_MONTH": "⭐ 790 — Пробный месяц",
-    "BTN_STARS_FOREVER": "⭐ Forever (Stars)",
+    "BTN_STARS_MONTH": "⭐ Оплатить старсами",
+    "BTN_STARS_FOREVER": "⭐ Оплатить старсами",
+    "BTN_STARS_FOREVER_AMOUNT": "Купить за звезды",
+    "INV_STARS_FOREVER_TITLE": "BrainBoosty — Forever",
+    "INV_STARS_FOREVER_DESC": "Пожизненный доступ: карты, тесты, план и закрытые материалы (оплата Telegram Stars).",
+    "INV_STARS_FOREVER_PRICE_LABEL": "Forever",
+    "STARS_INVOICE_SEND_FAIL": "Не удалось выставить счёт в Stars. Попробуйте позже или оплатите в Tribute.",
+    "STARS_PRECHECK_FAIL": "Платёж недоступен. Обновите экран и попробуйте снова.",
+    "STARS_PAY_ALREADY_LIFETIME": "У вас уже пожизненный доступ.",
+    "PAYMENT_STARS_FOREVER_OK": "✅ Оплата Stars получена. <b>Forever</b> активирован.\n\n{vip_block}",
+    "STARS_VIP_INVITE_HTML": "<b>Вход в закрытый канал:</b>\n{url}\n\n<i>Ссылка одноразовая — не пересылайте.</i>",
+    "STARS_VIP_SKIP_CONFIGURE_HTML": "<i>Закрытый канал: ссылку пришлёт поддержка (для бота не задан VIP_PRIVATE_CHANNEL_CHAT_ID).</i>",
+    "STARS_VIP_INVITE_FAILED_HTML": "<i>Не удалось создать приглашение в канал — напишите в поддержку, приложив скрин оплаты.</i>",
     "BTN_TRIBUTE_MONTH": "💳 790 ₽ Tribute — месяц",
-    "BTN_TRIBUTE_APP": "💳 Оплата в Tribute",
+    "BTN_TRIBUTE_APP": "💳 Оплата в Трибьют",
     "BTN_TRIBUTE_MONTH_15": "💳 Месяц −15% (672 ₽) — Tribute",
     "BTN_TRIBUTE_FOREVER_DISC": "💳 2 490 ₽ Tribute — Forever",
     "BTN_TRIBUTE_FOREVER_FULL": "💳 3 990 ₽ Tribute — Forever",
@@ -268,6 +326,36 @@ RU: dict[str, str] = {
     "PDF_VARIANT": "Стиль теста: {variant}",
     "PDF_SECTION_ZONES": "Шесть зон (%)",
     "PDF_SECTION_REC": "Рекомендации (фрагмент)",
+    "PDF_BRAIN_SCORE_LABEL": "NeuroScore",
+    "PDF_BRAIN_COVER_LINE": "Шесть зон · один профиль. Цифры, акценты и ясная картина без лишнего шума.",
+    "PDF_BRAIN_PROGRESS_MAIN": "Твой прогресс {pct}%",
+    "PDF_BRAIN_ZONE_LEVEL": "Интегральный уровень зоны",
+    "PDF_BRAIN_REC_TITLE": "Почему эта зона — твой главный рычаг удовольствия",
+    "PDF_BRAIN_CONNECTIVITY_TITLE": "Связность зон (образовательная модель)",
+    "PDF_BRAIN_M1": "Связность зоны",
+    "PDF_BRAIN_M2": "Ритм",
+    "PDF_BRAIN_M3": "Устойчивость",
+    "PDF_BRAIN_M4": "Потенциал роста",
+    "PDF_BRAIN_REC_FALLBACK": "Маленькие ежедневные шаги дают устойчивый рост без перегруза.",
+    "PDF_BRAIN_REC_UNLOCK": "Полная программа и все рекомендации — в платной версии.",
+    "PDF_BRAIN_CTA_BADGE": "ПОЛНЫЙ ДОСТУП",
+    "PDF_BRAIN_CTA_TITLE": "Забери полный доступ — сегодня",
+    "PDF_BRAIN_CTA_SUB": "Персональный план на 30 дней, трекер прогресса, упражнения под твой профиль и закрытый канал — без лишних слов, сразу в действие.",
+    "PDF_BRAIN_CTA_SCAN": "Наведи камеру — оплата за секунды в Tribute. Полная витрина и мгновенный доступ.",
+    "PDF_BRAIN_CTA_URL": "Ссылка:",
+    "PDF_BRAIN_HERO_BRAIN": "NEURAL MAP",
+    "PDF_BRAIN_SELL_prefrontal_cortex": "Здесь решается, кто ведёт игру: импульс или ты. Прокачай зону — и близость станет спокойнее, глубже и «дороже» по ощущениям, без лишней драмы.",
+    "PDF_BRAIN_SELL_brain_lobes": "Картинка в голове — это половина сцены. Чем ярче и честнее образ, тем увереннее ты задаёшь темп и получаешь отклик — иногда даже без слов.",
+    "PDF_BRAIN_SELL_insular_cortex": "Тело не врёт: островок переводит сенсации в ясность. Меньше тревожного шума — больше контакта «здесь и сейчас», когда хочется не отвлекаться ни на что.",
+    "PDF_BRAIN_SELL_temporoparietal_junction": "Это твой социальный радар: темп, намёки, паузы. Когда он точный, исчезают неловкие недопонимания — остаётся синхрон и доверие.",
+    "PDF_BRAIN_SELL_amygdala": "Триггеры режут глубину. Спокойная амигдала — это смелость в желаниях и честность в постели без срывов и обидных «автопилотов».",
+    "PDF_BRAIN_SELL_frontal_gyrus": "Слова — это интерфейс к удовольствию. Чёткая формулировка желаний делает отклик мягче и увереннее: меньше намёков в пустоту — больше «да» в реальности.",
+    "PDF_BRAIN_PAGE_prefrontal_cortex": "Префронтальная кора",
+    "PDF_BRAIN_PAGE_brain_lobes": "Доли мозга · образы",
+    "PDF_BRAIN_PAGE_insular_cortex": "Островковая кора",
+    "PDF_BRAIN_PAGE_temporoparietal_junction": "Височно-теменной узел",
+    "PDF_BRAIN_PAGE_amygdala": "Амигдала",
+    "PDF_BRAIN_PAGE_frontal_gyrus": "Лобная извилина",
     "PDF_FOOTER": "Образовательная модель, не медицинское заключение.",
     "BRAIN_MAP_PHOTO_TITLE": "Карта мозга — зоны",
     "BRAIN_MAP_PHOTO_LOCKED": "🔒 полная версия",
@@ -287,19 +375,34 @@ EN: dict[str, str] = {
     "SKILLS_MAX_TWO": "You can pick at most two skills.",
     "SKILLS_NEED_ONE": "Pick at least one skill.",
     "SKILLS_UPDATED": "Skills updated.",
-    "SKILLS_REPICK_INTRO": "Pick up to two skills, then tap «Next» to save.",
+    "SKILLS_REPICK_INTRO": "Pick up to two skills (⮕ marks selected), then tap «Next» to save.",
     "SKILLS_FINISH_COGNITIVE_FIRST": "Finish the in-bot test first, then send /skills again.",
     "NOT_REGISTERED": "Please finish registration: /start",
     "START_ALREADY": "👋 Welcome back, {name}!\n\nDaily brain hooks 🧠✨\nYour link:\n{ref_link}",
     "START_UNFINISHED_TEST": "Your test isn’t finished yet. Tap “Continue test” — we’ll return to the questions (if the bot still has your session) or to style selection.",
     "BTN_RESUME_TEST": "▶️ Continue test",
-    "START_NEW_INTRO": "🧠 Hi, {name}! I’m BrainBoosty Hook Bot.\n\nShort daily practices. First a quick profile, then a 7-question test (pick a style).",
-    "QUESTION_SKILL": "🎯 Step 1/3. Pick up to two focus areas (tap again to deselect). When ready — «Next».",
-    "QUESTION_AGE": "🎂 Step 2/3. Your age in full years (e.g. 24).",
-    "QUESTION_TIME": "⏱ Step 3/3. Minutes per day you can spend?",
-    "QUEST_TIME_1_5": "1–5 min",
-    "QUEST_TIME_5_15": "5–15 min",
-    "QUEST_TIME_15P": "15+ min",
+    "BTN_TEST_BACK": "Back",
+    "START_NEW_INTRO": (
+        "🧠 <b>Hi!</b>\n\n"
+        "I'm Androgen Autist. I help you regain mental clarity, confidence, and strength; I share insights on "
+        'neurobiology, hormones, and brain growth — more <a href="https://t.me/androgenautist">on Telegram</a>.\n\n'
+        "We'll go through a quick 7-question test — and you'll get a real map of your brain: where you're "
+        "<u>already strong</u>, and where there's huge <u>room to grow</u>.\n\n"
+        "Want to see what your brain will show?"
+    ),
+    "QUESTION_SKILL_LEAD": "🧠 Pick one skill you want to level up first",
+    "QUESTION_SKILL_LEAD_CMD": "🧠 Pick up to two skills to level up",
+    "QUESTION_SKILL_COUNT": "Selected: {n} of {max}",
+    "QUESTION_AGE": (
+        "🎂 <b>How old are you in full years?</b>\n\n"
+        "<blockquote>That helps me make your training recommendations as personal as possible for your age.</blockquote>"
+    ),
+    "QUESTION_TIME": (
+        "⏰ So I can build a personalized plan for you — how many minutes a day can you <u>really</u> spend?"
+    ),
+    "QUEST_TIME_1_5": "🕒 1–5 minutes",
+    "QUEST_TIME_5_15": "⏳ 5–15 minutes",
+    "QUEST_TIME_15P": "🔥 15+ minutes",
     "AGE_INVALID": "Please enter an age between 5 and 120.",
     "QUEST_STAY_ON_STEP": "Let's continue the profile 😊",
     "COGNITIVE_STAY_ON_STEP": "Let's continue the test 😊",
@@ -315,6 +418,9 @@ EN: dict[str, str] = {
     "REPLY_RETAKE_TEST": "🔄 Retake test",
     "REPLY_TESTS": "📋 Tests",
     "TESTS_HUB_TEXT": "Shared tests: the same questions for everyone for today or for the calendar week. History and impact on brain regions — PDF.",
+    "TESTS_HUB_TEXT_FREE": "Shared tests: without a subscription only the weekly set is available (refreshes each ISO week). Daily test and test-history PDF require a subscription.",
+    "TESTS_DAILY_PREMIUM": "The daily test requires an active subscription.",
+    "TESTS_PDF_PREMIUM": "Test history PDF requires an active subscription.",
     "TESTS_BTN_DAILY": "▶️ Today’s test",
     "TESTS_BTN_WEEKLY": "▶️ Weekly test",
     "TESTS_BTN_HISTORY_PDF": "📄 Test history (PDF)",
@@ -375,21 +481,28 @@ EN: dict[str, str] = {
     ),
     "BTN_ACCESS_CHANNEL_15_OFFER": "−15% on month (channel)",
     "BTN_ACCESS_NOT_READY": "Not ready yet",
-    "BTN_ACCESS_PLAN_MONTH": "Trial month",
+    "BTN_BUY_IN_TRIBUTE": "Buy in Tribute",
+    "BTN_BUY_FOR": "Buy for {price}",
+    "BTN_ACCESS_PLAN_MONTH": "Trial period",
     "BTN_ACCESS_PLAN_FOREVER": "Forever",
     "BTN_PAY_STEP_BACK": "← Plans",
+    "PAY_PRICE_MONTH_FULL": "790 ₽",
+    "PAY_PRICE_MONTH_PROMO": "672 ₽",
+    "PAY_PRICE_FOREVER_FULL": "3,990 ₽",
+    "PAY_PRICE_FOREVER_DISC": "2,490 ₽",
     "PAY_STEP2_MONTH_INTRO_HTML": (
-        "<b>Trial month</b> — 790 ₽ (or 672 ⭐ with the channel promo).\n\n"
-        "Choose how to pay:"
+        "<b>Trial period</b> — pay in Tribute.\n\n"
+        "If the channel discount (−15%) is active, you’ll get the promo link and a lower price on the button.\n\n"
+        "Tap the button below:"
     ),
     "PAY_STEP2_FOREVER_INTRO_HTML": (
-        "<b>Forever</b> — full price 3,990 ₽ / 3,900 ⭐.\n\n"
-        "Choose how to pay:"
+        "<b>Forever</b> — full price 3,990 ₽, pay in Tribute.\n\n"
+        "Tap the button below:"
     ),
     "PAY_STEP2_FOREVER_INTRO_DISC_HTML": (
         "<b>Forever — post-test discount</b>, time left: <b>{time_left}</b>.\n"
-        "2,490 ₽ / 2,490 ⭐ instead of 3,990.\n\n"
-        "Choose how to pay:"
+        "2,490 ₽ instead of 3,990.\n\n"
+        "Tap the button below:"
     ),
     "ACCESS_ALREADY_PREMIUM": "You already have full access. Use the menu below 👇",
     "ACCESS_POSTPONE_DISCOUNT_PITCH": (
@@ -428,6 +541,9 @@ EN: dict[str, str] = {
     "BRAIN_MAP_TITLE_DEVELOPMENT_BLOCK": "BRAIN REGION DEVELOPMENT:",
     "BRAIN_MAP_FIRST_FOOTER": "Not medical advice.",
     "BRAIN_MAP_COMPARISON_FOOTER": "Arrows = change vs last run (percentage points).",
+    "TEST_RESULT_MODEL_DISCLAIMER": (
+        "<tg-spoiler>This is a simplified practical model. In reality, all brain regions work together as one network.</tg-spoiler>"
+    ),
     "RETEST_INTRO": "Pick a style — 7 questions. We’ll compare with your last run.",
     "RETEST_SAVED": "✅ Saved. Arrows compare to the previous run.",
     "RETEST_LOCKED": "Retaking the test requires full access. Open “⭐ Get access”.",
@@ -458,17 +574,38 @@ EN: dict[str, str] = {
     "BTN_CHECK_CHANNEL_SUB": "✅ I subscribed — verify",
     "CHANNEL_SUB_OK": "15 minutes unlocked — see the messages above.",
     "CHANNEL_SUB_NOT_MEMBER": "Subscription not detected. Join the channel, tap Subscribe, then verify again.",
-    "CHANNEL_TRIAL_UNLOCKED": "⏱ Full map and PDF are in the messages above — they auto-delete in 15 minutes. Download in time.",
+    "CHANNEL_TRIAL_UNLOCKED": "⏱ Your brain map PDF is above — it auto-deletes in 15 minutes. Download in time.",
     "CHANNEL_TRIAL_DEBOUNCE": "Full access was already sent — scroll up.",
     "CHANNEL_TRIAL_ALREADY_FULL_ACCESS": "You already have full access.",
     "PDF_NEED_SUBSCRIPTION": "PDF is available with full subscription or in the 15-minute window after channel subscribe (button after the test).",
     "LANG_SWITCH": "🌐 Language: {lang}",
-    "LANG_PROMPT": "Choose language / Выберите язык:",
+    "LANG_PROMPT": (
+        "👋 <b>Choose a language so we can chat in the way that’s most comfortable for you:</b>\n\n"
+        "🇷🇺 Русский\n"
+        "🇬🇧 English"
+    ),
     "LANG_RU": "🇷🇺 Русский",
     "LANG_EN": "🇬🇧 English",
     "PDF_GENERATING": "📄 Preparing your PDF…",
+    "PDF_BRAIN_MAP_GENERATING": "Generating your brain map PDF…",
     "PDF_CAPTION": "Your brain map (PDF). Save or forward.",
-    "TEASER_PREMIUM_ZONES": "\n🔒 <b>Premium:</b> targeted training tips + 30-day plan — after payment.",
+    "TEASER_TITLE_SEXUAL_HTML": "🧠 <b>Your sexual brain map is ready</b>",
+    "TEASER_TITLE_GENERAL_HTML": "🧠 <b>Your brain map is ready</b>",
+    "TEASER_OPEN_ZONES_HEADER": "<b>Open zones:</b>",
+    "TEASER_GROWTH_HEADER": "📌 <b>Growth zones (you can train these now):</b>",
+    "TEASER_CLOSER_TAGLINE": "<b>I'll make you better.</b>",
+    "TEASER_CLOSER_GET_HEADER": "<b>You get:</b>",
+    "TEASER_CLOSER_ITEM_PLAN": "• A personal 30-day plan targeting your <u>weakest</u> zones",
+    "TEASER_CLOSER_ITEM_TRACKER_SEX": "• Progress tracker for brain and sexuality",
+    "TEASER_CLOSER_ITEM_TRACKER_GEN": "• Progress tracker for brain regions and skills",
+    "TEASER_CLOSER_ITEM_EXERCISES": "• 50+ proven drills",
+    "TEASER_CLOSER_ITEM_CHANNEL_SEX": "• Private channel for sexual development",
+    "TEASER_CLOSER_ITEM_CHANNEL_GEN": "• Private channel for developing all brain regions",
+    "TEASER_LIFETIME_SPOILER": "<tg-spoiler><b>⭐ Lifetime access — from {price} ₽</b></tg-spoiler>",
+    "TEASER_REFUND_LINE": "<i>Not happy — I’ll refund 100% within 7 days</i>",
+    "TEASER_CTA_ACCESS": "👇 <b>Choose access and unlock all zones</b>",
+    "TEASER_LOCKED_RL_prefrontal_cortex": "Prefrontal cortex (control + personality)",
+    "TEASER_LOCKED_RL_frontal_gyrus": "Frontal gyrus (confidence in words)",
     "BRAIN_RL_prefrontal_cortex": "Prefrontal cortex (personality)",
     "BRAIN_RL_brain_lobes": "Brain lobes (imagery)",
     "BRAIN_RL_insular_cortex": "Insular cortex",
@@ -476,18 +613,15 @@ EN: dict[str, str] = {
     "BRAIN_RL_amygdala": "Amygdala (emotion)",
     "BRAIN_RL_frontal_gyrus": "Frontal gyrus (speech)",
     "LOCKED_LINE": "🔒 {name} — in full version",
-    "TEASER_HEADER": "🧠 <b>Your brain map is ready</b>",
-    "TEASER_GROWTH": "📌 <b>Growth zones (preview):</b>",
-    "TEASER_SELL": "\n💡 Want the <b>full program</b> for your profile?\n• Progress tracker\n• Channel with 50+ brain drills\n• Channel for sexual wellness drills\n• Personal 30-day plan\n\nLifetime — <b>{price} ₽</b>\n\n👇 Pay below.",
     "STATUS_HIGH": "🟢 high",
     "STATUS_MED": "🟡 medium",
     "STATUS_LOW": "🔴 growth zone",
     "REF_LINK_LABEL": "📎 Invite link:",
     "SKILL_sexual_diversity": "Sexual variety / sexuality",
-    "SKILL_self_control": "Self-control & confidence",
+    "SKILL_self_control": "Confidence",
     "SKILL_sociability": "Sociability",
     "SKILL_speech": "Speech",
-    "SKILL_reduce_anxiety": "Reduce anxiety",
+    "SKILL_reduce_anxiety": "Ease anxiety",
     "GOAL_REC_sexual_diversity": "💡 Focus: variety & embodiment — small rituals + honest desire talk.",
     "GOAL_REC_self_control": "💡 Focus: regulation — breathe before you answer + one daily pause cue.",
     "GOAL_REC_sociability": "💡 Focus: social contact — one micro-step toward connection daily.",
@@ -506,8 +640,19 @@ EN: dict[str, str] = {
     "SUB_FOREVER_TITLE_HTML": "<b>2) Forever</b>",
     "SUB_FOREVER_DISC_LINES": "After the test: <s>3,990 ₽</s> → <b>2,490 ₽</b> <i>(save 1,500 ₽)</i>\nStars: <s>3,900 ⭐</s> → <b>2,490 ⭐</b>",
     "SUB_FOREVER_FULL_LINE": "<b>3,990 ₽</b> / <b>3,900 ⭐</b>",
-    "BTN_STARS_MONTH": "⭐ 790 — Trial month",
-    "BTN_STARS_FOREVER": "⭐ Forever (Stars)",
+    "BTN_STARS_MONTH": "⭐ Pay with Stars",
+    "BTN_STARS_FOREVER": "⭐ Pay with Stars",
+    "BTN_STARS_FOREVER_AMOUNT": "Buy with Stars",
+    "INV_STARS_FOREVER_TITLE": "BrainBoosty — Forever",
+    "INV_STARS_FOREVER_DESC": "Lifetime access: maps, tests, plan, and members-only content (Telegram Stars).",
+    "INV_STARS_FOREVER_PRICE_LABEL": "Forever",
+    "STARS_INVOICE_SEND_FAIL": "Couldn’t create a Stars invoice. Try again later or pay via Tribute.",
+    "STARS_PRECHECK_FAIL": "Payment unavailable. Refresh and try again.",
+    "STARS_PAY_ALREADY_LIFETIME": "You already have lifetime access.",
+    "PAYMENT_STARS_FOREVER_OK": "✅ Stars payment received. <b>Forever</b> is active.\n\n{vip_block}",
+    "STARS_VIP_INVITE_HTML": "<b>Your private channel link:</b>\n{url}\n\n<i>Single-use link — don’t forward it.</i>",
+    "STARS_VIP_SKIP_CONFIGURE_HTML": "<i>Private channel: support will send a link (VIP_PRIVATE_CHANNEL_CHAT_ID is not set for the bot).</i>",
+    "STARS_VIP_INVITE_FAILED_HTML": "<i>Couldn’t create a channel invite — contact support with a payment screenshot.</i>",
     "BTN_TRIBUTE_MONTH": "💳 790 ₽ Tribute — month",
     "BTN_TRIBUTE_APP": "💳 Pay in Tribute",
     "BTN_TRIBUTE_MONTH_15": "💳 Month −15% (672 ₽) — Tribute",
@@ -535,6 +680,36 @@ EN: dict[str, str] = {
     "PDF_VARIANT": "Test style: {variant}",
     "PDF_SECTION_ZONES": "Six zones (%)",
     "PDF_SECTION_REC": "Recommendations (excerpt)",
+    "PDF_BRAIN_SCORE_LABEL": "NeuroScore",
+    "PDF_BRAIN_COVER_LINE": "Six zones · one profile. Numbers, focus, and a clear read—no clutter.",
+    "PDF_BRAIN_PROGRESS_MAIN": "Your progress {pct}%",
+    "PDF_BRAIN_ZONE_LEVEL": "Integrated zone level",
+    "PDF_BRAIN_REC_TITLE": "Why this zone is your biggest pleasure lever",
+    "PDF_BRAIN_CONNECTIVITY_TITLE": "Inter-region links (educational model)",
+    "PDF_BRAIN_M1": "Regional coherence",
+    "PDF_BRAIN_M2": "Rhythm",
+    "PDF_BRAIN_M3": "Stability",
+    "PDF_BRAIN_M4": "Growth headroom",
+    "PDF_BRAIN_REC_FALLBACK": "Small daily steps build steady progress without overload.",
+    "PDF_BRAIN_REC_UNLOCK": "Full program and all recommendations are in the paid version.",
+    "PDF_BRAIN_CTA_BADGE": "FULL UNLOCK",
+    "PDF_BRAIN_CTA_TITLE": "Claim full access — today",
+    "PDF_BRAIN_CTA_SUB": "A 30-day plan tuned to your profile, a progress tracker, targeted drills, and a private channel — less theory, more reps.",
+    "PDF_BRAIN_CTA_SCAN": "Point your camera — pay in seconds via Tribute. Full storefront, instant unlock.",
+    "PDF_BRAIN_CTA_URL": "Link:",
+    "PDF_BRAIN_HERO_BRAIN": "NEURAL MAP",
+    "PDF_BRAIN_SELL_prefrontal_cortex": "This is who runs the scene: impulse or you. Level it up and intimacy feels calmer, deeper, and more premium—without extra drama.",
+    "PDF_BRAIN_SELL_brain_lobes": "Your inner picture is half the scene. Sharper, truer imagery means you set the pace and get response—sometimes without a single word.",
+    "PDF_BRAIN_SELL_insular_cortex": "The body doesn’t lie: the insula turns sensation into clarity. Less anxious noise—more full-contact presence when you don’t want to drift away.",
+    "PDF_BRAIN_SELL_temporoparietal_junction": "Your social radar for timing, cues, and pauses. When it’s accurate, awkward misunderstandings fade—what remains is sync and trust.",
+    "PDF_BRAIN_SELL_amygdala": "Triggers cut depth. A steadier amygdala means braver desire and honest bedroom talk—without snaps and autopilot resentment.",
+    "PDF_BRAIN_SELL_frontal_gyrus": "Words are the UI of pleasure. Clear asks land softer and stronger: fewer hints into the void—more real-world yes.",
+    "PDF_BRAIN_PAGE_prefrontal_cortex": "Prefrontal cortex",
+    "PDF_BRAIN_PAGE_brain_lobes": "Brain lobes · imagery",
+    "PDF_BRAIN_PAGE_insular_cortex": "Insular cortex",
+    "PDF_BRAIN_PAGE_temporoparietal_junction": "Temporoparietal junction",
+    "PDF_BRAIN_PAGE_amygdala": "Amygdala",
+    "PDF_BRAIN_PAGE_frontal_gyrus": "Frontal gyrus",
     "PDF_FOOTER": "Educational model, not medical advice.",
     "BRAIN_MAP_PHOTO_TITLE": "Brain map — regions",
     "BRAIN_MAP_PHOTO_LOCKED": "🔒 full version",

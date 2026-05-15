@@ -15,105 +15,25 @@ from typing import Any, Literal
 from openai import APIError, AsyncOpenAI
 
 from brainboosty_hook_bot.src.config.config import settings
+from brainboosty_hook_bot.src.prompts.cognitive_seven import (
+    BRAIN_REGION_SYSTEM_PROMPT_7_DEVELOPMENT,
+    BRAIN_REGION_SYSTEM_PROMPT_7_SEXUAL,
+)
+from brainboosty_hook_bot.src.prompts.shared_generate import (
+    GENERATE_SHARED_DAILY_SYSTEM,
+    GENERATE_SHARED_WEEKLY_SYSTEM,
+)
+from brainboosty_hook_bot.src.prompts.shared_score import DYNAMIC_REGION_SCORE_SYSTEM
+from brainboosty_hook_bot.src.services.brain_region_keys import REGION_KEYS
 
 logger = logging.getLogger(__name__)
 
 TestVariant = Literal["sexual", "development"]
 
-REGION_KEYS: tuple[str, ...] = (
-    "prefrontal_cortex",
-    "brain_lobes",
-    "insular_cortex",
-    "temporoparietal_junction",
-    "amygdala",
-    "frontal_gyrus",
-)
-
 COGNITIVE_NUM_QUESTIONS = 7
 
 # Общие правила для 7 вопросов (оба варианта):
 # 1 → ПФК; 2 → амигдала; 3 → островковая; 4 → TPJ; 5 → лобная извилина; 6 → доли; 7 → ПФК + амигдала
-
-BRAIN_REGION_SYSTEM_PROMPT_7_SEXUAL = """Ты — высококвалифицированный нейропсихолог и эксперт по когнитивным функциям мозга.
-
-У тебя есть результаты теста из 7 вопросов (стилистика «сексуальная карта мозга»). Каждый ответ — A, B, C или D.
-
-Вопросы и зоны:
-1. Планирование секса → ПФК
-2. Реакция на отказ или неудачу в сексе → Амигдала
-3. Чувствование тела во время секса → Островковая кора
-4. Чтение желаний партнёра → Височно-теменной узел (TPJ)
-5. Проговаривание своих желаний → Лобная извилина
-6. Визуализация секса → Доли мозга
-7. Контроль возбуждения и импульсов → ПФК + Амигдала
-
-Правила оценки:
-- A = 95.0
-- B = 75.0
-- C = 50.0
-- D = 25.0
-
-Для каждой зоны посчитай **средневзвешенный процент** (float с одним знаком после запятой).
-
-Веса вопросов:
-- prefrontal_cortex — вопросы 1 и 7 (и частично 5: половинный вес)
-- brain_lobes — вопрос 6
-- insular_cortex — вопрос 3
-- temporoparietal_junction — вопрос 4
-- amygdala — вопросы 2 и 7
-- frontal_gyrus — вопросы 1 и 5
-
-Твоя задача: вернуть **СТРОГО ТОЛЬКО JSON** (без markdown, без пояснений):
-
-{
-  "prefrontal_cortex": float_от_0_до_100,
-  "brain_lobes": float_от_0_до_100,
-  "insular_cortex": float_от_0_до_100,
-  "temporoparietal_junction": float_от_0_до_100,
-  "amygdala": float_от_0_до_100,
-  "frontal_gyrus": float_от_0_до_100
-}"""
-
-
-BRAIN_REGION_SYSTEM_PROMPT_7_DEVELOPMENT = """Ты — высококвалифицированный нейропсихолог и эксперт по когнитивным функциям мозга.
-
-У тебя есть результаты теста из 7 вопросов (стилистика «развитие отделов мозга»). Каждый ответ — A, B, C или D.
-
-Вопросы и зоны:
-1. Планирование жизни и дел → ПФК
-2. Реакция на стресс → Амигдала
-3. Осознание телесных ощущений → Островковая кора
-4. Понимание других людей → Височно-теменной узел (TPJ)
-5. Умение выражать свои мысли → Лобная извилина
-6. Пространственное мышление и визуализация → Доли мозга
-7. Самоконтроль и импульсивность → ПФК + Амигдала
-
-Правила оценки:
-- A = 95.0
-- B = 75.0
-- C = 50.0
-- D = 25.0
-
-Для каждой зоны посчитай **средневзвешенный процент** (float с одним знаком после запятой).
-
-Веса вопросов:
-- prefrontal_cortex — вопросы 1 и 7 (и частично 5: половинный вес)
-- brain_lobes — вопрос 6
-- insular_cortex — вопрос 3
-- temporoparietal_junction — вопрос 4
-- amygdala — вопросы 2 и 7
-- frontal_gyrus — вопросы 1 и 5
-
-Твоя задача: вернуть **СТРОГО ТОЛЬКО JSON** (без markdown, без пояснений):
-
-{
-  "prefrontal_cortex": float_от_0_до_100,
-  "brain_lobes": float_от_0_до_100,
-  "insular_cortex": float_от_0_до_100,
-  "temporoparietal_junction": float_от_0_до_100,
-  "amygdala": float_от_0_до_100,
-  "frontal_gyrus": float_от_0_до_100
-}"""
 
 
 def system_prompt_for_variant(variant: TestVariant) -> str:
@@ -174,11 +94,34 @@ def _strip_json_fence(text: str) -> str:
     return t.strip()
 
 
-def _parse_scores_json(content: str) -> dict[str, float]:
+def _load_json_object(content: str) -> dict[str, Any]:
+    """Парсит JSON-объект; при REASONING перед JSON берёт последний валидный объект."""
     cleaned = _strip_json_fence(content)
-    data = json.loads(cleaned)
+    try:
+        data = json.loads(cleaned)
+    except json.JSONDecodeError:
+        data = None
+        pos = len(cleaned)
+        while pos > 0:
+            pos = cleaned.rfind("{", 0, pos)
+            if pos < 0:
+                break
+            try:
+                candidate = json.loads(cleaned[pos:])
+            except json.JSONDecodeError:
+                continue
+            if isinstance(candidate, dict):
+                data = candidate
+                break
+        if data is None:
+            raise
     if not isinstance(data, dict):
         raise ValueError("JSON не является объектом")
+    return data
+
+
+def _parse_scores_json(content: str) -> dict[str, float]:
+    data = _load_json_object(content)
     out: dict[str, float] = {}
     for key in REGION_KEYS:
         if key not in data:
@@ -186,6 +129,85 @@ def _parse_scores_json(content: str) -> dict[str, float]:
         val = float(data[key])
         out[key] = _round_one_dec(min(100.0, max(0.0, val)))
     return out
+
+
+def _parse_scores_object(data: dict[str, Any]) -> dict[str, float]:
+    out: dict[str, float] = {}
+    for key in REGION_KEYS:
+        if key not in data:
+            raise ValueError(f"Нет ключа {key}")
+        val = float(data[key])
+        out[key] = _round_one_dec(min(100.0, max(0.0, val)))
+    return out
+
+
+def _parse_cognitive_scores_and_detail(content: str) -> tuple[dict[str, float], dict[str, Any] | None]:
+    """Новый формат: scores + regions + inter_region_links; старый — плоский объект из шести ключей."""
+    data = _load_json_object(content)
+    if "scores" in data and isinstance(data["scores"], dict):
+        scores = _parse_scores_object(data["scores"])
+        detail: dict[str, Any] = {}
+        links = data.get("inter_region_links")
+        if isinstance(links, list) and links:
+            detail["inter_region_links"] = links
+        regions = data.get("regions")
+        if isinstance(regions, dict) and regions:
+            detail["regions"] = regions
+        return scores, detail if detail else None
+    scores = _parse_scores_json(content)
+    return scores, None
+
+
+def _parse_dynamic_scores_and_detail(content: str) -> tuple[dict[str, float], dict[str, Any] | None]:
+    data = _load_json_object(content)
+    if "scores" in data and isinstance(data["scores"], dict):
+        scores = _parse_scores_object(data["scores"])
+        rat: dict[str, Any] = {}
+        if isinstance(data.get("rationale_ru"), str):
+            rat["rationale_ru"] = str(data["rationale_ru"])
+        if isinstance(data.get("rationale_en"), str):
+            rat["rationale_en"] = str(data["rationale_en"])
+        return scores, rat if rat else None
+    return _parse_scores_json(content), None
+
+
+def merge_scheduled_into_profile(
+    previous: dict[str, float] | None,
+    raw_test_scores: dict[str, float],
+    *,
+    kind: Literal["daily", "weekly"],
+) -> dict[str, float]:
+    """Сглаженное обновление профиля после общего теста (ежедневный слабее влияет, чем недельный)."""
+    if previous is None:
+        return raw_test_scores
+    w = 0.42 if kind == "daily" else 0.58
+    return {
+        k: _round_one_dec(min(100.0, max(0.0, w * raw_test_scores[k] + (1.0 - w) * previous[k])))
+        for k in REGION_KEYS
+    }
+
+
+_REGION_KEY_SET = frozenset(REGION_KEYS)
+
+
+def validate_shared_meta(meta: Any) -> dict[str, Any]:
+    if not isinstance(meta, dict):
+        raise ValueError("meta must be object")
+    for field in ("title_ru", "title_en", "emoji", "focus_regions", "focus_note_ru", "focus_note_en"):
+        if field not in meta:
+            raise ValueError(f"meta missing {field}")
+    if not all(isinstance(meta.get(f), str) and str(meta.get(f)).strip() for f in ("title_ru", "title_en", "focus_note_ru", "focus_note_en")):
+        raise ValueError("meta text fields must be non-empty strings")
+    emoji = str(meta["emoji"]).strip()
+    if not emoji:
+        raise ValueError("meta.emoji empty")
+    fr = meta["focus_regions"]
+    if not isinstance(fr, list) or not 1 <= len(fr) <= 3:
+        raise ValueError("meta.focus_regions must be list length 1..3")
+    for x in fr:
+        if not isinstance(x, str) or x not in _REGION_KEY_SET:
+            raise ValueError("meta.focus_regions bad key")
+    return meta
 
 
 def _openai_client() -> AsyncOpenAI:
@@ -196,11 +218,12 @@ def _openai_client() -> AsyncOpenAI:
     return AsyncOpenAI(api_key=api_key)
 
 
-async def _openai_compute_scores(answers_block: str, variant: TestVariant) -> dict[str, float]:
+async def _openai_compute_scores(answers_block: str, variant: TestVariant) -> tuple[dict[str, float], dict[str, Any] | None]:
     client = _openai_client()
     completion = await client.chat.completions.create(
         model=settings.OPENAI_MODEL,
         temperature=0.2,
+        max_tokens=6000,
         messages=[
             {"role": "system", "content": system_prompt_for_variant(variant)},
             {"role": "user", "content": f"Ответ пользователя:\n\n{answers_block}"},
@@ -209,101 +232,24 @@ async def _openai_compute_scores(answers_block: str, variant: TestVariant) -> di
     choice = completion.choices[0].message.content
     if not choice:
         raise ValueError("Пустой ответ модели")
-    return _parse_scores_json(choice)
+    return _parse_cognitive_scores_and_detail(choice)
 
 
 async def compute_region_scores(
     answers: dict[int, str],
     variant: TestVariant,
-) -> tuple[dict[str, float], Literal["openai", "fallback"]]:
-    """Подсчёт по 7 ответам и выбранной стилистике."""
+) -> tuple[dict[str, float], Literal["openai", "fallback"], dict[str, Any] | None]:
+    """Подсчёт по 7 ответам; третий элемент — детализация для PDF (связи зон, буллеты, субметрики)."""
     answers_block = format_user_answers_block(answers)
     if not settings.OPENAI_API_KEY.strip():
-        return fallback_region_scores_7(answers), "fallback"
+        return fallback_region_scores_7(answers), "fallback", None
 
     try:
-        scores = await _openai_compute_scores(answers_block, variant)
-        return scores, "openai"
+        scores, detail = await _openai_compute_scores(answers_block, variant)
+        return scores, "openai", detail
     except (APIError, json.JSONDecodeError, ValueError, KeyError, TypeError) as exc:
         logger.warning("OpenAI brain-region scoring failed, using fallback: %s", exc)
-        return fallback_region_scores_7(answers), "fallback"
-
-
-GENERATE_SHARED_DAILY_SYSTEM = """Ты составляешь короткий ежедневный когнитивный мини-тест для приложения про мозг и привычки.
-
-Требования:
-- Ровно от 4 до 7 вопросов (включительно).
-- У каждого вопроса ровно 4 варианта ответа с ключами A, B, C, D.
-- Тексты на двух языках: text_ru и text_en у вопроса и у каждого варианта (поля text_ru, text_en внутри каждого option).
-- Вопросы разнообразные, без токсичности, без медицинских диагнозов; образовательный тон.
-- Варианты A–D — разные стили поведения/мышления (не «правильный/неправильный»).
-
-Верни СТРОГО один JSON-объект (без markdown, без комментариев) вида:
-{
-  "questions": [
-    {
-      "id": 1,
-      "text_ru": "...",
-      "text_en": "...",
-      "options": [
-        {"key": "A", "text_ru": "...", "text_en": "..."},
-        {"key": "B", "text_ru": "...", "text_en": "..."},
-        {"key": "C", "text_ru": "...", "text_en": "..."},
-        {"key": "D", "text_ru": "...", "text_en": "..."}
-      ]
-    }
-  ]
-}"""
-
-
-GENERATE_SHARED_WEEKLY_SYSTEM = """Ты составляешь расширенный недельный когнитивный тест для приложения про мозг и саморегуляцию.
-
-Требования:
-- Ровно от 10 до 15 вопросов (включительно).
-- У каждого вопроса ровно 4 варианта ответа с ключами A, B, C, D.
-- Тексты на двух языках: text_ru и text_en у вопроса и у каждого варианта.
-- Вопросы глубже и разнообразнее, чем в ежедневном мини-тесте; без токсичности и без медицинских диагнозов.
-- Варианты A–D отражают разные стили мышления и поведения.
-
-Верни СТРОГО один JSON-объект (без markdown, без комментариев) вида:
-{
-  "questions": [
-    {
-      "id": 1,
-      "text_ru": "...",
-      "text_en": "...",
-      "options": [
-        {"key": "A", "text_ru": "...", "text_en": "..."},
-        {"key": "B", "text_ru": "...", "text_en": "..."},
-        {"key": "C", "text_ru": "...", "text_en": "..."},
-        {"key": "D", "text_ru": "...", "text_en": "..."}
-      ]
-    }
-  ]
-}"""
-
-
-DYNAMIC_REGION_SCORE_SYSTEM = """Ты — нейропсихолог. По полному тексту теста и ответам пользователя (буквы A–D) оцени активацию/развитие шести зон (проценты 0–100).
-
-Зоны (ключи JSON):
-- prefrontal_cortex — префронтальная кора (планирование, контроль)
-- brain_lobes — доли мозга (образность, пространство)
-- insular_cortex — островковая кора (интероцепция, телесность)
-- temporoparietal_junction — височно-теменной узел (понимание других)
-- amygdala — амигдала (стресс, эмоциональные реакции)
-- frontal_gyrus — лобные извилины (выражение, артикуляция мыслей)
-
-Учитывай смысл вопросов и выбранных ответов; взвесь зоны по релевантности вопросов.
-
-Верни СТРОГО ТОЛЬКО JSON (без markdown):
-{
-  "prefrontal_cortex": float,
-  "brain_lobes": float,
-  "insular_cortex": float,
-  "temporoparietal_junction": float,
-  "amygdala": float,
-  "frontal_gyrus": float
-}"""
+        return fallback_region_scores_7(answers), "fallback", None
 
 
 def validate_shared_questions(kind: str, data: Any) -> list[dict[str, Any]]:
@@ -311,6 +257,8 @@ def validate_shared_questions(kind: str, data: Any) -> list[dict[str, Any]]:
         raise ValueError("bad kind")
     if not isinstance(data, dict):
         raise ValueError("root must be object")
+    meta = data.get("meta")
+    validate_shared_meta(meta)
     qs = data.get("questions")
     if not isinstance(qs, list):
         raise ValueError("questions must be list")
@@ -342,12 +290,29 @@ def validate_shared_questions(kind: str, data: Any) -> list[dict[str, Any]]:
     return qs
 
 
-def format_dynamic_qa_block(questions: list[dict[str, Any]], answers: dict[int, str], *, lang: str) -> str:
+def format_dynamic_qa_block(
+    questions: list[dict[str, Any]],
+    answers: dict[int, str],
+    *,
+    lang: str,
+    test_meta: dict[str, Any] | None = None,
+) -> str:
     """Текстовый блок вопрос–ответ для модели."""
     lg = lang if lang in {"ru", "en"} else "ru"
     text_key = "text_ru" if lg == "ru" else "text_en"
     opt_key = "text_ru" if lg == "ru" else "text_en"
     lines: list[str] = []
+    if isinstance(test_meta, dict):
+        title = test_meta.get("title_ru" if lg == "ru" else "title_en", "")
+        fr = test_meta.get("focus_regions")
+        fn = test_meta.get("focus_note_ru" if lg == "ru" else "focus_note_en", "")
+        if isinstance(title, str) and title.strip():
+            lines.append(f"Тест: {title.strip()}" if lg == "ru" else f"Test: {title.strip()}")
+        if isinstance(fr, list) and fr:
+            lines.append(f"Фокус зон: {', '.join(str(x) for x in fr)}" if lg == "ru" else f"Focus regions: {', '.join(str(x) for x in fr)}")
+        if isinstance(fn, str) and fn.strip():
+            lines.append(fn.strip())
+        lines.append("")
     for q in questions:
         qid = int(q["id"])
         lines.append(f"Вопрос {qid}: {q[text_key]}")
@@ -366,11 +331,12 @@ def fallback_region_scores_n(answers: dict[int, str], n: int) -> dict[str, float
     return {k: _round_one_dec(min(100.0, max(0.0, raw[k]))) for k in REGION_KEYS}
 
 
-async def _openai_dynamic_scores(qa_block: str) -> dict[str, float]:
+async def _openai_dynamic_scores(qa_block: str) -> tuple[dict[str, float], dict[str, Any] | None]:
     client = _openai_client()
     completion = await client.chat.completions.create(
         model=settings.OPENAI_MODEL,
         temperature=0.2,
+        max_tokens=4500,
         messages=[
             {"role": "system", "content": DYNAMIC_REGION_SCORE_SYSTEM},
             {"role": "user", "content": qa_block},
@@ -379,7 +345,7 @@ async def _openai_dynamic_scores(qa_block: str) -> dict[str, float]:
     choice = completion.choices[0].message.content
     if not choice:
         raise ValueError("Пустой ответ модели")
-    return _parse_scores_json(choice)
+    return _parse_dynamic_scores_and_detail(choice)
 
 
 async def compute_region_scores_dynamic(
@@ -387,19 +353,20 @@ async def compute_region_scores_dynamic(
     answers: dict[int, str],
     *,
     lang: str,
-) -> tuple[dict[str, float], Literal["openai", "fallback"]]:
+    test_meta: dict[str, Any] | None = None,
+) -> tuple[dict[str, float], Literal["openai", "fallback"], dict[str, Any] | None]:
     n = len(questions)
     if set(answers.keys()) != set(range(1, n + 1)):
         raise ValueError("incomplete answers")
-    qa_block = format_dynamic_qa_block(questions, answers, lang=lang)
+    qa_block = format_dynamic_qa_block(questions, answers, lang=lang, test_meta=test_meta)
     if not settings.OPENAI_API_KEY.strip():
-        return fallback_region_scores_n(answers, n), "fallback"
+        return fallback_region_scores_n(answers, n), "fallback", None
     try:
-        scores = await _openai_dynamic_scores(qa_block)
-        return scores, "openai"
+        scores, detail = await _openai_dynamic_scores(qa_block)
+        return scores, "openai", detail
     except (APIError, json.JSONDecodeError, ValueError, KeyError, TypeError) as exc:
         logger.warning("OpenAI dynamic scoring failed, using fallback: %s", exc)
-        return fallback_region_scores_n(answers, n), "fallback"
+        return fallback_region_scores_n(answers, n), "fallback", None
 
 
 async def _openai_generate_test(system: str, user_msg: str, *, max_tokens: int) -> dict[str, Any]:
@@ -432,4 +399,4 @@ async def generate_shared_test_json(kind: Literal["daily", "weekly"]) -> dict[st
         hint = "Сгенерируй новый недельный тест (10–15 вопросов)."
     data = await _openai_generate_test(system, hint, max_tokens=max_tokens)
     validate_shared_questions(kind, data)
-    return data
+    return {"meta": data["meta"], "questions": data["questions"]}

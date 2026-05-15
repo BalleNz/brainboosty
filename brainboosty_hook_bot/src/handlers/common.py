@@ -29,7 +29,7 @@ async def cmd_cancel(message: Message, state: FSMContext, locale: str) -> None:
 
 @router.message(Command("language"))
 async def cmd_language(message: Message, locale: str) -> None:
-    await message.answer(t(locale, "LANG_PROMPT"), reply_markup=lang_pick_kb(locale))
+    await message.answer(t(locale, "LANG_PROMPT"), reply_markup=lang_pick_kb(locale), parse_mode="HTML")
 
 
 @router.message(Command("skills"))
@@ -56,7 +56,7 @@ async def cmd_skills(message: Message, state: FSMContext, session: AsyncSession,
     await state.set_state(QuestStates.skill)
     sent = await message.answer(
         t(lang, "SKILLS_REPICK_INTRO"),
-        reply_markup=questionnaire_skill_kb(lang, selected=tuple(pref)),
+        reply_markup=questionnaire_skill_kb(lang, selected=tuple(pref), show_done_button=True),
     )
     await flow_remember(state, sent.message_id)
 

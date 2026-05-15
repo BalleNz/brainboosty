@@ -27,3 +27,13 @@ def t(lang: str, key: str, **kwargs: object) -> str:
     if kwargs:
         return str(template).format(**kwargs)
     return str(template)
+
+
+def question_skill_message(lang: str, *, selected_count: int, max_skills: int = 1) -> str:
+    """Текст шага выбора навыков: онбординг — 1, /skills — до 2."""
+    cap = max(1, min(2, max_skills))
+    lead_key = "QUESTION_SKILL_LEAD_CMD" if cap >= 2 else "QUESTION_SKILL_LEAD"
+    lead = t(lang, lead_key)
+    if cap == 1 and selected_count == 0:
+        return lead
+    return f"{lead}\n\n{t(lang, 'QUESTION_SKILL_COUNT', n=selected_count, max=cap)}"

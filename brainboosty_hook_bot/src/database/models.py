@@ -100,6 +100,9 @@ class BrainRegionSnapshot(Base):
     amygdala: Mapped[float] = mapped_column(Float, nullable=False)
     frontal_gyrus: Mapped[float] = mapped_column(Float, nullable=False)
 
+    # Расширенный профиль от модели (связи зон, буллеты, субметрики) — для PDF; при null — шаблоны из brain_pdf_content.
+    detail_json: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+
     user: Mapped[User] = relationship("User", back_populates="brain_snapshots")
     test_completion: Mapped["UserTestCompletion | None"] = relationship(
         "UserTestCompletion",

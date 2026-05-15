@@ -23,7 +23,7 @@ from brainboosty_hook_bot.src.services.brain_regions_display import (
     format_brain_map_with_comparison,
     snapshot_to_scores,
 )
-from brainboosty_hook_bot.src.services.pdf_report import build_brain_map_pdf
+from brainboosty_hook_bot.src.services.brain_result_delivery import deliver_brain_map_pdf
 from brainboosty_hook_bot.src.services.subscription_service import user_has_paid_access
 from brainboosty_hook_bot.src.services.teaser_service import generate_teaser_recommendations
 from brainboosty_hook_bot.src.utils.flow_chat import flow_remember
@@ -139,6 +139,7 @@ async def menu_brain_map(message: Message, session: AsyncSession, locale: str) -
 
     await message.answer(
         text,
+        parse_mode="HTML",
         reply_markup=main_reply_kb(
             lang,
             paid_access=user_has_paid_access(user),
@@ -259,17 +260,16 @@ async def menu_pdf_last(callback: CallbackQuery, session: AsyncSession, locale: 
         await callback.answer(t(lang, "NO_BRAIN_MAP_YET"), show_alert=True)
         return
 
-    await callback.message.answer(t(lang, "PDF_GENERATING"))
-    scores = snapshot_to_scores(snap)
-    pdf_bytes = build_brain_map_pdf(
-        lang=lang,
-        scores=scores,
-        test_variant=snap.test_variant,
-        goal_keys=list(user.goals) if isinstance(user.goals, list) else [],
-        paid=paid,
-    )
-    await callback.message.answer_document(
-        BufferedInputFile(pdf_bytes, filename="brainboosty-brain-map.pdf"),
-        caption=t(lang, "PDF_CAPTION"),
-    )
     await callback.answer()
+    await deliver_brain_map_pdf(
+        callback.message.bot,
+        callback.message.chat.id,
+        session,
+        user,
+        lang,
+        scores=snapshot_to_scores(snap),
+        test_variant=snap.test_variant,
+        paid=paid,
+        reply_markup=None,
+        detail_json=snap.detail_json if isinstance(snap.detail_json, dict) else None,
+    )

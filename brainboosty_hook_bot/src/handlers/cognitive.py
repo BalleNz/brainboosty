@@ -8,14 +8,14 @@ from typing import cast
 from aiogram import Bot, F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import BufferedInputFile, CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from brainboosty_hook_bot.src.config.config import settings
 from brainboosty_hook_bot.src.database.models import BrainRegionSnapshot, User
-from brainboosty_hook_bot.src.handlers.payments import send_subscription_offer
 from brainboosty_hook_bot.src.keyboards.inline import (
+    COGNITIVE_BACK_CALLBACK,
     COGNITIVE_CB_PREFIX,
     RESUME_COGNITIVE_CB,
     TEST_VARIANT_PREFIX,
@@ -28,14 +28,8 @@ from brainboosty_hook_bot.src.locale import t
 from brainboosty_hook_bot.src.locale.cognitive_bodies import cognitive_question_body
 from brainboosty_hook_bot.src.services import assistant_service
 from brainboosty_hook_bot.src.services.assistant_service import TestVariant
-from brainboosty_hook_bot.src.services.brain_map_image import build_brain_map_infographic_png
-from brainboosty_hook_bot.src.services.brain_result_delivery import send_full_brain_result_pack
-from brainboosty_hook_bot.src.services.pdf_report import build_brain_map_pdf
-from brainboosty_hook_bot.src.services.subscription_service import (
-    open_discount_window,
-    test_discount_time_left_phrase,
-    user_has_paid_access,
-)
+from brainboosty_hook_bot.src.services.brain_result_delivery import deliver_brain_map_pdf, send_full_brain_result_pack
+from brainboosty_hook_bot.src.services.subscription_service import open_discount_window, user_has_paid_access
 from brainboosty_hook_bot.src.utils.flow_chat import delete_one, flow_remember, flow_wipe, try_delete_user_message
 from brainboosty_hook_bot.src.utils.helpers import build_ref_link
 
@@ -112,7 +106,7 @@ async def cognitive_variant_chosen(
     sent = await bot.send_message(
         chat_id,
         cognitive_question_body(lang, raw, 1),
-        reply_markup=cognitive_answer_kb(1),
+        reply_markup=cognitive_answer_kb(lang, 1),
         parse_mode="HTML",
     )
     await flow_remember(state, sent.message_id)
@@ -164,7 +158,7 @@ async def cognitive_resume(
         sent = await bot.send_message(
             chat_id,
             cognitive_question_body(lang, variant, cq),
-            reply_markup=cognitive_answer_kb(cq),
+            reply_markup=cognitive_answer_kb(lang, cq),
             parse_mode="HTML",
         )
         await flow_remember(state, sent.message_id)
@@ -176,7 +170,73 @@ async def cognitive_resume(
     await callback.answer()
 
 
-@router.callback_query(CognitiveStates.testing, F.data.startswith(COGNITIVE_CB_PREFIX))
+@router.callback_query(CognitiveStates.testing, F.data == COGNITIVE_BACK_CALLBACK)
+async def cognitive_go_back(
+    callback: CallbackQuery,
+    state: FSMContext,
+    session: AsyncSession,
+    locale: str,
+) -> None:
+    if callback.from_user is None or callback.message is None:
+        await callback.answer()
+        return
+
+    data = await state.get_data()
+    cq = data.get("cq")
+    variant = data.get("test_variant")
+    answers_obj = data.get("answers") or {}
+
+    if not isinstance(cq, int) or variant not in ("sexual", "development"):
+        await callback.answer(t(locale, "ERR_START_OVER"), show_alert=True)
+        await state.clear()
+        return
+
+    ur = await session.execute(select(User).where(User.tg_id == callback.from_user.id))
+    user = ur.scalar_one_or_none()
+    if user is None:
+        await callback.answer(t(locale, "NOT_REGISTERED"), show_alert=True)
+        return
+    lang = normalize_user_lang(user, locale)
+
+    answers: dict[int, str] = {}
+    for k, v in answers_obj.items():
+        try:
+            ki = int(k) if isinstance(k, str) and k.isdigit() else int(k)
+            if isinstance(v, str):
+                answers[ki] = v
+        except (TypeError, ValueError):
+            continue
+
+    bot = callback.bot
+    chat_id = callback.message.chat.id
+    question_mid = callback.message.message_id
+
+    if cq == 1:
+        await callback.answer()
+        await delete_one(bot, chat_id, question_mid)
+        await flow_wipe(bot, chat_id, state, extra_ids=(question_mid,))
+        await prompt_test_style_choice(state, lang, bot=bot, chat_id=chat_id)
+        return
+
+    prev = cq - 1
+    answers.pop(prev, None)
+    await state.update_data(cq=prev, answers={str(i): answers[i] for i in sorted(answers)})
+    await callback.answer()
+    await delete_one(bot, chat_id, question_mid)
+    await flow_wipe(bot, chat_id, state, extra_ids=(question_mid,))
+    sent = await bot.send_message(
+        chat_id,
+        cognitive_question_body(lang, variant, prev),
+        reply_markup=cognitive_answer_kb(lang, prev),
+        parse_mode="HTML",
+    )
+    await flow_remember(state, sent.message_id)
+
+
+@router.callback_query(
+    CognitiveStates.testing,
+    F.data.startswith(COGNITIVE_CB_PREFIX) & (F.data != COGNITIVE_BACK_CALLBACK),
+)
 async def cognitive_answer_step(
     callback: CallbackQuery,
     state: FSMContext,
@@ -246,7 +306,7 @@ async def cognitive_answer_step(
         sent = await bot.send_message(
             chat_id,
             cognitive_question_body(lang, variant, nxt),
-            reply_markup=cognitive_answer_kb(nxt),
+            reply_markup=cognitive_answer_kb(lang, nxt),
             parse_mode="HTML",
         )
         await flow_remember(state, sent.message_id)
@@ -311,7 +371,7 @@ async def cognitive_testing_stray(
     sent = await bot.send_message(
         chat_id,
         text,
-        reply_markup=cognitive_answer_kb(cq),
+        reply_markup=cognitive_answer_kb(lang, cq),
         parse_mode="HTML",
     )
     await flow_remember(state, sent.message_id)
@@ -341,11 +401,12 @@ async def _finalize(
 
     v = variant if variant in ("sexual", "development") else "development"
     try:
-        scores, source = await assistant_service.compute_region_scores(answers, cast(TestVariant, v))
+        scores, source, detail = await assistant_service.compute_region_scores(answers, cast(TestVariant, v))
     except Exception as exc:  # noqa: BLE001
         logger.exception("Unexpected scoring failure: %s", exc)
         scores = assistant_service.fallback_region_scores_7(answers)
         source = "fallback"
+        detail = None
 
     open_discount_window(user)
     await session.flush()
@@ -373,16 +434,13 @@ async def _finalize(
             temporoparietal_junction=scores["temporoparietal_junction"],
             amygdala=scores["amygdala"],
             frontal_gyrus=scores["frontal_gyrus"],
+            detail_json=detail,
         ),
     )
     user.cognitive_completed = True
     await session.flush()
 
     await delete_one(bot, chat_id, computing.message_id)
-
-    tl = test_discount_time_left_phrase(lang, user)
-    if tl:
-        await bot.send_message(chat_id, t(lang, "FOREVER_DISCOUNT_LINE", time_left=tl), parse_mode="HTML")
 
     paid = user_has_paid_access(user)
     if paid:
@@ -391,37 +449,24 @@ async def _finalize(
         except ValueError as exc:
             logger.warning("full brain pack after test: %s", exc)
     else:
-        try:
-            png = build_brain_map_infographic_png(scores, lang, paid=False, test_variant=v)
-            cap = t(lang, "BRAIN_MAP_PHOTO_CAPTION_FREE")
-            await bot.send_photo(
-                chat_id,
-                BufferedInputFile(png, filename="brain-map.png"),
-                caption=cap,
-            )
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("Brain map infographic failed: %s", exc)
-        try:
-            goal_keys = list(user.goals) if isinstance(user.goals, list) else []
-            pdf_bytes = build_brain_map_pdf(
-                lang=lang,
-                scores=scores,
-                test_variant=v,
-                goal_keys=goal_keys,
-                paid=False,
-            )
-            await bot.send_document(
-                chat_id,
-                BufferedInputFile(pdf_bytes, filename="brainboosty-brain-map.pdf"),
-                caption=t(lang, "PDF_CAPTION"),
-            )
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("Brain map PDF (free) failed: %s", exc)
+        await deliver_brain_map_pdf(
+            bot,
+            chat_id,
+            session,
+            user,
+            lang,
+            scores=scores,
+            test_variant=v,
+            paid=False,
+            reply_markup=None,
+            detail_json=detail,
+        )
         await bot.send_message(
             chat_id,
             t(lang, "CHANNEL_TRIAL_CTA"),
             reply_markup=channel_trial_cta_kb(lang, settings.premium_channel_url),
         )
+        await bot.send_message(chat_id, t(lang, "TEST_RESULT_MODEL_DISCLAIMER"), parse_mode="HTML")
 
     if source == "fallback":
         await bot.send_message(chat_id, t(lang, "COGNITIVE_DONE_FALLBACK"))
@@ -440,5 +485,3 @@ async def _finalize(
             f"{t(lang, 'RETEST_SAVED')}\n\n{t(lang, 'REF_LINK_LABEL')}\n{ref_link}",
             reply_markup=main_reply_kb(lang, paid_access=paid, show_retest=show_retest),
         )
-
-    await send_subscription_offer(bot, from_user_id, session, user, lang)
