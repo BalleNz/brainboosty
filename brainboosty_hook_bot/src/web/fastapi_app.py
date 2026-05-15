@@ -65,13 +65,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="BrainBoosty Hook API", lifespan=lifespan)
 app.include_router(webapp_router)
-mount_webapp_static(app)
-
-
-@app.get("/")
-async def root() -> RedirectResponse:
-    """Сайт на главном домене: браузер → Web App. POST на этот же путь — только Telegram (см. TELEGRAM_WEBHOOK_PATH)."""
-    return RedirectResponse(url="/webapp/", status_code=302)
 
 
 @app.get("/health")
@@ -85,6 +78,13 @@ async def health() -> dict[str, str]:
         "telegram_mode": "webhook",
         "webapp_dist_built": str(built).lower(),
     }
+
+
+@app.get("/webapp")
+@app.get("/webapp/")
+async def legacy_webapp_path_redirect() -> RedirectResponse:
+    """Старые закладки и ссылки с /webapp/ → корень домена."""
+    return RedirectResponse(url="/", status_code=301)
 
 
 @app.post(settings.TELEGRAM_WEBHOOK_PATH)
@@ -117,3 +117,6 @@ async def tribute_webhook_route(request: Request) -> Response:
     bot = _runtime.bot if _runtime else None
     status, body = await process_tribute_webhook(raw, sig, bot)
     return Response(content=body, status_code=status, media_type="text/plain")
+
+
+mount_webapp_static(app)

@@ -38,11 +38,21 @@ export async function renderTest(root, ctx, profile, { onProfile } = {}) {
 
   function renderVariantPick() {
     wrap.innerHTML = `
-      <h2 class="bb-page-title neon-zone-title">${esc(t.testTitle)}</h2>
-      <p class="bb-page-sub text-slate-300/90 text-sm mb-4">${esc(t.testPickVariant)}</p>
-      <div class="grid gap-3">
-        <button type="button" class="bb-btn-primary" data-variant="development">${esc(t.variantDev)}</button>
-        <button type="button" class="bb-btn-ghost" data-variant="sexual">${esc(t.variantSex)}</button>
+      <div class="bb-test-pick">
+        <div class="bb-test-pick__glow" aria-hidden="true"></div>
+        <h2 class="bb-page-title bb-page-title--premium neon-zone-title">${esc(t.testTitle)}</h2>
+        <p class="bb-page-sub text-slate-300/90 text-sm mb-1 leading-relaxed">${esc(t.testPickVariant)}</p>
+        <div class="bb-test-variant-grid">
+          <button type="button" class="bb-btn-hero" data-variant="sexual">
+            <span class="bb-btn-hero__badge">${esc(t.variantSexBadge)}</span>
+            <span class="bb-btn-hero__label">${esc(t.variantSex)}</span>
+            <span class="bb-btn-hero__hint">${esc(t.variantSexHint)}</span>
+          </button>
+          <button type="button" class="bb-btn-alt" data-variant="development">
+            <span class="bb-btn-alt__label">${esc(t.variantDev)}</span>
+            <span class="bb-btn-alt__hint">${esc(t.variantDevHint)}</span>
+          </button>
+        </div>
       </div>
     `;
     wrap.querySelectorAll("[data-variant]").forEach((btn) => {
@@ -71,7 +81,7 @@ export async function renderTest(root, ctx, profile, { onProfile } = {}) {
         </div>
         <div class="pdf-bar-track"><div class="pdf-bar-gradient pdf-bar-gradient--main" style="clip-path: inset(0 ${(100 - progress).toFixed(1)}% 0 0)"></div></div>
       </div>
-      <h2 class="text-lg font-bold text-cyan-100 mb-2 neon-zone-title">${esc(q.topic)}</h2>
+      <h2 class="bb-test-q-title">${esc(q.topic)}</h2>
       <p class="text-slate-200 mb-4 leading-relaxed">${esc(q.text)}</p>
       <div class="grid gap-2 bb-test-options" id="bb-test-options"></div>
     `;

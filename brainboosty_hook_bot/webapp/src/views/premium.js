@@ -15,14 +15,14 @@ export function renderPremium(root, profile) {
       <div class="mb-3 rounded-full px-5 py-1.5 border border-cyan-400/30 bg-cyan-500/10 text-xs font-bold uppercase tracking-[0.35em] text-cyan-100 text-center bb-type-display">
         ${esc(t.premiumBadge)}
       </div>
-      <h2 class="text-3xl font-black text-center bg-gradient-to-r from-cyan-100 via-violet-200 to-fuchsia-300 bg-clip-text text-transparent mb-4 neon-cta-title">
+      <h2 class="bb-page-title bb-page-title--premium neon-cta-title mb-4">
         ${esc(t.premiumTitle)}
       </h2>
       <p class="text-slate-200 text-center text-sm leading-relaxed mb-6">${esc(t.premiumSub)}</p>
       <ul class="bb-premium-list glass rounded-2xl p-5 mb-6 space-y-3 text-sm text-slate-200">
         ${t.premiumBullets.map((b) => `<li>${esc(b)}</li>`).join("")}
       </ul>
-      <button type="button" class="bb-btn-primary w-full" id="bb-premium-buy">${esc(t.premiumCta)}</button>
+      <button type="button" class="bb-btn-premium-buy w-full" id="bb-premium-buy">${esc(t.premiumCta)}</button>
     </section>
   `;
   root.querySelector("#bb-premium-buy")?.addEventListener("click", () => {

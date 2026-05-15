@@ -10,20 +10,92 @@ function esc(s) {
     .replace(/>/g, "&gt;");
 }
 
-function detectLang() {
-  const nav = (navigator.language || "ru").toLowerCase();
-  return nav.startsWith("en") ? "en" : "ru";
+const LANDING_LANG_KEY = "bb-landing-lang";
+
+function getStoredLandingLang() {
+  try {
+    const v = localStorage.getItem(LANDING_LANG_KEY);
+    if (v === "en" || v === "ru") return v;
+  } catch {
+    /* private mode */
+  }
+  return null;
+}
+
+function showLanguageGate(onChoose) {
+  document.body.classList.add("bb-lang-gate-open");
+
+  const gate = document.createElement("div");
+  gate.className = "bb-lang-gate";
+  gate.setAttribute("role", "dialog");
+  gate.setAttribute("aria-modal", "true");
+  gate.setAttribute("aria-labelledby", "bb-lang-gate-title");
+
+  gate.innerHTML = `
+    <div class="bb-lang-gate__backdrop" aria-hidden="true"></div>
+    <div class="bb-lang-gate__dialog glass">
+      <p id="bb-lang-gate-title" class="bb-lang-gate__title">BrainBoosty</p>
+      <p class="bb-lang-gate__sub">Выберите язык · Choose language</p>
+      <div class="bb-lang-gate__choices">
+        <button type="button" class="bb-lang-gate__btn" data-lang="ru">
+          <span class="bb-lang-gate__flag" aria-hidden="true">🇷🇺</span>
+          <span>Русский</span>
+        </button>
+        <button type="button" class="bb-lang-gate__btn" data-lang="en">
+          <span class="bb-lang-gate__flag" aria-hidden="true">🇬🇧</span>
+          <span>English</span>
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(gate);
+
+  const finish = (lang) => {
+    try {
+      localStorage.setItem(LANDING_LANG_KEY, lang);
+    } catch {
+      /* ignore */
+    }
+    document.body.classList.remove("bb-lang-gate-open");
+    gate.remove();
+    onChoose(lang);
+  };
+
+  gate.querySelectorAll("[data-lang]").forEach((btn) => {
+    btn.addEventListener("click", () => finish(btn.getAttribute("data-lang") || "ru"));
+  });
+
+  requestAnimationFrame(() => {
+    gate.querySelector(".bb-lang-gate__btn")?.focus();
+  });
 }
 
 export async function bootLanding() {
-  const lang = detectLang();
-  const t = getStrings(lang);
-  document.documentElement.lang = lang;
-
   const header = document.getElementById("bb-header");
   const nav = document.getElementById("bb-nav");
   if (header) header.hidden = true;
   if (nav) nav.hidden = true;
+
+  const root = document.getElementById("bb-root");
+  if (!root) return;
+
+  const saved = getStoredLandingLang();
+  if (!saved) {
+    root.className = "bb-root";
+    root.innerHTML = "";
+    showLanguageGate((lang) => {
+      runLanding(lang).catch(() => {});
+    });
+    return;
+  }
+
+  await runLanding(saved);
+}
+
+async function runLanding(lang) {
+  const t = getStrings(lang);
+  document.documentElement.lang = lang;
 
   const root = document.getElementById("bb-root");
   if (!root) return;

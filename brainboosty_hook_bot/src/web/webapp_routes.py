@@ -44,11 +44,11 @@ def mount_webapp_static(app) -> None:
     dist = webapp_dist_dir()
     if dist.is_dir() and (dist / "index.html").is_file():
         app.mount(
-            "/webapp",
+            "/",
             StaticFiles(directory=str(dist), html=True),
             name="brainboosty_webapp",
         )
-        logger.info("Web App static files mounted at /webapp/ from %s", dist)
+        logger.info("Web App SPA mounted at / from %s", dist)
     else:
         logger.warning(
             "Web App dist not found at %s — run: cd webapp && npm install && npm run build",

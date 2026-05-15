@@ -203,7 +203,7 @@ fi
 
 echo ""
 echo "==> Готово — проверьте вручную"
-echo "    Web App:    ${PUBLIC_URL}/webapp/"
+echo "    Web App:    ${PUBLIC_URL}/"
 echo "    Tribute:    POST ${PUBLIC_URL}${WEBHOOK_PATH}"
 echo "    BotFather:  домен бота → ${DOMAIN}"
 echo "    Telegram:   webhook ${PUBLIC_URL}${TELEGRAM_WEBHOOK_PATH:-/}"
@@ -216,5 +216,5 @@ if [[ "$MODE" == "local" ]]; then
   echo ""
   echo "==> Режим local: добавьте в /etc/hosts на Mac:"
   echo "    127.0.0.1 ${DOMAIN} www.${DOMAIN}"
-  echo "    Откройте: ${PUBLIC_URL}/webapp/ (самоподписанный сертификат)"
+  echo "    Откройте: ${PUBLIC_URL}/ (самоподписанный сертификат)"
 fi

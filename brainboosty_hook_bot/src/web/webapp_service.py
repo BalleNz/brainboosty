@@ -28,7 +28,7 @@ from brainboosty_hook_bot.src.services.subscription_service import discount_acti
 def webapp_public_url() -> str:
     url = (settings.WEBAPP_PUBLIC_URL or "").strip().rstrip("/")
     if url:
-        return f"{url}/webapp/"
+        return f"{url}/"
     return ""
 
 

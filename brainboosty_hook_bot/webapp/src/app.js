@@ -129,8 +129,10 @@ export async function bootApp(ctx) {
 
   const t0 = getStrings(ctx.lang);
   const header = document.getElementById("bb-header");
+  const headerWordmark = document.getElementById("bb-header-wordmark");
   const headerTitle = document.getElementById("bb-header-title");
   const headerLogo = document.getElementById("bb-header-logo");
+  if (headerWordmark) headerWordmark.textContent = t0.appBrandName;
   if (headerTitle) headerTitle.textContent = t0.appHeaderTitle;
   if (headerLogo) headerLogo.innerHTML = logoSvg;
   if (header) {

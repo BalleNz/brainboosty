@@ -7,7 +7,7 @@ const packageAssets = path.resolve(webappRoot, "../assets");
 
 /** @type {import('vite').UserConfig} */
 export default defineConfig({
-  base: "/webapp/",
+  base: "/",
   root: webappRoot,
   publicDir: path.join(webappRoot, "public"),
   resolve: {

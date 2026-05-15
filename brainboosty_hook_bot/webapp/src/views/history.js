@@ -31,7 +31,7 @@ export async function renderHistory(root, ctx, profile) {
   const wrap = document.createElement("section");
   wrap.className = "bb-section is-visible bb-history";
   wrap.innerHTML = `
-    <h2 class="bb-page-title neon-zone-title">${esc(t.historyTitle)}</h2>
+    <h2 class="bb-page-title bb-page-title--premium neon-zone-title">${esc(t.historyTitle)}</h2>
     <p class="bb-page-sub text-slate-300/90 text-sm mb-4">${esc(t.historySub)}</p>
   `;
   const list = document.createElement("div");

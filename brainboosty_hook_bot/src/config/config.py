@@ -92,7 +92,7 @@ class Settings(BaseSettings):
         default="",
         description=(
             "Публичный HTTPS URL API без слэша на конце (например https://api.example.com). "
-            "Кнопка Web App в боте: {WEBAPP_PUBLIC_URL}/webapp/"
+            "Публичный URL сайта и Web App: {WEBAPP_PUBLIC_URL}/"
         ),
     )
 

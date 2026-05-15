@@ -48,6 +48,7 @@ export default {
   navHistory: "History",
   navTest: "Test",
   navPremium: "Access",
+  appBrandName: "BrainBoosty",
   appHeaderTitle: "Neural Map",
   loading: "Loading your neuro profile…",
   computing: "Computing your brain map…",
@@ -64,6 +65,9 @@ export default {
   testPickVariant: "Choose question style (7 steps):",
   variantDev: "Development & cognition",
   variantSex: "Sexual profile",
+  variantSexBadge: "Maximum insight",
+  variantSexHint: "Pleasure, drive, and your neural edge",
+  variantDevHint: "Focus, habits, and cognitive style",
   questionProgress: (n, total) => `Question ${n} of ${total}`,
   regions: {
     prefrontal_cortex: "Prefrontal cortex",

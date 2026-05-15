@@ -9,7 +9,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("/webapp/fonts/space-grotesk/vietnamese.woff2") format("woff2");
+  src: url("/fonts/space-grotesk/vietnamese.woff2") format("woff2");
   unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304,
     U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
 }
@@ -19,7 +19,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("/webapp/fonts/space-grotesk/latin-ext.woff2") format("woff2");
+  src: url("/fonts/space-grotesk/latin-ext.woff2") format("woff2");
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF,
     U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
@@ -29,7 +29,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("/webapp/fonts/space-grotesk/latin.woff2") format("woff2");
+  src: url("/fonts/space-grotesk/latin.woff2") format("woff2");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
     U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
@@ -39,7 +39,7 @@
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url("/webapp/fonts/space-grotesk/vietnamese.woff2") format("woff2");
+  src: url("/fonts/space-grotesk/vietnamese.woff2") format("woff2");
   unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304,
     U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
 }
@@ -49,7 +49,7 @@
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url("/webapp/fonts/space-grotesk/latin-ext.woff2") format("woff2");
+  src: url("/fonts/space-grotesk/latin-ext.woff2") format("woff2");
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF,
     U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
@@ -59,7 +59,7 @@
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url("/webapp/fonts/space-grotesk/latin.woff2") format("woff2");
+  src: url("/fonts/space-grotesk/latin.woff2") format("woff2");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
     U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
@@ -69,7 +69,7 @@
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("/webapp/fonts/space-grotesk/vietnamese.woff2") format("woff2");
+  src: url("/fonts/space-grotesk/vietnamese.woff2") format("woff2");
   unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304,
     U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
 }
@@ -79,7 +79,7 @@
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("/webapp/fonts/space-grotesk/latin-ext.woff2") format("woff2");
+  src: url("/fonts/space-grotesk/latin-ext.woff2") format("woff2");
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF,
     U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
@@ -89,7 +89,7 @@
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("/webapp/fonts/space-grotesk/latin.woff2") format("woff2");
+  src: url("/fonts/space-grotesk/latin.woff2") format("woff2");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
     U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
@@ -99,7 +99,7 @@
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url("/webapp/fonts/space-grotesk/vietnamese.woff2") format("woff2");
+  src: url("/fonts/space-grotesk/vietnamese.woff2") format("woff2");
   unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304,
     U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
 }
@@ -109,7 +109,7 @@
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url("/webapp/fonts/space-grotesk/latin-ext.woff2") format("woff2");
+  src: url("/fonts/space-grotesk/latin-ext.woff2") format("woff2");
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF,
     U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
@@ -119,7 +119,7 @@
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url("/webapp/fonts/space-grotesk/latin.woff2") format("woff2");
+  src: url("/fonts/space-grotesk/latin.woff2") format("woff2");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
     U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
@@ -171,7 +171,7 @@ body {
 .neon-zone-title,
 .neon-cta-title,
 .bb-region__title,
-.bb-header__title,
+.bb-header__tagline,
 .bb-page-title,
 .bb-landing-title,
 .bb-landing-section__title,
@@ -551,8 +551,9 @@ body.bb-app--telegram .bb-root.bb-root--spa::before {
   height: min(120vw, 480px);
   transform: translate(-50%, -42%);
   background:
-    radial-gradient(circle, rgba(34, 211, 238, 0.12), transparent 68%),
-    radial-gradient(circle at 32% 38%, rgba(167, 139, 250, 0.08), transparent 58%);
+    radial-gradient(circle, rgba(34, 211, 238, 0.16), transparent 68%),
+    radial-gradient(circle at 32% 38%, rgba(232, 121, 249, 0.1), transparent 58%),
+    radial-gradient(circle at 70% 60%, rgba(124, 58, 237, 0.07), transparent 50%);
   pointer-events: none;
   z-index: 0;
 }
@@ -590,13 +591,14 @@ body.bb-app--telegram .bb-root.bb-root--spa > * {
 .bb-header.bb-app-top-nav .bb-header__brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   min-width: 0;
 }
 
 .bb-header.bb-app-top-nav .bb-header__logo {
-  height: 26px;
+  height: 32px;
   flex-shrink: 0;
+  filter: drop-shadow(0 0 12px rgba(34, 211, 238, 0.45)) drop-shadow(0 0 24px rgba(168, 85, 247, 0.25));
 }
 
 .bb-header.bb-app-top-nav .bb-header__logo svg {
@@ -605,14 +607,47 @@ body.bb-app--telegram .bb-root.bb-root--spa > * {
   display: block;
 }
 
-.bb-header.bb-app-top-nav .bb-header__title {
+.bb-header__text-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.bb-wordmark {
+  display: block;
   font-family: var(--bb-font-display);
-  font-size: 13px;
+  font-weight: 800;
+  font-size: clamp(1.08rem, 4vw, 1.48rem);
+  letter-spacing: -0.05em;
+  line-height: 1;
+  background: linear-gradient(
+    118deg,
+    #ecfeff 0%,
+    #22d3ee 14%,
+    #67e8f9 28%,
+    #a5b4fc 48%,
+    #c084fc 64%,
+    #e879f9 80%,
+    #d946ef 92%,
+    #9333ea 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 16px rgba(34, 211, 238, 0.55)) drop-shadow(0 0 36px rgba(192, 132, 252, 0.4)) drop-shadow(0 3px 2px rgba(0, 0, 0, 0.45));
+}
+
+.bb-header.bb-app-top-nav .bb-header__tagline {
+  font-family: var(--bb-font-display);
+  font-size: 9px;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: rgba(207, 250, 254, 0.92);
-  text-shadow: 0 0 18px rgba(34, 211, 238, 0.35);
+  color: rgba(148, 163, 184, 0.92);
+  line-height: 1;
+  text-shadow: 0 0 18px rgba(34, 211, 238, 0.2);
 }
 
 body.bb-app--telegram .bb-nav {
@@ -656,16 +691,23 @@ body.bb-app--telegram .bb-region {
   right: 16px;
   bottom: calc(72px + var(--bb-safe-bottom));
   z-index: 45;
-  padding: 10px 16px;
+  padding: 12px 18px;
   border-radius: 9999px;
-  border: 1px solid rgba(34, 211, 238, 0.35);
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(124, 58, 237, 0.2));
-  color: #cffafe;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(155deg, rgba(12, 8, 22, 0.92), rgba(8, 16, 32, 0.92)) padding-box,
+    linear-gradient(120deg, #22d3ee, #c084fc, #e879f9) border-box;
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  color: #fdf4ff;
+  font-family: var(--bb-font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  box-shadow: 0 0 32px rgba(34, 211, 238, 0.35);
+  box-shadow:
+    0 0 28px rgba(192, 132, 252, 0.35),
+    0 0 48px rgba(34, 211, 238, 0.2);
   cursor: pointer;
   backdrop-filter: blur(10px);
   animation: bb-fab-glow 2.5s ease-in-out infinite;
@@ -674,11 +716,120 @@ body.bb-app--telegram .bb-region {
 @keyframes bb-fab-glow {
   0%,
   100% {
-    box-shadow: 0 0 24px rgba(34, 211, 238, 0.3);
+    box-shadow:
+      0 0 24px rgba(192, 132, 252, 0.3),
+      0 0 40px rgba(34, 211, 238, 0.15);
   }
   50% {
-    box-shadow: 0 0 40px rgba(167, 139, 250, 0.45);
+    box-shadow:
+      0 0 36px rgba(232, 121, 249, 0.4),
+      0 0 56px rgba(34, 211, 238, 0.25);
   }
+}
+
+/* Сайт в браузере: выбор языка до лендинга */
+body.bb-lang-gate-open {
+  overflow: hidden;
+}
+
+.bb-lang-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px))
+    max(20px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px));
+}
+
+.bb-lang-gate__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(1, 1, 8, 0.38);
+  backdrop-filter: blur(22px) saturate(1.2);
+  -webkit-backdrop-filter: blur(22px) saturate(1.2);
+}
+
+.bb-lang-gate__dialog {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 360px;
+  padding: 32px 28px 28px;
+  border-radius: 24px;
+  text-align: center;
+  box-shadow:
+    0 0 0 1px rgba(34, 211, 238, 0.12),
+    0 28px 80px rgba(0, 0, 0, 0.65),
+    0 0 60px rgba(124, 58, 237, 0.12);
+}
+
+.bb-lang-gate__title {
+  font-family: var(--bb-font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: var(--bb-tracking-display);
+  margin: 0 0 10px;
+  color: #f8fafc;
+  text-shadow: 0 0 24px rgba(34, 211, 238, 0.25);
+}
+
+.bb-lang-gate__sub {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(148, 163, 184, 0.98);
+  margin: 0 0 28px;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+}
+
+.bb-lang-gate__choices {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bb-lang-gate__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  padding: 18px 22px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.03));
+  color: #f1f5f9;
+  font-family: var(--bb-font-sans);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+.bb-lang-gate__btn:hover {
+  border-color: rgba(34, 211, 238, 0.5);
+  box-shadow: 0 0 32px rgba(34, 211, 238, 0.18);
+  transform: translateY(-1px);
+}
+
+.bb-lang-gate__btn:active {
+  transform: translateY(0);
+}
+
+.bb-lang-gate__btn:focus-visible {
+  outline: 2px solid rgba(34, 211, 238, 0.65);
+  outline-offset: 3px;
+}
+
+.bb-lang-gate__flag {
+  font-size: 1.65rem;
+  line-height: 1;
 }
 
 /* Public landing (browser, not Telegram) */
@@ -967,6 +1118,205 @@ body.bb-app--telegram .bb-region {
   text-align: center;
 }
 
+.bb-page-title--premium {
+  font-size: clamp(1.45rem, 5.2vw, 1.9rem);
+  font-weight: 800;
+  margin: 0 0 12px;
+  text-align: center;
+  line-height: 1.12;
+  letter-spacing: -0.04em;
+  background: linear-gradient(98deg, #f0fdfa 0%, #a5f3fc 26%, #ddd6fe 58%, #f0abfc 85%, #e879f9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 18px rgba(34, 211, 238, 0.38)) drop-shadow(0 0 42px rgba(192, 132, 252, 0.28));
+}
+
+.bb-test-q-title {
+  font-family: var(--bb-font-display);
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin: 0 0 10px;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+  background: linear-gradient(90deg, #cffafe, #e9d5ff 45%, #f0abfc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 14px rgba(34, 211, 238, 0.25));
+}
+
+.bb-test-pick {
+  position: relative;
+  padding: 12px 2px 4px;
+}
+
+.bb-test-pick__glow {
+  position: absolute;
+  left: 50%;
+  top: -28px;
+  width: min(104%, 400px);
+  height: 140px;
+  transform: translateX(-50%);
+  background:
+    radial-gradient(ellipse 80% 70% at 50% 0%, rgba(232, 121, 249, 0.22), transparent 68%),
+    radial-gradient(ellipse 60% 50% at 20% 40%, rgba(34, 211, 238, 0.12), transparent 55%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bb-test-pick > *:not(.bb-test-pick__glow) {
+  position: relative;
+  z-index: 1;
+}
+
+.bb-test-variant-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.bb-btn-hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  padding: 18px 18px 16px;
+  border-radius: 18px;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(145deg, rgba(15, 8, 24, 0.92) 0%, rgba(8, 12, 28, 0.94) 100%) padding-box,
+    linear-gradient(125deg, rgba(34, 211, 238, 0.85), rgba(192, 132, 252, 0.75), rgba(217, 70, 239, 0.9), rgba(34, 211, 238, 0.5)) border-box;
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow:
+    0 0 0 1px rgba(232, 121, 249, 0.15),
+    0 0 48px rgba(192, 132, 252, 0.22),
+    0 0 80px rgba(34, 211, 238, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.25s ease;
+  animation: bb-sensual-cta-glow 4s ease-in-out infinite;
+}
+
+@keyframes bb-sensual-cta-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(232, 121, 249, 0.15),
+      0 0 48px rgba(192, 132, 252, 0.22),
+      0 0 80px rgba(34, 211, 238, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(232, 121, 249, 0.35),
+      0 0 64px rgba(217, 70, 239, 0.32),
+      0 0 100px rgba(34, 211, 238, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  }
+}
+
+.bb-btn-hero:hover {
+  transform: translateY(-2px);
+}
+
+.bb-btn-hero:focus-visible {
+  outline: 2px solid rgba(232, 121, 249, 0.7);
+  outline-offset: 3px;
+}
+
+.bb-btn-alt:focus-visible {
+  outline: 2px solid rgba(34, 211, 238, 0.5);
+  outline-offset: 3px;
+}
+
+.bb-btn-hero:active {
+  transform: translateY(0);
+}
+
+.bb-btn-hero__badge {
+  align-self: flex-start;
+  margin-bottom: 10px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-family: var(--bb-font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fdf4ff;
+  background: linear-gradient(90deg, rgba(232, 121, 249, 0.45), rgba(34, 211, 238, 0.35));
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 0 20px rgba(232, 121, 249, 0.35);
+}
+
+.bb-btn-hero__label {
+  font-family: var(--bb-font-display);
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: #f8fafc;
+  text-shadow: 0 0 24px rgba(34, 211, 238, 0.25);
+}
+
+.bb-btn-hero__hint {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: rgba(203, 213, 225, 0.95);
+}
+
+.bb-btn-alt {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  padding: 15px 18px;
+  border-radius: 16px;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(255, 255, 255, 0.035);
+  color: #cbd5e1;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.15s ease;
+}
+
+.bb-btn-alt:hover {
+  border-color: rgba(34, 211, 238, 0.25);
+  background: rgba(34, 211, 238, 0.06);
+}
+
+.bb-btn-alt:active {
+  transform: scale(0.99);
+}
+
+.bb-btn-alt__label {
+  font-family: var(--bb-font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #e2e8f0;
+}
+
+.bb-btn-alt__hint {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(148, 163, 184, 0.95);
+  line-height: 1.35;
+}
+
 .bb-page-sub {
   text-align: center;
 }
@@ -992,6 +1342,68 @@ body.bb-app--telegram .bb-region {
   background: linear-gradient(135deg, rgba(6, 182, 212, 0.35), rgba(124, 58, 237, 0.28));
   color: #ecfeff;
   box-shadow: 0 0 28px rgba(34, 211, 238, 0.25);
+}
+
+.bb-btn-premium-buy {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 18px 22px;
+  border-radius: 16px;
+  font-family: var(--bb-font-display);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: #fdf4ff;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(155deg, rgba(25, 10, 40, 0.95), rgba(8, 20, 35, 0.96)) padding-box,
+    linear-gradient(120deg, #22d3ee, #a78bfa, #e879f9, #c026d3) border-box;
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow:
+    0 0 0 1px rgba(232, 121, 249, 0.2),
+    0 0 40px rgba(192, 132, 252, 0.35),
+    0 0 72px rgba(34, 211, 238, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  text-shadow: 0 0 20px rgba(34, 211, 238, 0.45);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+  animation: bb-premium-cta-pulse 3.2s ease-in-out infinite;
+}
+
+@keyframes bb-premium-cta-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(232, 121, 249, 0.2),
+      0 0 40px rgba(192, 132, 252, 0.35),
+      0 0 72px rgba(34, 211, 238, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(34, 211, 238, 0.35),
+      0 0 56px rgba(217, 70, 239, 0.4),
+      0 0 96px rgba(34, 211, 238, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  }
+}
+
+.bb-btn-premium-buy:hover {
+  transform: translateY(-2px);
+}
+
+.bb-btn-premium-buy:focus-visible {
+  outline: 2px solid rgba(34, 211, 238, 0.85);
+  outline-offset: 3px;
+}
+
+.bb-btn-premium-buy:active {
+  transform: translateY(0) scale(0.99);
 }
 
 .bb-btn-primary:active {
@@ -1109,7 +1521,11 @@ body.bb-app--telegram .bb-region {
   .pdf-bar-gradient,
   .bb-header:not(.bb-app-top-nav),
   .bb-landing-cta-primary,
-  body.bb-app--telegram .bb-nav__btn {
+  body.bb-app--telegram .bb-nav__btn,
+  .bb-lang-gate__btn,
+  .bb-btn-hero,
+  .bb-btn-premium-buy,
+  .bb-premium-fab {
     transition: none !important;
     animation: none !important;
   }
