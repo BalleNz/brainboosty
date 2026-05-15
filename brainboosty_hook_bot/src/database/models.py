@@ -209,6 +209,3 @@ class Exercise(Base):
         onupdate=func.now(),
         nullable=False,
     )
-
-
-class SharedTest(Base):
