@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Локальные шрифты в public/fonts/ (Inter + Space Grotesk woff2).
+# Локальные woff2 в public/fonts/ (Space Grotesk). Satoshi — Fontshare в index.html.
 # macOS без wget: используйте bash webapp/scripts/download-fonts.sh
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -16,12 +16,6 @@ fetch() {
     exit 1
   fi
 }
-
-# Inter (rsms/inter)
-fetch "https://raw.githubusercontent.com/rsms/inter/master/docs/font-files/Inter-Regular.woff2" "Inter-Regular.woff2"
-fetch "https://raw.githubusercontent.com/rsms/inter/master/docs/font-files/Inter-Medium.woff2" "Inter-Medium.woff2"
-fetch "https://raw.githubusercontent.com/rsms/inter/master/docs/font-files/Inter-SemiBold.woff2" "Inter-SemiBold.woff2"
-fetch "https://raw.githubusercontent.com/rsms/inter/master/docs/font-files/Inter-Bold.woff2" "Inter-Bold.woff2"
 
 # Space Grotesk — прямых woff2 с gstatic (архив fonts.google.com через wget часто отдаёт HTML)
 SG="https://fonts.gstatic.com/s/spacegrotesk/v22"

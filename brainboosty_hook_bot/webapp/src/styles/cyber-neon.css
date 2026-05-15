@@ -1,42 +1,9 @@
 /**
  * Cyber-neon theme — aligned with brain_pdf/styles.py (screen / Web App).
- * Шрифты: см. webapp/public/fonts/ и scripts/download-fonts.sh
+ * Сатоши: Fontshare в index.html. Space Grotesk: webapp/public/fonts/ (download-fonts.sh).
  */
 
-/* —— Inter (локально, UI) —— */
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/webapp/fonts/Inter-Regular.woff2") format("woff2");
-}
-
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("/webapp/fonts/Inter-Medium.woff2") format("woff2");
-}
-
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("/webapp/fonts/Inter-SemiBold.woff2") format("woff2"), url("/webapp/fonts/Inter-Medium.woff2") format("woff2");
-}
-
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("/webapp/fonts/Inter-Bold.woff2") format("woff2");
-}
-
-/* —— Space Grotesk (локально, заголовки) —— подборки как на Google Fonts */
+/* —— Space Grotesk (локально, акцентные заголовки) —— */
 @font-face {
   font-family: "Space Grotesk";
   font-style: normal;
@@ -170,9 +137,10 @@
   --bb-tg-text: #f1f5f9;
   --bb-safe-bottom: env(safe-area-inset-bottom, 0px);
   --bb-safe-top: env(safe-area-inset-top, 0px);
-  --bb-font-sans: "Inter", "Satoshi", sans-serif;
-  --bb-font-display: "Space Grotesk", "Inter", sans-serif;
-  --bb-tracking-display: -0.03em;
+  --bb-font-sans: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+  --bb-font-display: "Space Grotesk", "Satoshi", sans-serif;
+  --bb-tracking-display: -0.035em;
+  --bb-tracking-ui: 0.01em;
 }
 
 *,
@@ -189,8 +157,12 @@ body {
   background: var(--bb-tg-bg);
   color: var(--bb-tg-text);
   font-family: var(--bb-font-sans);
+  letter-spacing: var(--bb-tracking-ui);
+  font-weight: 400;
+  font-feature-settings: "kern" 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   overscroll-behavior-y: none;
 }
 
@@ -462,7 +434,8 @@ body {
   padding-left: 1.25rem;
   color: #e2e8f0;
   font-size: 0.875rem;
-  line-height: 1.55;
+  line-height: 1.65;
+  font-weight: 500;
 }
 
 .bb-rec-list li + li {

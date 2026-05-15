@@ -13,8 +13,8 @@ export function initTelegramWebApp() {
     tg.disableVerticalSwipes();
   }
 
-  applyThemeParams(tg.themeParams);
-  tg.onEvent("themeChanged", () => applyThemeParams(tg.themeParams));
+  lockMiniAppSurfaceDark();
+  tg.onEvent("themeChanged", lockMiniAppSurfaceDark);
 
   const user = tg.initDataUnsafe?.user ?? null;
   const lang =
@@ -34,14 +34,11 @@ export function initTelegramWebApp() {
   return { tg, initData: tg.initData || "", user, lang };
 }
 
-function applyThemeParams(params = {}) {
+/** Всегда тёмный cyber-neon: не тянем светлый bg_color/text_color из Telegram themeParams. */
+function lockMiniAppSurfaceDark() {
   const root = document.documentElement;
-  if (params.bg_color) {
-    root.style.setProperty("--bb-tg-bg", params.bg_color);
-  }
-  if (params.text_color) {
-    root.style.setProperty("--bb-tg-text", params.text_color);
-  }
+  root.style.setProperty("--bb-tg-bg", "#010108");
+  root.style.setProperty("--bb-tg-text", "#f1f5f9");
 }
 
 export function openTributeLink(url) {
