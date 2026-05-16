@@ -27,6 +27,14 @@ class ThrottlingMiddleware(BaseMiddleware):
         self._last_ts: dict[int, float] = {}
 
     @staticmethod
+    def _is_start_deep_link(event: TelegramObject) -> bool:
+        """Не душим /start — иначе повторный Start при site-login не доходит до attach."""
+        if not isinstance(event, Message) or not event.text:
+            return False
+        parts = event.text.split(maxsplit=1)
+        return bool(parts and parts[0].startswith("/start"))
+
+    @staticmethod
     def _user_id(event: TelegramObject) -> int | None:
         if isinstance(event, Message) and event.from_user:
             return event.from_user.id
@@ -40,6 +48,9 @@ class ThrottlingMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: dict[str, Any],
     ) -> Any:
+        if self._is_start_deep_link(event):
+            return await handler(event, data)
+
         uid = self._user_id(event)
         if uid is None:
             return await handler(event, data)

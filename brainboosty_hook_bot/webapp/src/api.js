@@ -19,8 +19,11 @@ export function formatApiError(err, fallback = "") {
   return fallback || err?.message || "";
 }
 
-function headers(initData, siteToken) {
-  const h = { "Content-Type": "application/json" };
+function headers(initData, siteToken, { jsonBody = false } = {}) {
+  const h = {};
+  if (jsonBody) {
+    h["Content-Type"] = "application/json";
+  }
   if (initData) {
     h["X-Telegram-Init-Data"] = initData;
   }
@@ -34,7 +37,7 @@ function headers(initData, siteToken) {
 async function apiFetch(path, { initData = "", siteToken = "", method = "GET", body } = {}) {
   const res = await fetch(`/api/webapp${path}`, {
     method,
-    headers: headers(initData, siteToken),
+    headers: headers(initData, siteToken, { jsonBody: Boolean(body) }),
     body: body ? JSON.stringify(body) : undefined,
     cache: "no-store",
   });
