@@ -6,7 +6,7 @@
   :root {
     --bb-neon-pink: #ff1493;
     --bb-neon-pink-hot: #ff00aa;
-    --bb-neon-cyan: #00f0ff;
+    --bb-neon-cyan: #ff69b4;
     --bb-neon-gold: #ffd700;
     --bb-void: #0a0a0a;
   }
@@ -41,12 +41,12 @@
   }
 
   .lux-btn-ghost {
-    @apply inline-flex items-center justify-center rounded-full border border-neon-cyan/40 px-6 py-3 font-medium text-neon-cyan transition;
-    box-shadow: 0 0 16px rgba(0, 240, 255, 0.2);
+    @apply inline-flex items-center justify-center rounded-full border border-neon-pink/45 px-6 py-3 font-medium text-pink-200 transition;
+    box-shadow: 0 0 16px rgba(255, 20, 147, 0.25);
   }
 
   .lux-btn-ghost:hover {
-    @apply border-neon-cyan/70 bg-neon-cyan/10;
+    @apply border-neon-pink/70 bg-neon-pink/15;
   }
 
   .lux-heading {
@@ -56,7 +56,7 @@
 
   .lux-wordmark {
     @apply font-display text-xl font-semibold lowercase tracking-tight;
-    background: linear-gradient(105deg, #00f0ff 0%, #ff1493 55%, #c026d3 100%);
+    background: linear-gradient(105deg, #ffb6e1 0%, #ff1493 55%, #ffd700 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;

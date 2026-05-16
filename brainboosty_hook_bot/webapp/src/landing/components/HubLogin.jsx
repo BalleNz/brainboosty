@@ -11,7 +11,7 @@ export function HubLogin({ lang, status, error, onLogin, oidcConfigured }) {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
       >
-        <p className="text-xs uppercase tracking-[0.3em] text-neon-cyan">Neural Map Hub</p>
+        <p className="text-xs uppercase tracking-[0.3em] text-pink-300">Neural Map Hub ♥</p>
         <h2 className="lux-heading mt-3 text-2xl sm:text-3xl">
           {isRu ? "Вход в браузере" : "Browser sign-in"}
         </h2>
@@ -20,7 +20,7 @@ export function HubLogin({ lang, status, error, onLogin, oidcConfigured }) {
             ? "Нужен профиль после анкеты в боте. Вход через официальный Telegram Login."
             : "Complete bot onboarding first. Sign in with official Telegram Login."}
         </p>
-        {status && <p className="mt-4 text-sm text-neon-cyan">{status}</p>}
+        {status && <p className="mt-4 text-sm text-pink-300">{status}</p>}
         {error && <p className="mt-4 text-sm text-neon-pink">{error}</p>}
         <button
           type="button"

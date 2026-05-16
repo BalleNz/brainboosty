@@ -76,8 +76,8 @@ export async function renderHistory(root, ctx, profile) {
     head.className = "flex justify-between items-start gap-2 mb-2";
     const left = document.createElement("div");
     left.innerHTML = `
-      <p class="text-xs text-cyan-200/80 uppercase tracking-wide">${esc(formatDate(item.createdAt, profile.lang))}</p>
-      <p class="text-lg font-bold text-white mt-1 bb-type-display">NeuroScore <span class="text-cyan-200">${Number(item.neuroScore).toFixed(1)}</span></p>
+      <p class="text-xs text-pink-200/85 uppercase tracking-wide">${esc(formatDate(item.createdAt, profile.lang))}</p>
+      <p class="text-lg font-bold text-white mt-1 bb-type-display">NeuroScore <span class="text-pink-200">${Number(item.neuroScore).toFixed(1)} ♥</span></p>
     `;
     head.appendChild(left);
     if (idx === 0) {

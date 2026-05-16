@@ -46,7 +46,7 @@ export function Pricing({ lang, meta, onLogin, onAccess }) {
                 {isRu ? "Популярно" : "Popular"}
               </span>
             )}
-            <p className="text-xs uppercase tracking-widest text-neon-cyan">{tier.price[lang] || tier.price.ru}</p>
+            <p className="text-xs uppercase tracking-widest text-pink-300">{tier.price[lang] || tier.price.ru}</p>
             <h3 className="mt-2 font-display text-xl font-bold">{tier.title[lang] || tier.title.ru}</h3>
             <ul className="mt-4 flex-1 space-y-2 text-sm text-white/75">
               {(tier.features[lang] || tier.features.ru).map((f) => (

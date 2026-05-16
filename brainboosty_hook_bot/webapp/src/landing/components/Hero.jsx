@@ -50,7 +50,7 @@ export function Hero({ lang, onCtaBot, onCtaLogin }) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.45 }}
       >
-        <span className="bg-gradient-to-r from-neon-pink via-white to-neon-cyan bg-clip-text text-transparent">
+        <span className="bg-gradient-to-r from-neon-pink via-white to-amber-200 bg-clip-text text-transparent">
           {slogan}
         </span>
       </motion.h1>

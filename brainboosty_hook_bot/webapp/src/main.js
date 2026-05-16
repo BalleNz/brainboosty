@@ -1,5 +1,6 @@
 import "./styles/tailwind.css";
 import "./styles/cyber-neon.css";
+import "./styles/lux-pink-global.css";
 import "./styles/exercise-lux.css";
 import { SITE_SESSION_STORAGE_KEY, SITE_USER_STORAGE_KEY } from "./api.js";
 import { bootApp } from "./app.js";
@@ -117,6 +118,7 @@ function readSiteUserHint() {
 }
 
 async function bootstrap() {
+  document.body.classList.add("bb-theme-lux");
   migrateLegacyUrl();
 
   if (await consumeOidcHandoffFromQuery()) {

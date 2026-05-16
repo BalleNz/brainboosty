@@ -86,7 +86,7 @@ async function ensureProfileLoaded(root) {
   root.innerHTML = `
       <div class="bb-loading">
         <div class="bb-loading__pulse"></div>
-        <p class="text-sm text-cyan-200/80">${t.loading}</p>
+        <p class="text-sm text-pink-200/85">${t.loading}</p>
       </div>`;
   try {
     profileCache = await fetchBrainProfile(appCtx);

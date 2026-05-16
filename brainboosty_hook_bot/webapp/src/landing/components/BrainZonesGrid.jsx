@@ -12,7 +12,7 @@ export function BrainZonesGrid({ lang }) {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
       >
-        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-neon-cyan/90">
+        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-pink-300/90">
           {isRu ? "Neural Map" : "Neural Map"}
         </p>
         <h2 className="lux-heading mt-3 text-3xl sm:text-4xl">

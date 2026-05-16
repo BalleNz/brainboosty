@@ -37,7 +37,7 @@ export function initTelegramWebApp() {
 /** Всегда тёмный cyber-neon: не тянем светлый bg_color/text_color из Telegram themeParams. */
 function lockMiniAppSurfaceDark() {
   const root = document.documentElement;
-  root.style.setProperty("--bb-tg-bg", "#010108");
+  root.style.setProperty("--bb-tg-bg", "#0a0a0a");
   root.style.setProperty("--bb-tg-text", "#f1f5f9");
 }
 

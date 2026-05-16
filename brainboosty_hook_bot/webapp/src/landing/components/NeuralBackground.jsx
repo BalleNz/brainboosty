@@ -16,7 +16,7 @@ export function NeuralBackground() {
       <svg className="absolute inset-0 h-full w-full opacity-[0.14]" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="neural-line" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#00F0FF" />
+            <stop offset="0%" stopColor="#FF69B4" />
             <stop offset="50%" stopColor="#FF1493" />
             <stop offset="100%" stopColor="#FFD700" />
           </linearGradient>

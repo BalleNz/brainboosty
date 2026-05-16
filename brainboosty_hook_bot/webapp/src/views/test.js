@@ -24,7 +24,7 @@ export async function renderTest(root, ctx, profile, { onProfile } = {}) {
   root.replaceChildren(wrap);
 
   async function loadQuestions() {
-    wrap.innerHTML = `<p class="text-cyan-200/80 text-sm">${esc(t.loading)}</p>`;
+    wrap.innerHTML = `<p class="text-pink-200/85 text-sm">${esc(t.loading)}</p>`;
     try {
       const data = await fetchTestQuestions(ctx, state.variant);
       state.questions = data.questions ?? [];
@@ -75,7 +75,7 @@ export async function renderTest(root, ctx, profile, { onProfile } = {}) {
 
     wrap.innerHTML = `
       <div class="bb-test-progress mb-4">
-        <div class="flex justify-between text-xs text-cyan-200/80 mb-1">
+        <div class="flex justify-between text-xs text-pink-200/85 mb-1">
           <span>${esc(t.questionProgress(state.step + 1, total))}</span>
           <span>${Math.round(progress)}%</span>
         </div>
@@ -109,7 +109,7 @@ export async function renderTest(root, ctx, profile, { onProfile } = {}) {
     wrap.innerHTML = `
       <div class="bb-loading">
         <div class="bb-loading__pulse"></div>
-        <p class="text-sm text-cyan-200/80">${esc(t.computing)}</p>
+        <p class="text-sm text-pink-200/85">${esc(t.computing)}</p>
       </div>`;
     try {
       const answersPayload = {};

@@ -9,7 +9,7 @@ export function Footer({ lang, meta }) {
           href={meta.channelUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-4 inline-block text-neon-cyan hover:text-neon-pink"
+          className="mt-4 inline-block text-pink-300 hover:text-neon-pink"
         >
           {isRu ? "Канал @androgenautist" : "Channel @androgenautist"}
         </a>

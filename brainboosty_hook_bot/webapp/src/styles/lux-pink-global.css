@@ -1,0 +1,251 @@
+/**
+ * Global luxury pink neon — единый стиль лендинга и webapp.
+ * Прогресс-бары ♥, розовые скроллбары, прозрачные brain PNG без фона.
+ */
+
+@keyframes bb-heart-pulse {
+  0%,
+  100% {
+    transform: translateY(-50%) scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translateY(-50%) scale(1.2);
+    opacity: 1;
+  }
+}
+
+/* —— Scrollbars (милые розовые) —— */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #ff69b4 rgba(255, 20, 147, 0.12);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 20, 147, 0.06);
+  border-radius: 999px;
+  margin: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 2px solid rgba(255, 20, 147, 0.2);
+  background: linear-gradient(180deg, #ff69b4 0%, #ff1493 55%, #ff00aa 100%);
+  box-shadow: 0 0 12px rgba(255, 20, 147, 0.45);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ffb6e1 0%, #ff1493 100%);
+}
+
+/* —— Progress bars: розовые + сердечки —— */
+.pdf-bar-track {
+  height: 1.15rem;
+  background: rgba(255, 20, 147, 0.1);
+  border: 1px solid rgba(255, 20, 147, 0.38);
+  box-shadow:
+    inset 0 0 14px rgba(255, 20, 147, 0.12),
+    0 0 16px rgba(255, 20, 147, 0.08);
+}
+
+.pdf-bar-track::before {
+  content: "♡ ♡ ♡ ♡ ♡ ♡ ♡ ♡ ♡ ♡ ♡ ♡ ♡ ♡";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  font-size: 8px;
+  line-height: 1;
+  color: rgba(255, 105, 180, 0.45);
+  pointer-events: none;
+  letter-spacing: 0.12em;
+  padding: 0 4px;
+}
+
+.pdf-bar-gradient {
+  z-index: 1;
+  background: linear-gradient(90deg, #ff1493 0%, #ff00aa 38%, #ff69b4 72%, #ffd700 100%);
+}
+
+.pdf-bar-gradient::after {
+  content: "♥";
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  line-height: 1;
+  color: #fff;
+  text-shadow:
+    0 0 6px #ff1493,
+    0 0 12px #ffd700;
+  animation: bb-heart-pulse 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.pdf-bar-gradient--main::before {
+  content: "♥ ♥ ♥";
+  position: absolute;
+  left: 8%;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 7px;
+  letter-spacing: 0.35em;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 0 8px rgba(255, 20, 147, 0.9);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.pdf-bar-gradient--main {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 0 18px rgba(255, 20, 147, 0.75),
+    0 0 36px rgba(255, 0, 170, 0.4);
+}
+
+.pdf-bar-gradient--sub {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 0 14px rgba(255, 20, 147, 0.5),
+    0 0 28px rgba(255, 105, 180, 0.3);
+}
+
+.pdf-bar-label {
+  color: rgba(255, 182, 225, 0.75) !important;
+}
+
+.pdf-bar-value {
+  color: #ffb6e1 !important;
+  text-shadow: 0 0 10px rgba(255, 20, 147, 0.55);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bb-region:hover .pdf-bar-track {
+    border-color: rgba(255, 20, 147, 0.55);
+    box-shadow:
+      inset 0 0 16px rgba(255, 20, 147, 0.18),
+      0 0 22px rgba(255, 20, 147, 0.22);
+  }
+}
+
+/* Drawer bars */
+.bb-zone-drawer__bar-track {
+  background: rgba(255, 20, 147, 0.1);
+  border-color: rgba(255, 20, 147, 0.35);
+}
+
+.bb-zone-drawer__bar-fill {
+  background: linear-gradient(90deg, #ff1493 0%, #ff00aa 40%, #ff69b4 75%, #ffd700 100%);
+  box-shadow: 0 0 18px rgba(255, 20, 147, 0.55);
+}
+
+.bb-zone-drawer__meter-value {
+  color: #ffb6e1;
+  text-shadow: 0 0 14px rgba(255, 20, 147, 0.5);
+}
+
+/* Brain PNG без фона — только розовый неон */
+.brain-float-top,
+.cover-full-brain-hero,
+.bb-region__illu,
+.bb-zone-drawer__hero-img {
+  filter: drop-shadow(0 0 20px rgba(255, 20, 147, 0.7)) drop-shadow(0 0 44px rgba(255, 0, 170, 0.45))
+    drop-shadow(0 0 64px rgba(255, 105, 180, 0.25)) !important;
+}
+
+.bb-region__illu-hit:focus-visible {
+  box-shadow: 0 0 0 2px rgba(255, 20, 147, 0.75), 0 0 24px rgba(255, 20, 147, 0.35) !important;
+}
+
+/* Wordmark — розово-золотой */
+.bb-wordmark {
+  background: linear-gradient(105deg, #ffb6e1 0%, #ff1493 40%, #ff00aa 70%, #ffd700 100%) !important;
+  filter: drop-shadow(0 0 12px rgba(255, 20, 147, 0.55)) drop-shadow(0 0 20px rgba(255, 215, 0, 0.25)) !important;
+}
+
+.neon-zone-title {
+  text-shadow:
+    0 0 22px rgba(255, 20, 147, 0.55),
+    0 0 48px rgba(255, 0, 170, 0.35),
+    0 0 4px rgba(255, 255, 255, 0.12) !important;
+}
+
+.cover-neon-card {
+  box-shadow:
+    0 0 0 1px rgba(255, 20, 147, 0.3),
+    0 0 48px rgba(255, 20, 147, 0.22),
+    0 0 80px rgba(255, 0, 170, 0.12),
+    0 24px 64px rgba(0, 0, 0, 0.55) !important;
+  border-color: rgba(255, 20, 147, 0.25) !important;
+}
+
+.neon-score-cover {
+  filter: drop-shadow(0 0 32px rgba(255, 20, 147, 0.65)) drop-shadow(0 0 48px rgba(255, 215, 0, 0.35)) !important;
+}
+
+/* Bottom nav */
+.bb-nav {
+  border-top-color: rgba(255, 20, 147, 0.2) !important;
+}
+
+.bb-nav__btn.is-active {
+  color: #ff69b4 !important;
+  text-shadow: 0 0 16px rgba(255, 20, 147, 0.55) !important;
+}
+
+body.bb-app--telegram .bb-nav__btn.is-active {
+  background: rgba(255, 20, 147, 0.14) !important;
+}
+
+body.bb-app--telegram .bb-root.bb-root--spa::before {
+  background:
+    radial-gradient(circle, rgba(255, 20, 147, 0.18), transparent 68%),
+    radial-gradient(circle at 32% 38%, rgba(255, 0, 170, 0.12), transparent 58%),
+    radial-gradient(circle at 70% 60%, rgba(192, 38, 211, 0.08), transparent 50%) !important;
+}
+
+.bb-app::before {
+  background-image:
+    radial-gradient(ellipse 100% 55% at 50% -12%, rgba(255, 20, 147, 0.16), transparent 58%),
+    radial-gradient(ellipse 80% 70% at 80% 100%, rgba(192, 38, 211, 0.1), transparent 55%),
+    linear-gradient(rgba(255, 105, 180, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 105, 180, 0.04) 1px, transparent 1px) !important;
+}
+
+/* Buttons */
+.bb-btn-hero,
+.bb-landing-cta-primary,
+.lux-btn-primary {
+  background: linear-gradient(105deg, #ff1493 0%, #ff00aa 50%, #c026d3 100%) !important;
+  box-shadow: 0 0 28px rgba(255, 20, 147, 0.55) !important;
+}
+
+.bb-btn-alt,
+.bb-test-option:hover,
+.bb-zone-drawer__btn--primary {
+  border-color: rgba(255, 20, 147, 0.45) !important;
+}
+
+.bb-zone-drawer__btn--primary {
+  color: #ffe4f5 !important;
+  background: linear-gradient(135deg, rgba(255, 20, 147, 0.55), rgba(192, 38, 211, 0.42)) !important;
+  box-shadow: 0 0 32px rgba(255, 20, 147, 0.35) !important;
+}
+
+.bb-test-option.is-selected {
+  border-color: rgba(255, 20, 147, 0.65) !important;
+  box-shadow: 0 0 20px rgba(255, 20, 147, 0.25) !important;
+}
+
+.bb-loading__pulse {
+  border-color: rgba(255, 20, 147, 0.35) !important;
+  box-shadow: 0 0 24px rgba(255, 20, 147, 0.35) !important;
+}

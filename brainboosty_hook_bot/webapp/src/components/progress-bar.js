@@ -11,9 +11,9 @@ export function progressBarHtml({ label, value, glow = false }) {
   const safeLabel = escapeHtml(label);
   const parts = [
     `<div class="mb-3.5" data-bar-value="${w}">`,
-    '<div class="flex justify-between text-xs text-slate-400 mb-1">',
+    '<div class="flex justify-between text-xs mb-1 pdf-bar-label">',
     `<span>${safeLabel}</span>`,
-    `<span class="text-cyan-100 font-bold tracking-wide">${w.toFixed(1)}%</span>`,
+    `<span class="pdf-bar-value font-bold tracking-wide">${w.toFixed(1)}% ♥</span>`,
     "</div>",
     '<div class="pdf-bar-track">',
     `<div class="${gradCls}" style="clip-path: inset(0 ${clipRight.toFixed(2)}% 0 0);"></div>`,

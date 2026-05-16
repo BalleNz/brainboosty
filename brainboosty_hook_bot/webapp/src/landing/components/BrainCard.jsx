@@ -50,7 +50,7 @@ export function BrainCard({ zone, lang, index }) {
         />
       </div>
       <h3 className="relative mt-3 font-display text-sm font-semibold text-white sm:text-base">{title}</h3>
-      <p className="relative mt-1 text-xs text-neon-cyan/80">{tag}</p>
+      <p className="relative mt-1 text-xs text-pink-300/90">{tag}</p>
     </motion.article>
   );
 }
