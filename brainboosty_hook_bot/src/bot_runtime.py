@@ -106,6 +106,20 @@ async def stop_bot_runtime(runtime: BotRuntime) -> None:
     await runtime.bot.session.close()
 
 
+async def read_webhook_diagnostics(bot: Bot) -> dict[str, str | int]:
+    """Снимок getWebhookInfo для /health (диагностика: вебхук не установлен / секрет / локальный запуск)."""
+    try:
+        info = await bot.get_webhook_info()
+        return {
+            "url": (info.url or "").strip(),
+            "pending_updates": int(info.pending_update_count or 0),
+            "last_error": (info.last_error_message or "").strip(),
+        }
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("getWebhookInfo failed: %s", exc)
+        return {"url": "", "pending_updates": -1, "last_error": str(exc)}
+
+
 async def install_telegram_webhook(runtime: BotRuntime) -> None:
     url = settings.telegram_webhook_url
     if not url.startswith("https://"):
@@ -122,6 +136,21 @@ async def install_telegram_webhook(runtime: BotRuntime) -> None:
         drop_pending_updates=True,
     )
     logger.info("Telegram webhook registered: %s", url)
+    try:
+        snap = await read_webhook_diagnostics(runtime.bot)
+        logger.info(
+            "Telegram getWebhookInfo: url=%r pending=%s last_error=%r",
+            snap["url"],
+            snap["pending_updates"],
+            snap["last_error"] or "-",
+        )
+        if not snap["url"]:
+            logger.warning(
+                "У Telegram пустой webhook url — бот не получит /start и вход с сайта не заработает. "
+                "Нужен публичный HTTPS (VPS/ngrok/cloudflared) и успешный setWebhook."
+            )
+    except Exception:
+        logger.exception("post-setWebhook getWebhookInfo")
 
 
 async def remove_telegram_webhook(runtime: BotRuntime) -> None:

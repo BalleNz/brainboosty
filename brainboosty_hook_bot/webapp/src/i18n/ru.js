@@ -17,6 +17,8 @@ export default {
   landingHubStartLogin: "Открыть Telegram и подтвердить вход",
   landingHubPrepare: "Готовим ссылку…",
   landingHubPolling: "Ждём подтверждение в Telegram… не закрывай эту вкладку.",
+  landingHubPollNetworkError:
+    "Не удаётся связаться с сервером. Проверь интернет и обнови страницу или попробуй позже.",
   landingHubExpired: "Ссылка устарела. Нажми кнопку ещё раз.",
   landingHubPopupBlocked:
     "Не удалось открыть отдельное окно для Telegram (блокировка всплывающих окон). Разреши окна для этого сайта или нажми кнопку ниже — откроется компактное окно.",

@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -305,11 +305,19 @@ async def webapp_test_submit(
 
 
 @router.get("/health")
-async def webapp_health() -> dict[str, str]:
+async def webapp_health(request: Request) -> dict[str, str | int]:
     dist = webapp_dist_dir()
     built = dist.is_dir() and (dist / "index.html").is_file()
+    tg = getattr(request.app.state, "tg_webhook", None) or {}
+    secret_on = bool((settings.TELEGRAM_WEBHOOK_SECRET or "").strip())
     return {
         "status": "ok",
         "dist_built": str(built).lower(),
+        "webapp_dist_built": int(built),
         "webapp_url": webapp_public_url(),
+        "telegram_mode": "webhook",
+        "telegram_webhook_secret_configured": int(secret_on),
+        "telegram_webhook_url": str(tg.get("url", "") or ""),
+        "telegram_webhook_pending_updates": int(tg.get("pending_updates", 0) or 0),
+        "telegram_webhook_last_error": str(tg.get("last_error", "") or ""),
     }

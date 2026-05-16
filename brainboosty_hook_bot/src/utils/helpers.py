@@ -62,7 +62,9 @@ def parse_site_login_token(payload: str | None) -> str | None:
     if not payload:
         return None
     raw = unquote(payload.strip().replace("+", " "))
-    m = _SITE_LOGIN_TOKEN_PATTERN.match(raw.strip())
+    # Убрать все пробелы/переносы внутри токена (редкие кривые клиенты).
+    compact = "".join(raw.split())
+    m = _SITE_LOGIN_TOKEN_PATTERN.match(compact)
     if not m:
         return None
     return m.group(1).lower()

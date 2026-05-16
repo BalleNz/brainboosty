@@ -343,9 +343,12 @@ async function runLanding(lang) {
 
   const beginSiteLoginPoll = (loginToken, tloc) => {
     clearSitePoll();
+    let pollNetErrors = 0;
+    let pollNetMsgShown = false;
     const tick = async () => {
       try {
         const r = await fetchSiteLoginPoll(loginToken);
+        pollNetErrors = 0;
         if (r.status === "ready") {
           clearSitePoll();
           clearSitePollState();
@@ -359,7 +362,7 @@ async function runLanding(lang) {
               language_code: r.lang === "en" ? "en" : "ru",
             }),
           );
-          window.location.replace("/#map");
+          window.location.hash = "map";
           window.location.reload();
           return;
         }
@@ -371,7 +374,11 @@ async function runLanding(lang) {
           setHubStatusSimple(tloc.landingHubExpired);
         }
       } catch {
-        /* продолжаем опрос до истечения */
+        pollNetErrors += 1;
+        if (pollNetErrors >= 3 && !pollNetMsgShown) {
+          pollNetMsgShown = true;
+          setHubStatusSimple(tloc.landingHubPollNetworkError);
+        }
       }
     };
     sitePollTimer = setInterval(tick, 2000);

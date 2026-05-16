@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 
 from aiogram import F, Router
@@ -25,6 +26,8 @@ from brainboosty_hook_bot.src.utils.flow_chat import flow_remember
 from brainboosty_hook_bot.src.utils.helpers import build_ref_link, parse_site_login_token, parse_start_payload
 from brainboosty_hook_bot.src.web.site_login_challenge import attach_site_login_challenge
 from brainboosty_hook_bot.src.web.webapp_link import send_webapp_link
+
+logger = logging.getLogger(__name__)
 
 router = Router(name="start")
 
@@ -137,6 +140,11 @@ async def _handle_site_login_hex(
     if message.from_user is None:
         return
     result = await attach_site_login_challenge(session, message.from_user.id, site_hex)
+    logger.info(
+        "site_login attach: tg_id=%s result=%s",
+        message.from_user.id,
+        result,
+    )
     db_user = await _get_user(session, message.from_user.id)
     lang = db_user.locale if db_user and db_user.locale in {"ru", "en"} else normalize_lang(locale)
     if result == "ok":
@@ -158,6 +166,7 @@ async def cmd_start_site_regexp(message: Message, state: FSMContext, session: As
     payload = m.group(1)
     site_hex = parse_site_login_token(payload)
     if not site_hex:
+        logger.warning("site_login regexp matched but token did not parse: %r", payload[:48])
         return
     await _handle_site_login_hex(message, session, locale, site_hex)
 

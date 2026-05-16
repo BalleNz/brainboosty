@@ -17,6 +17,8 @@ export default {
   landingHubStartLogin: "Open Telegram and confirm",
   landingHubPrepare: "Preparing your link…",
   landingHubPolling: "Waiting for confirmation in Telegram… keep this tab open.",
+  landingHubPollNetworkError:
+    "Can't reach the server. Check your connection, refresh the page, or try again later.",
   landingHubExpired: "That link expired. Tap the button to try again.",
   landingHubPopupBlocked:
     "Pop-ups are blocked, so we couldn't open a separate small window. Allow pop-ups for this site or use the button below.",
