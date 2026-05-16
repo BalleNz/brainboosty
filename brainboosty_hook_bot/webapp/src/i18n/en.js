@@ -71,7 +71,7 @@ export default {
   computing: "Computing your brain map…",
   errorLoad: "Could not load data. Please try again later.",
   authError: "Open the app from the Telegram bot.",
-  notRegistered: "Complete the bot questionnaire first (/start).",
+  notRegistered: "Take the test in the bot first!",
   historyTitle: "Progress history",
   historySub: "Zone comparison across tests. Arrows show percentage-point change.",
   historyEmpty: "No saved tests yet. Take your first test to see history here.",

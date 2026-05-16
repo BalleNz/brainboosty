@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from brainboosty_hook_bot.src.database.models import User
 from brainboosty_hook_bot.src.handlers.cognitive import prompt_test_style_choice
+from brainboosty_hook_bot.src.handlers.fsm_skip_start import SkipIfStartCommand
 from brainboosty_hook_bot.src.keyboards.inline import (
     QUEST_LANG_PREFIX,
     QUEST_SKILL_KEY_SET,
@@ -130,7 +131,7 @@ async def quest_language_chosen(callback: CallbackQuery, state: FSMContext) -> N
     await callback.answer()
 
 
-@router.message(QuestStates.language)
+@router.message(QuestStates.language, SkipIfStartCommand())
 async def quest_language_stray(message: Message, state: FSMContext, locale: str) -> None:
     await try_delete_user_message(message)
     sent = await message.answer(
@@ -248,7 +249,7 @@ async def quest_skill_interaction(
     await callback.answer()
 
 
-@router.message(QuestStates.skill)
+@router.message(QuestStates.skill, SkipIfStartCommand())
 async def quest_skill_text_instead_of_button(message: Message, state: FSMContext, locale: str) -> None:
     lang = await _quest_lang(state, locale)
     await try_delete_user_message(message)
@@ -265,7 +266,7 @@ async def quest_skill_text_instead_of_button(message: Message, state: FSMContext
     await flow_remember(state, sent.message_id)
 
 
-@router.message(QuestStates.age)
+@router.message(QuestStates.age, SkipIfStartCommand())
 async def quest_age_entered(message: Message, state: FSMContext, locale: str) -> None:
     lang = await _quest_lang(state, locale)
     age = _parse_age_years(message.text)
@@ -295,7 +296,7 @@ async def quest_age_entered(message: Message, state: FSMContext, locale: str) ->
     await flow_remember(state, sent.message_id)
 
 
-@router.message(QuestStates.time)
+@router.message(QuestStates.time, SkipIfStartCommand())
 async def quest_time_stray(message: Message, state: FSMContext, locale: str) -> None:
     lang = await _quest_lang(state, locale)
     await try_delete_user_message(message)

@@ -11,6 +11,76 @@ import { renderTest } from "./views/test.js";
 let appCtx = null;
 let profileCache = null;
 
+function applyQuestionnaireGate(root) {
+  document.body.classList.add("bb-app--needs-bot");
+  document.querySelector(".bb-premium-fab")?.remove();
+  const nav = document.getElementById("bb-nav");
+  if (nav) {
+    nav.hidden = true;
+    nav.innerHTML = "";
+  }
+  const t = getStrings(appCtx.lang);
+  root.className = "bb-root bb-root--spa bb-root--bot-gate";
+  root.replaceChildren();
+  const wrap = document.createElement("div");
+  wrap.className = "bb-bot-gate";
+  wrap.setAttribute("role", "status");
+  const line = document.createElement("p");
+  line.className = "bb-bot-gate__line";
+  line.textContent = t.notRegistered;
+  wrap.appendChild(line);
+  root.appendChild(wrap);
+}
+
+async function ensureProfileLoaded(root) {
+  if (profileCache) {
+    document.body.classList.remove("bb-app--needs-bot");
+    return true;
+  }
+  const t = getStrings(appCtx.lang);
+  root.className = "bb-root bb-root--spa";
+  root.innerHTML = `
+      <div class="bb-loading">
+        <div class="bb-loading__pulse"></div>
+        <p class="text-sm text-cyan-200/80">${t.loading}</p>
+      </div>`;
+  try {
+    profileCache = await fetchBrainProfile(appCtx);
+    document.body.classList.remove("bb-app--needs-bot");
+    syncLangFromProfile(profileCache);
+    if (appCtx.user?.first_name && !profileCache.userDisplayName) {
+      profileCache.userDisplayName = [appCtx.user.first_name, appCtx.user.last_name]
+        .filter(Boolean)
+        .join(" ");
+    }
+    return true;
+  } catch (e) {
+    if (e?.status === 401 && e?.detail === "invalid_site_token" && appCtx?.siteToken) {
+      try {
+        localStorage.removeItem(SITE_SESSION_STORAGE_KEY);
+        localStorage.removeItem(SITE_USER_STORAGE_KEY);
+      } catch {
+        /* ignore */
+      }
+      window.location.replace("/");
+      return false;
+    }
+    if (e?.status === 403 && e?.detail === "not_registered") {
+      applyQuestionnaireGate(root);
+      return false;
+    }
+    const msg =
+      e?.status === 403
+        ? t.notRegistered
+        : e?.status === 401
+          ? t.authError
+          : t.errorLoad;
+    root.className = "bb-root bb-root--spa";
+    root.innerHTML = `<p class="bb-error">${msg}</p>`;
+    return false;
+  }
+}
+
 function setActiveNav(routeName) {
   const nav = document.getElementById("bb-nav");
   if (!nav) return;
@@ -90,7 +160,6 @@ async function renderRoute(route) {
   const nav = document.getElementById("bb-nav");
   const isExercise = route.name === "exercise";
   document.body.classList.toggle("bb-route-exercise", isExercise);
-  if (nav) nav.hidden = isExercise;
 
   if (!isExercise) {
     setActiveNav(route.name);
@@ -100,20 +169,19 @@ async function renderRoute(route) {
     document.querySelector(".bb-premium-fab")?.remove();
   }
 
+  if (!(await ensureProfileLoaded(root))) {
+    return;
+  }
+
+  setupNav(appCtx.lang);
+  if (nav) nav.hidden = isExercise;
+
   if (route.name === "premium") {
-    if (!profileCache) {
-      profileCache = await fetchBrainProfile(appCtx);
-      syncLangFromProfile(profileCache);
-    }
     renderPremium(root, profileCache);
     return;
   }
 
   if (route.name === "test") {
-    if (!profileCache) {
-      profileCache = await fetchBrainProfile(appCtx);
-      syncLangFromProfile(profileCache);
-    }
     await renderTest(root, appCtx, profileCache, {
       onProfile: (p) => {
         profileCache = p;
@@ -124,49 +192,8 @@ async function renderRoute(route) {
   }
 
   if (route.name === "history") {
-    if (!profileCache) {
-      profileCache = await fetchBrainProfile(appCtx);
-      syncLangFromProfile(profileCache);
-    }
     await renderHistory(root, appCtx, profileCache);
     return;
-  }
-
-  if (!profileCache) {
-    const t = getStrings(appCtx.lang);
-    root.innerHTML = `
-      <div class="bb-loading">
-        <div class="bb-loading__pulse"></div>
-        <p class="text-sm text-cyan-200/80">${t.loading}</p>
-      </div>`;
-    try {
-      profileCache = await fetchBrainProfile(appCtx);
-      syncLangFromProfile(profileCache);
-      if (appCtx.user?.first_name && !profileCache.userDisplayName) {
-        profileCache.userDisplayName = [appCtx.user.first_name, appCtx.user.last_name]
-          .filter(Boolean)
-          .join(" ");
-      }
-    } catch (e) {
-      if (e?.status === 401 && e?.detail === "invalid_site_token" && appCtx?.siteToken) {
-        try {
-          localStorage.removeItem(SITE_SESSION_STORAGE_KEY);
-          localStorage.removeItem(SITE_USER_STORAGE_KEY);
-        } catch {
-          /* ignore */
-        }
-        window.location.replace("/");
-        return;
-      }
-      const msg =
-        e?.status === 403
-          ? t.notRegistered
-          : e?.status === 401
-            ? t.authError
-            : t.errorLoad;
-      root.innerHTML = `<p class="bb-error">${msg}</p>`;
-      return;
-    }
   }
 
   if (route.name === "exercise") {
@@ -208,7 +235,6 @@ export async function bootApp(ctx) {
   const headerWordmark = document.getElementById("bb-header-wordmark");
   if (headerWordmark) headerWordmark.textContent = t0.appBrandName;
 
-  setupNav(appCtx.lang);
   onRouteChange((route) => {
     renderRoute(route).catch(() => {});
   });

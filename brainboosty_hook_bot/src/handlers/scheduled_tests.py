@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from brainboosty_hook_bot.src.database.models import BrainRegionSnapshot, SharedTest, User, UserTestCompletion
 from brainboosty_hook_bot.src.handlers.cognitive import normalize_user_lang
+from brainboosty_hook_bot.src.handlers.fsm_skip_start import SkipIfStartCommand
 from brainboosty_hook_bot.src.keyboards.inline import (
     STEST_ANS_PREFIX,
     STEST_HUB_PREFIX,
@@ -450,7 +451,7 @@ async def scheduled_test_answer_step(
     await state.clear()
 
 
-@router.message(ScheduledTestStates.running)
+@router.message(ScheduledTestStates.running, SkipIfStartCommand())
 async def scheduled_test_stray(message: Message, state: FSMContext, session: AsyncSession, locale: str) -> None:
     if message.from_user is None:
         return

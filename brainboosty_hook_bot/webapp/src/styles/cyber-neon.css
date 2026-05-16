@@ -904,6 +904,47 @@ body {
   color: #fca5a5;
 }
 
+/* Нет анкеты в боте — только фон (как у SPA) и короткий текст */
+body.bb-app--needs-bot #bb-nav {
+  display: none !important;
+}
+
+body.bb-app--needs-bot .bb-premium-fab {
+  display: none !important;
+}
+
+body.bb-app--needs-bot .bb-root.bb-root--spa.bb-root--bot-gate {
+  padding-top: calc(24px + var(--bb-safe-top));
+  padding-bottom: calc(24px + var(--bb-safe-bottom));
+}
+
+body.bb-app--needs-bot .bb-root.bb-root--spa.bb-root--bot-gate::before {
+  opacity: 1;
+}
+
+.bb-bot-gate {
+  min-height: min(78vh, 520px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 28px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.bb-bot-gate__line {
+  margin: 0;
+  max-width: 20ch;
+  font-size: clamp(1.4rem, 5vw, 1.95rem);
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1.3;
+  color: #ecfeff;
+  text-shadow:
+    0 0 22px rgba(34, 211, 238, 0.55),
+    0 0 56px rgba(192, 132, 252, 0.28);
+}
+
 /* Bottom nav (future routes) */
 .bb-nav {
   position: fixed;

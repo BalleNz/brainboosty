@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from brainboosty_hook_bot.src.config.config import settings
 from brainboosty_hook_bot.src.database.models import BrainRegionSnapshot, User
+from brainboosty_hook_bot.src.handlers.fsm_skip_start import SkipIfStartCommand
 from brainboosty_hook_bot.src.keyboards.inline import (
     COGNITIVE_BACK_CALLBACK,
     COGNITIVE_CB_PREFIX,
@@ -318,7 +319,7 @@ async def cognitive_answer_step(
     await state.clear()
 
 
-@router.message(CognitiveStates.choose_style)
+@router.message(CognitiveStates.choose_style, SkipIfStartCommand())
 async def cognitive_choose_style_stray(
     message: Message,
     state: FSMContext,
@@ -337,7 +338,7 @@ async def cognitive_choose_style_stray(
     await prompt_test_style_choice(state, lang, bot=bot, chat_id=chat_id)
 
 
-@router.message(CognitiveStates.testing)
+@router.message(CognitiveStates.testing, SkipIfStartCommand())
 async def cognitive_testing_stray(
     message: Message,
     state: FSMContext,
