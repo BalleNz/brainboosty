@@ -269,6 +269,23 @@ async function runLanding(lang) {
   const stopHero = heroEl ? initLandingHeroMotion(heroEl) : () => {};
 
   let sitePollTimer = null;
+  let telegramLoginPopup = null;
+
+  const TG_LOGIN_WIN = "bb_tg_site_login";
+  const TG_LOGIN_FEATURES =
+    "popup=yes,width=460,height=740,left=96,top=72,menubar=no,toolbar=no,status=no,scrollbars=yes,resizable=yes";
+
+  const closeTelegramLoginPopup = () => {
+    try {
+      if (telegramLoginPopup && !telegramLoginPopup.closed) {
+        telegramLoginPopup.close();
+      }
+    } catch {
+      /* ignore */
+    }
+    telegramLoginPopup = null;
+  };
+
   const clearSitePoll = () => {
     if (sitePollTimer != null) {
       clearInterval(sitePollTimer);
@@ -293,10 +310,20 @@ async function runLanding(lang) {
   };
 
   const openTelegramFromAuthClick = (url) => {
-    const w = window.open("about:blank", "_blank");
-    if (w) {
-      w.location.href = url;
-      return true;
+    try {
+      closeTelegramLoginPopup();
+      telegramLoginPopup = window.open("about:blank", TG_LOGIN_WIN, TG_LOGIN_FEATURES);
+      if (telegramLoginPopup) {
+        telegramLoginPopup.location.href = url;
+        try {
+          telegramLoginPopup.focus();
+        } catch {
+          /* ignore */
+        }
+        return true;
+      }
+    } catch {
+      closeTelegramLoginPopup();
     }
     return false;
   };
@@ -309,6 +336,7 @@ async function runLanding(lang) {
         if (r.status === "ready") {
           clearSitePoll();
           clearSitePollState();
+          closeTelegramLoginPopup();
           localStorage.setItem(SITE_SESSION_STORAGE_KEY, r.accessToken);
           localStorage.setItem(
             SITE_USER_STORAGE_KEY,
@@ -325,6 +353,7 @@ async function runLanding(lang) {
         if (r.status === "expired" || r.status === "not_found") {
           clearSitePoll();
           clearSitePollState();
+          closeTelegramLoginPopup();
           setStartBtnsDisabled(false);
           if (statusEl) statusEl.textContent = tloc.landingHubExpired;
         }
@@ -366,6 +395,7 @@ async function runLanding(lang) {
       } catch (e) {
         clearSitePoll();
         clearSitePollState();
+        closeTelegramLoginPopup();
         setStartBtnsDisabled(false);
         if (statusEl) {
           statusEl.hidden = false;

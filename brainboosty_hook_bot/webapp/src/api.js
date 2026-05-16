@@ -36,6 +36,7 @@ async function apiFetch(path, { initData = "", siteToken = "", method = "GET", b
     method,
     headers: headers(initData, siteToken),
     body: body ? JSON.stringify(body) : undefined,
+    cache: "no-store",
   });
   if (!res.ok) {
     const err = new Error(`HTTP ${res.status}`);

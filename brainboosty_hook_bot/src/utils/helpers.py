@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 
 from aiogram.types import User as TgUser
 
@@ -61,7 +61,8 @@ def parse_site_login_token(payload: str | None) -> str | None:
     """
     if not payload:
         return None
-    m = _SITE_LOGIN_TOKEN_PATTERN.match(payload.strip())
+    raw = unquote(payload.strip().replace("+", " "))
+    m = _SITE_LOGIN_TOKEN_PATTERN.match(raw.strip())
     if not m:
         return None
     return m.group(1).lower()
