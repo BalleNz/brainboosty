@@ -5,7 +5,11 @@ from __future__ import annotations
 import html
 
 from brainboosty_hook_bot.src.locale import t
-from brainboosty_hook_bot.src.services.brain_pdf.assets import cover_hero_image_html, read_pdf_svg, section_brain_visual_html
+from brainboosty_hook_bot.src.services.brain_pdf.assets import (
+    brand_logo_html,
+    cover_hero_image_html,
+    section_brain_visual_html,
+)
 from brainboosty_hook_bot.src.services.brain_pdf.fragments import bar_block, html_foot, html_head, sheet_close, sheet_open
 from brainboosty_hook_bot.src.services.brain_pdf.styles import PRINT_STYLESHEET
 from brainboosty_hook_bot.src.services.brain_pdf_content import (
@@ -37,7 +41,7 @@ def build_brain_map_html(
     detail_json: dict | None = None,
 ) -> str:
     is_sexual = test_variant == "sexual"
-    logo = read_pdf_svg("logo.svg")
+    logo = brand_logo_html()
     ns = neuro_score(scores)
     name = html.escape((user_display_name or "").strip() or ("User" if lang == "en" else "Гость"))
     cover_sub = html.escape(t(lang, "PDF_BRAIN_COVER_LINE"))
@@ -47,7 +51,7 @@ def build_brain_map_html(
 
     # --- Cover ---
     parts.append(sheet_open())
-    parts.append(f'<div class="flex justify-center mb-5 drop-shadow-[0_0_24px_rgba(34,211,238,0.35)]">{logo}</div>')
+    parts.append(f'<div class="flex justify-center mb-5 drop-shadow-[0_0_24px_rgba(255,20,147,0.35)]">{logo}</div>')
     parts.append('<div class="w-full flex justify-center mb-4 px-2">')
     parts.append(cover_hero_image_html())
     parts.append("</div>")

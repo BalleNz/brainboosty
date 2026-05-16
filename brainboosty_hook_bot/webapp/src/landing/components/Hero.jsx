@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import heroBrain from "@bb-assets/full-glowing-brain.png";
+import { BrandLogo } from "../../components/BrandLogo.jsx";
 
 export function Hero({ lang, onCtaBot, onCtaLogin }) {
   const isRu = lang === "ru";
@@ -35,14 +36,14 @@ export function Hero({ lang, onCtaBot, onCtaLogin }) {
         />
       </motion.div>
 
-      <motion.p
-        className="lux-wordmark mt-8"
+      <motion.div
+        className="mt-8 flex justify-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
       >
-        brainboosty
-      </motion.p>
+        <BrandLogo className="bb-brand-logo bb-brand-logo--hero" />
+      </motion.div>
 
       <motion.h1
         className="lux-heading mt-4 max-w-2xl text-3xl leading-tight sm:text-4xl md:text-5xl"

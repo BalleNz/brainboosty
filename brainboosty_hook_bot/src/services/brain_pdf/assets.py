@@ -81,6 +81,18 @@ def section_brain_visual_html(region_key: str) -> str:
     return f'<div class="brain-float-top-svg mx-auto w-full max-w-md">{read_region_fallback_svg(region_key)}</div>'
 
 
+def brand_logo_html(*, max_edge_px: int = 480) -> str:
+    """Логотип brainboosty для PDF/HTML отчётов."""
+    path = all_assets_dir() / "brainboosty_logo.png"
+    url = png_data_url(path, max_edge_px=max_edge_px)
+    if url:
+        return (
+            f'<img src="{url}" alt="brainboosty" class="mx-auto block" '
+            f'style="max-height:52px;width:auto;object-fit:contain"/>'
+        )
+    return read_pdf_svg("logo.svg")
+
+
 def cover_hero_image_html() -> str:
     for candidate in _COVER_HERO_PNG_CANDIDATES:
         url = png_data_url(candidate, max_edge_px=1000)

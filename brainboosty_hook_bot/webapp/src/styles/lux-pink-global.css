@@ -165,7 +165,45 @@ html {
   box-shadow: 0 0 0 2px rgba(255, 20, 147, 0.75), 0 0 24px rgba(255, 20, 147, 0.35) !important;
 }
 
-/* Wordmark — розово-золотой */
+/* Логотип PNG */
+.bb-brand-logo {
+  display: block;
+  height: auto;
+  width: auto;
+  max-width: min(220px, 78vw);
+  object-fit: contain;
+  filter: drop-shadow(0 0 14px rgba(255, 20, 147, 0.45));
+}
+
+.bb-brand-logo--header {
+  max-height: 34px;
+  margin: 0 auto;
+}
+
+.bb-brand-logo--hero {
+  max-height: 52px;
+}
+
+.bb-brand-logo--gate {
+  max-height: 48px;
+}
+
+.bb-brand-logo--footer {
+  max-height: 40px;
+  opacity: 0.95;
+}
+
+.bb-brand-logo--cover {
+  max-height: 44px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.bb-lang-gate__title .bb-brand-logo {
+  margin: 0 auto 0.35rem;
+}
+
+/* Wordmark — fallback / legacy */
 .bb-wordmark {
   background: linear-gradient(105deg, #ffb6e1 0%, #ff1493 40%, #ff00aa 70%, #ffd700 100%) !important;
   filter: drop-shadow(0 0 12px rgba(255, 20, 147, 0.55)) drop-shadow(0 0 20px rgba(255, 215, 0, 0.25)) !important;

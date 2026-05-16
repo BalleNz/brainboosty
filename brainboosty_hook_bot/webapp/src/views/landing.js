@@ -1,4 +1,5 @@
 import brainImg from "@bb-assets/full-glowing-brain.png";
+import { brandLogoHtml } from "../components/brand-logo-html.js";
 import { fetchLandingMeta } from "../api.js";
 import { initLandingHeroMotion } from "../lib/landing-hero-motion.js";
 import { initLandingReveal } from "../lib/landing-reveal.js";
@@ -67,7 +68,7 @@ function showLanguageGate(onChoose) {
   gate.innerHTML = `
     <div class="bb-lang-gate__backdrop" aria-hidden="true"></div>
     <div class="bb-lang-gate__dialog glass">
-      <p id="bb-lang-gate-title" class="bb-lang-gate__title bb-wordmark" translate="no">brainboosty</p>
+      <div id="bb-lang-gate-title" class="bb-lang-gate__title">${brandLogoHtml("bb-brand-logo bb-brand-logo--gate")}</div>
       <p class="bb-lang-gate__sub">Выберите язык · Choose language</p>
       <div class="bb-lang-gate__choices">
         <button type="button" class="bb-lang-gate__btn" data-lang="ru">
