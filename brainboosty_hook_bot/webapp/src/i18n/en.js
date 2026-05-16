@@ -19,9 +19,8 @@ export default {
   landingHubPolling: "Waiting for confirmation in Telegram… keep this tab open.",
   landingHubExpired: "That link expired. Tap the button to try again.",
   landingHubPopupBlocked:
-    "Your browser blocked the Telegram window. Allow pop-ups for this site and try again.",
-  landingHubReturnSameTab:
-    "Telegram will open next. After you tap Start in the bot, return to this browser tab to finish sign-in.",
+    "Pop-ups are blocked, so we couldn't open a separate small window. Allow pop-ups for this site or use the button below.",
+  landingHubTryOpenWindow: "Open Telegram in a separate window",
   landingLoginTelegram: "Log in with Telegram",
   landingChannelAria: "Telegram channel",
   landingAboutTitle: "About me",

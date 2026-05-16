@@ -273,7 +273,7 @@ async function runLanding(lang) {
 
   const TG_LOGIN_WIN = "bb_tg_site_login";
   const TG_LOGIN_FEATURES =
-    "popup=yes,width=460,height=740,left=96,top=72,menubar=no,toolbar=no,status=no,scrollbars=yes,resizable=yes";
+    "width=440,height=720,left=100,top=80,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no,directories=no";
 
   const closeTelegramLoginPopup = () => {
     try {
@@ -309,23 +309,36 @@ async function runLanding(lang) {
     });
   };
 
-  const openTelegramFromAuthClick = (url) => {
-    try {
-      closeTelegramLoginPopup();
-      telegramLoginPopup = window.open("about:blank", TG_LOGIN_WIN, TG_LOGIN_FEATURES);
-      if (telegramLoginPopup) {
-        telegramLoginPopup.location.href = url;
-        try {
-          telegramLoginPopup.focus();
-        } catch {
-          /* ignore */
-        }
-        return true;
+  const setHubStatusSimple = (text) => {
+    if (!statusEl) return;
+    statusEl.replaceChildren();
+    if (!text) return;
+    const p = document.createElement("p");
+    p.className = "bb-landing-hub__status-line";
+    p.textContent = text;
+    statusEl.appendChild(p);
+  };
+
+  const showHubStatusPopupBlockedWithButton = (telegramLink, tloc) => {
+    if (!statusEl) return;
+    statusEl.hidden = false;
+    statusEl.replaceChildren();
+    const p = document.createElement("p");
+    p.className = "bb-landing-hub__status-line";
+    p.textContent = tloc.landingHubPopupBlocked;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "bb-landing-hub__manual-popup";
+    btn.textContent = tloc.landingHubTryOpenWindow;
+    btn.addEventListener("click", () => {
+      const w = window.open(telegramLink, TG_LOGIN_WIN, TG_LOGIN_FEATURES);
+      if (w) {
+        telegramLoginPopup = w;
+        setHubStatusSimple(tloc.landingHubPolling);
       }
-    } catch {
-      closeTelegramLoginPopup();
-    }
-    return false;
+    });
+    statusEl.appendChild(p);
+    statusEl.appendChild(btn);
   };
 
   const beginSiteLoginPoll = (loginToken, tloc) => {
@@ -355,7 +368,7 @@ async function runLanding(lang) {
           clearSitePollState();
           closeTelegramLoginPopup();
           setStartBtnsDisabled(false);
-          if (statusEl) statusEl.textContent = tloc.landingHubExpired;
+          setHubStatusSimple(tloc.landingHubExpired);
         }
       } catch {
         /* продолжаем опрос до истечения */
@@ -374,8 +387,13 @@ async function runLanding(lang) {
       setStartBtnsDisabled(true);
       if (statusEl) {
         statusEl.hidden = false;
-        statusEl.textContent = tloc.landingHubPrepare;
+        setHubStatusSimple(tloc.landingHubPrepare);
       }
+
+      closeTelegramLoginPopup();
+      const popup = window.open("about:blank", TG_LOGIN_WIN, TG_LOGIN_FEATURES);
+      telegramLoginPopup = popup;
+
       try {
         const linkData = await fetchSiteLoginLink();
         const loginToken = linkData?.loginToken;
@@ -385,13 +403,26 @@ async function runLanding(lang) {
         }
         writeSitePollState({ loginToken, lang, startedAt: Date.now() });
 
-        if (openTelegramFromAuthClick(telegramLink)) {
-          if (statusEl) statusEl.textContent = tloc.landingHubPolling;
+        if (telegramLoginPopup && !telegramLoginPopup.closed) {
+          try {
+            telegramLoginPopup.location.href = telegramLink;
+          } catch {
+            /* ignore */
+          }
+          try {
+            telegramLoginPopup.focus();
+          } catch {
+            /* ignore */
+          }
+          setHubStatusSimple(tloc.landingHubPolling);
           beginSiteLoginPoll(loginToken, tloc);
           return;
         }
-        if (statusEl) statusEl.textContent = tloc.landingHubReturnSameTab;
-        window.location.href = telegramLink;
+
+        closeTelegramLoginPopup();
+        showHubStatusPopupBlockedWithButton(telegramLink, tloc);
+        beginSiteLoginPoll(loginToken, tloc);
+        setStartBtnsDisabled(false);
       } catch (e) {
         clearSitePoll();
         clearSitePollState();
@@ -399,7 +430,7 @@ async function runLanding(lang) {
         setStartBtnsDisabled(false);
         if (statusEl) {
           statusEl.hidden = false;
-          statusEl.textContent = formatApiError(e, tloc.errorLoad);
+          setHubStatusSimple(formatApiError(e, tloc.errorLoad));
         }
       }
     });
@@ -411,7 +442,7 @@ async function runLanding(lang) {
     setStartBtnsDisabled(true);
     if (statusEl) {
       statusEl.hidden = false;
-      statusEl.textContent = t.landingHubPolling;
+      setHubStatusSimple(t.landingHubPolling);
     }
     beginSiteLoginPoll(pending.loginToken, t);
   } else if (pending) {

@@ -19,9 +19,8 @@ export default {
   landingHubPolling: "Ждём подтверждение в Telegram… не закрывай эту вкладку.",
   landingHubExpired: "Ссылка устарела. Нажми кнопку ещё раз.",
   landingHubPopupBlocked:
-    "Браузер заблокировал окно Telegram. Разреши всплывающие окна для этого сайта и нажми кнопку снова.",
-  landingHubReturnSameTab:
-    "Сейчас откроется Telegram. После кнопки Start в боте вернись в этот браузер на эту вкладку — вход завершится сам.",
+    "Не удалось открыть отдельное окно для Telegram (блокировка всплывающих окон). Разреши окна для этого сайта или нажми кнопку ниже — откроется компактное окно.",
+  landingHubTryOpenWindow: "Открыть Telegram в отдельном окне",
   landingLoginTelegram: "Войти через Telegram",
   landingChannelAria: "Канал в Telegram",
   landingAboutTitle: "Обо мне",

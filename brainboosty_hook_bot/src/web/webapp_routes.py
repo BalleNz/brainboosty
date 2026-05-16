@@ -15,6 +15,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from brainboosty_hook_bot.src.config.config import settings
 from brainboosty_hook_bot.src.database.session import get_session
 from brainboosty_hook_bot.src.locale import normalize_lang
+from brainboosty_hook_bot.src.services.about_photo import (
+    resolve_about_photo_path,
+    resolve_channel_avatar_path,
+)
 from brainboosty_hook_bot.src.web.webapp_auth import (
     WebAppAuthError,
     tg_user_id_from_init,
