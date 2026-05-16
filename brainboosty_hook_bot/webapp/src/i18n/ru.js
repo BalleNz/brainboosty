@@ -13,16 +13,13 @@ export default {
   landingHubLead:
     "Карта мозга, тест, история и упражнения — в браузере, тот же аккаунт, что в боте и мини-приложении.",
   landingHubHint:
-    "Нужен аккаунт после анкеты в боте. Нажми кнопку — откроется Telegram с командой /start и одноразовым токеном; подтверди «Start», вернись сюда: страница сама авторизуется.",
-  landingHubStartLogin: "Открыть Telegram и подтвердить вход",
-  landingHubPrepare: "Готовим ссылку…",
-  landingHubPolling: "Ждём подтверждение в Telegram… не закрывай эту вкладку.",
-  landingHubPollNetworkError:
-    "Не удаётся связаться с сервером. Проверь интернет и обнови страницу или попробуй позже.",
-  landingHubExpired: "Ссылка устарела. Нажми кнопку ещё раз.",
-  landingHubPopupBlocked:
-    "Не удалось открыть отдельное окно для Telegram (блокировка всплывающих окон). Разреши окна для этого сайта или нажми кнопку ниже — откроется компактное окно.",
-  landingHubTryOpenWindow: "Открыть Telegram в отдельном окне",
+    "Нужен аккаунт после анкеты в боте. Нажми кнопку — откроется официальный вход Telegram (Log in with Telegram), после подтверждения вернёшься сюда автоматически.",
+  landingHubStartLogin: "Войти через Telegram",
+  landingHubErrorNotRegistered:
+    "Сначала пройди анкету в боте (/start), затем снова нажми «Войти через Telegram».",
+  landingHubErrorNotConfigured:
+    "Вход через Telegram не настроен на сервере (TELEGRAM_OIDC_CLIENT_ID / SECRET в .env и Allowed URLs в BotFather).",
+  landingHubErrorOidc: "Не удалось войти через Telegram. Попробуй ещё раз.",
   landingLoginTelegram: "Войти через Telegram",
   landingChannelAria: "Канал в Telegram",
   landingAboutTitle: "Обо мне",

@@ -44,6 +44,34 @@ function getSiteToken() {
   }
 }
 
+function consumeOidcAuthCallback() {
+  const raw = (window.location.hash || "").replace(/^#/, "");
+  if (!raw.startsWith("auth/callback")) return false;
+
+  const q = raw.includes("?") ? raw.slice(raw.indexOf("?") + 1) : "";
+  const params = new URLSearchParams(q);
+  const token = params.get("access_token")?.trim();
+  if (!token) return false;
+
+  const lang = params.get("lang") === "en" ? "en" : "ru";
+  try {
+    localStorage.setItem(SITE_SESSION_STORAGE_KEY, token);
+    localStorage.setItem(
+      SITE_USER_STORAGE_KEY,
+      JSON.stringify({
+        first_name: params.get("first_name") || "",
+        last_name: "",
+        language_code: lang,
+      }),
+    );
+  } catch {
+    return false;
+  }
+
+  window.location.replace("/#map");
+  return true;
+}
+
 function readSiteUserHint() {
   try {
     const raw = localStorage.getItem(SITE_USER_STORAGE_KEY);
@@ -55,6 +83,10 @@ function readSiteUserHint() {
 }
 
 async function bootstrap() {
+  if (consumeOidcAuthCallback()) {
+    return;
+  }
+
   if (isLikelyTelegramWebAppContext()) {
     await loadTelegramWebAppScript();
   }

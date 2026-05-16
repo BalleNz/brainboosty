@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import logging
-import re
-
-from aiogram import F, Router
+from aiogram import Router
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
@@ -23,19 +20,10 @@ from brainboosty_hook_bot.src.keyboards.reply import main_reply_kb
 from brainboosty_hook_bot.src.locale import normalize_lang, question_skill_message, t
 from brainboosty_hook_bot.src.services.subscription_service import user_has_paid_access
 from brainboosty_hook_bot.src.utils.flow_chat import flow_remember
-from brainboosty_hook_bot.src.utils.helpers import build_ref_link, parse_site_login_token, parse_start_payload
-from brainboosty_hook_bot.src.web.site_login_challenge import attach_site_login_challenge
+from brainboosty_hook_bot.src.utils.helpers import build_ref_link, parse_start_payload
 from brainboosty_hook_bot.src.web.webapp_link import send_webapp_link
 
-logger = logging.getLogger(__name__)
-
 router = Router(name="start")
-
-# Отдельно от CommandStart: иногда клиенты шлют /start@BotUser site_<token>, и это надёжно ловить regexp.
-_SITE_LOGIN_TEXT = re.compile(
-    r"^/start(?:@[A-Za-z0-9_]+)?\s+(site_[a-fA-F0-9]{32})(?:\s*)$",
-    re.IGNORECASE,
-)
 
 
 def _quest_fsm_leaf(state_id: str | None) -> str | None:
@@ -131,46 +119,6 @@ async def _get_user(session: AsyncSession, tg_id: int) -> User | None:
     return result.scalar_one_or_none()
 
 
-async def _handle_site_login_hex(
-    message: Message,
-    session: AsyncSession,
-    locale: str,
-    site_hex: str,
-) -> None:
-    if message.from_user is None:
-        return
-    result = await attach_site_login_challenge(session, message.from_user.id, site_hex)
-    logger.info(
-        "site_login attach: tg_id=%s result=%s",
-        message.from_user.id,
-        result,
-    )
-    db_user = await _get_user(session, message.from_user.id)
-    lang = db_user.locale if db_user and db_user.locale in {"ru", "en"} else normalize_lang(locale)
-    if result == "ok":
-        await message.answer(t(lang, "SITE_LOGIN_OK"))
-    elif result == "not_registered":
-        lang_nr = normalize_lang(locale)
-        await message.answer(t(lang_nr, "SITE_LOGIN_NOT_REGISTERED"))
-    else:
-        await message.answer(t(lang, "SITE_LOGIN_BAD_TOKEN"))
-
-
-@router.message(F.text.regexp(_SITE_LOGIN_TEXT))
-async def cmd_start_site_regexp(message: Message, state: FSMContext, session: AsyncSession, locale: str) -> None:
-    if message.from_user is None or not message.text:
-        return
-    m = _SITE_LOGIN_TEXT.match(message.text.strip())
-    if not m:
-        return
-    payload = m.group(1)
-    site_hex = parse_site_login_token(payload)
-    if not site_hex:
-        logger.warning("site_login regexp matched but token did not parse: %r", payload[:48])
-        return
-    await _handle_site_login_hex(message, session, locale, site_hex)
-
-
 @router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext, session: AsyncSession, locale: str) -> None:
     if message.from_user is None:
@@ -178,11 +126,6 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession, 
 
     parts = (message.text or "").split(maxsplit=1)
     payload = parts[1].strip() if len(parts) > 1 else None
-
-    site_raw = parse_site_login_token(payload)
-    if site_raw:
-        await _handle_site_login_hex(message, session, locale, site_raw)
-        return
 
     pending_ref = parse_start_payload(payload)
 

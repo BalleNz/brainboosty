@@ -13,16 +13,13 @@ export default {
   landingHubLead:
     "Your brain map, test, history, and exercises—in the browser, same account as the bot and Mini App.",
   landingHubHint:
-    "You need a profile after the bot onboarding. Tap the button — Telegram opens with /start and a one-time token; confirm with «Start», then return here; this tab will log you in automatically.",
-  landingHubStartLogin: "Open Telegram and confirm",
-  landingHubPrepare: "Preparing your link…",
-  landingHubPolling: "Waiting for confirmation in Telegram… keep this tab open.",
-  landingHubPollNetworkError:
-    "Can't reach the server. Check your connection, refresh the page, or try again later.",
-  landingHubExpired: "That link expired. Tap the button to try again.",
-  landingHubPopupBlocked:
-    "Pop-ups are blocked, so we couldn't open a separate small window. Allow pop-ups for this site or use the button below.",
-  landingHubTryOpenWindow: "Open Telegram in a separate window",
+    "You need a profile after bot onboarding. Tap the button — official Telegram login opens; after you approve, you'll return here automatically.",
+  landingHubStartLogin: "Log in with Telegram",
+  landingHubErrorNotRegistered:
+    "Finish onboarding in the bot (/start) first, then try «Log in with Telegram» again.",
+  landingHubErrorNotConfigured:
+    "Telegram login isn't configured on the server (TELEGRAM_OIDC_CLIENT_ID / SECRET in .env and Allowed URLs in BotFather).",
+  landingHubErrorOidc: "Telegram sign-in failed. Please try again.",
   landingLoginTelegram: "Log in with Telegram",
   landingChannelAria: "Telegram channel",
   landingAboutTitle: "About me",

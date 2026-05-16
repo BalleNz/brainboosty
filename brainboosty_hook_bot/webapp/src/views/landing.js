@@ -1,13 +1,5 @@
 import brainImg from "@bb-assets/full-glowing-brain.png";
-import {
-  fetchLandingMeta,
-  fetchSiteLoginLink,
-  fetchSiteLoginPoll,
-  SITE_SESSION_STORAGE_KEY,
-  SITE_USER_STORAGE_KEY,
-  formatApiError,
-  SITE_LOGIN_POLL_STATE_KEY,
-} from "../api.js";
+import { fetchLandingMeta } from "../api.js";
 import { initLandingHeroMotion } from "../lib/landing-hero-motion.js";
 import { initLandingReveal } from "../lib/landing-reveal.js";
 import { getStrings } from "../i18n/index.js";
@@ -20,37 +12,15 @@ function esc(s) {
 }
 
 const LANDING_LANG_KEY = "bb-landing-lang";
-const SITE_POLL_MAX_MS = 16 * 60 * 1000;
 
-function readSitePollState() {
-  try {
-    const raw = sessionStorage.getItem(SITE_LOGIN_POLL_STATE_KEY);
-    if (!raw) return null;
-    const o = JSON.parse(raw);
-    if (!o?.loginToken || typeof o.loginToken !== "string") return null;
-    if (typeof o.startedAt !== "number") return null;
-    if (o.lang !== "en" && o.lang !== "ru") return null;
-    return o;
-  } catch {
-    return null;
-  }
-}
-
-function writeSitePollState(state) {
-  try {
-    sessionStorage.setItem(SITE_LOGIN_POLL_STATE_KEY, JSON.stringify(state));
-  } catch {
-    /* ignore */
-  }
-}
-
-function clearSitePollState() {
-  try {
-    sessionStorage.removeItem(SITE_LOGIN_POLL_STATE_KEY);
-  } catch {
-    /* ignore */
-  }
-}
+const OIDC_ERROR_KEYS = {
+  not_registered: "landingHubErrorNotRegistered",
+  oidc_not_configured: "landingHubErrorNotConfigured",
+  token_exchange_failed: "landingHubErrorOidc",
+  invalid_state: "landingHubErrorOidc",
+  state_expired: "landingHubErrorOidc",
+  missing_code: "landingHubErrorOidc",
+};
 
 function getStoredLandingLang() {
   try {
@@ -60,6 +30,19 @@ function getStoredLandingLang() {
     /* private mode */
   }
   return null;
+}
+
+function hubLoginErrorMessage(t, code) {
+  const key = OIDC_ERROR_KEYS[code];
+  if (key && t[key]) return t[key];
+  return t.landingHubErrorOidc;
+}
+
+function parseHubLoginErrorFromHash() {
+  const raw = (window.location.hash || "").replace(/^#/, "");
+  if (!raw.startsWith("hub-login")) return null;
+  const q = raw.includes("?") ? raw.slice(raw.indexOf("?") + 1) : "";
+  return new URLSearchParams(q).get("error");
 }
 
 function showLanguageGate(onChoose) {
@@ -147,13 +130,15 @@ async function runLanding(lang) {
     </div>`;
 
   let meta = {
-    botUrl: "https://t.me/brainboosty?start=site",
+    botUrl: "https://t.me/brainboosty?start=webapp",
     webappEntryUrl: "https://t.me/brainboosty?start=webapp",
     channelUrl: "https://t.me/androgenautist",
     hasAuthorPhoto: false,
     hasChannelAvatar: false,
     neuralMapHubUrl: "/#hub-login",
     hubHostDisplay: "neuralmap.brainboosty.app",
+    oidcLoginUrl: "/api/webapp/auth/oidc/start",
+    oidcConfigured: false,
   };
   try {
     meta = { ...meta, ...(await fetchLandingMeta()) };
@@ -162,10 +147,9 @@ async function runLanding(lang) {
   }
 
   const photoSrc = "/api/webapp/landing/photo";
-
   const features = t.landingFeatures.map((f) => `<li>${esc(f)}</li>`).join("");
-
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const loginUrl = meta.oidcLoginUrl || "/api/webapp/auth/oidc/start";
 
   root.innerHTML = `
     <div class="bb-landing">
@@ -268,31 +252,6 @@ async function runLanding(lang) {
   const heroEl = root.querySelector(".bb-landing-hero");
   const stopHero = heroEl ? initLandingHeroMotion(heroEl) : () => {};
 
-  let sitePollTimer = null;
-  let telegramLoginPopup = null;
-
-  const TG_LOGIN_WIN = "bb_tg_site_login";
-  const TG_LOGIN_FEATURES =
-    "width=440,height=720,left=100,top=80,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no,directories=no";
-
-  const closeTelegramLoginPopup = () => {
-    try {
-      if (telegramLoginPopup && !telegramLoginPopup.closed) {
-        telegramLoginPopup.close();
-      }
-    } catch {
-      /* ignore */
-    }
-    telegramLoginPopup = null;
-  };
-
-  const clearSitePoll = () => {
-    if (sitePollTimer != null) {
-      clearInterval(sitePollTimer);
-      sitePollTimer = null;
-    }
-  };
-
   const onPageHide = () => {
     stopReveal();
     stopHero();
@@ -303,14 +262,9 @@ async function runLanding(lang) {
   const startBtns = root.querySelectorAll("[data-start-site-login]");
   const statusEl = root.querySelector(".bb-landing-hub__status");
 
-  const setStartBtnsDisabled = (disabled) => {
-    startBtns.forEach((b) => {
-      b.disabled = disabled;
-    });
-  };
-
-  const setHubStatusSimple = (text) => {
+  const setHubStatus = (text) => {
     if (!statusEl) return;
+    statusEl.hidden = !text;
     statusEl.replaceChildren();
     if (!text) return;
     const p = document.createElement("p");
@@ -319,140 +273,22 @@ async function runLanding(lang) {
     statusEl.appendChild(p);
   };
 
-  const showHubStatusPopupBlockedWithButton = (telegramLink, tloc) => {
-    if (!statusEl) return;
-    statusEl.hidden = false;
-    statusEl.replaceChildren();
-    const p = document.createElement("p");
-    p.className = "bb-landing-hub__status-line";
-    p.textContent = tloc.landingHubPopupBlocked;
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "bb-landing-hub__manual-popup";
-    btn.textContent = tloc.landingHubTryOpenWindow;
+  startBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
-      const w = window.open(telegramLink, TG_LOGIN_WIN, TG_LOGIN_FEATURES);
-      if (w) {
-        telegramLoginPopup = w;
-        setHubStatusSimple(tloc.landingHubPolling);
-      }
-    });
-    statusEl.appendChild(p);
-    statusEl.appendChild(btn);
-  };
-
-  const beginSiteLoginPoll = (loginToken, tloc) => {
-    clearSitePoll();
-    let pollNetErrors = 0;
-    let pollNetMsgShown = false;
-    const tick = async () => {
-      try {
-        const r = await fetchSiteLoginPoll(loginToken);
-        pollNetErrors = 0;
-        if (r.status === "ready") {
-          clearSitePoll();
-          clearSitePollState();
-          closeTelegramLoginPopup();
-          localStorage.setItem(SITE_SESSION_STORAGE_KEY, r.accessToken);
-          localStorage.setItem(
-            SITE_USER_STORAGE_KEY,
-            JSON.stringify({
-              first_name: r.user?.first_name ?? "",
-              last_name: r.user?.last_name ?? "",
-              language_code: r.lang === "en" ? "en" : "ru",
-            }),
-          );
-          window.location.hash = "map";
-          window.location.reload();
-          return;
-        }
-        if (r.status === "expired" || r.status === "not_found") {
-          clearSitePoll();
-          clearSitePollState();
-          closeTelegramLoginPopup();
-          setStartBtnsDisabled(false);
-          setHubStatusSimple(tloc.landingHubExpired);
-        }
-      } catch {
-        pollNetErrors += 1;
-        if (pollNetErrors >= 3 && !pollNetMsgShown) {
-          pollNetMsgShown = true;
-          setHubStatusSimple(tloc.landingHubPollNetworkError);
-        }
-      }
-    };
-    sitePollTimer = setInterval(tick, 2000);
-    tick();
-  };
-
-  startBtns.forEach((startBtn) => {
-    startBtn.addEventListener("click", async () => {
       const tloc = getStrings(lang);
-      clearSitePoll();
-      clearSitePollState();
       document.getElementById("hub-login")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      setStartBtnsDisabled(true);
-      if (statusEl) {
-        statusEl.hidden = false;
-        setHubStatusSimple(tloc.landingHubPrepare);
+      if (!meta.oidcConfigured) {
+        setHubStatus(tloc.landingHubErrorNotConfigured);
+        return;
       }
-
-      closeTelegramLoginPopup();
-      const popup = window.open("about:blank", TG_LOGIN_WIN, TG_LOGIN_FEATURES);
-      telegramLoginPopup = popup;
-
-      try {
-        const linkData = await fetchSiteLoginLink();
-        const loginToken = linkData?.loginToken;
-        const telegramLink = linkData?.telegramLink;
-        if (!loginToken || !telegramLink) {
-          throw new Error(tloc.errorLoad);
-        }
-        writeSitePollState({ loginToken, lang, startedAt: Date.now() });
-
-        if (telegramLoginPopup && !telegramLoginPopup.closed) {
-          try {
-            telegramLoginPopup.location.href = telegramLink;
-          } catch {
-            /* ignore */
-          }
-          try {
-            telegramLoginPopup.focus();
-          } catch {
-            /* ignore */
-          }
-          setHubStatusSimple(tloc.landingHubPolling);
-          beginSiteLoginPoll(loginToken, tloc);
-          return;
-        }
-
-        closeTelegramLoginPopup();
-        showHubStatusPopupBlockedWithButton(telegramLink, tloc);
-        beginSiteLoginPoll(loginToken, tloc);
-        setStartBtnsDisabled(false);
-      } catch (e) {
-        clearSitePoll();
-        clearSitePollState();
-        closeTelegramLoginPopup();
-        setStartBtnsDisabled(false);
-        if (statusEl) {
-          statusEl.hidden = false;
-          setHubStatusSimple(formatApiError(e, tloc.errorLoad));
-        }
-      }
+      window.location.href = loginUrl;
     });
   });
 
-  const pending = readSitePollState();
-  if (pending && pending.lang === lang && Date.now() - pending.startedAt < SITE_POLL_MAX_MS) {
+  const oidcErr = parseHubLoginErrorFromHash();
+  if (oidcErr) {
     document.getElementById("hub-login")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    setStartBtnsDisabled(true);
-    if (statusEl) {
-      statusEl.hidden = false;
-      setHubStatusSimple(t.landingHubPolling);
-    }
-    beginSiteLoginPoll(pending.loginToken, t);
-  } else if (pending) {
-    clearSitePollState();
+    setHubStatus(hubLoginErrorMessage(t, oidcErr));
+    window.location.hash = "hub-login";
   }
 }

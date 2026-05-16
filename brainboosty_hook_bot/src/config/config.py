@@ -99,9 +99,29 @@ class Settings(BaseSettings):
     WEBAPP_SITE_SESSION_SECRET: str = Field(
         default="",
         description=(
-            "Секрет подписи браузерных сессий (вход через Telegram Login Widget на сайте). "
+            "Секрет подписи браузерных сессий (Neural Map Hub в браузере) и OIDC state. "
             "Пусто — ключ выводится из BOT_TOKEN."
         ),
+    )
+
+    TELEGRAM_OIDC_CLIENT_ID: str = Field(
+        default="",
+        description="Client ID из BotFather → Bot Settings → Web Login (Telegram Login OIDC).",
+    )
+    TELEGRAM_OIDC_CLIENT_SECRET: str = Field(
+        default="",
+        description="Client Secret из BotFather → Web Login.",
+    )
+    TELEGRAM_OIDC_REDIRECT_URI: str = Field(
+        default="",
+        description=(
+            "Redirect URI для OIDC callback; должен быть в Allowed URLs у BotFather. "
+            "Пусто → {WEBAPP_PUBLIC_URL}/api/webapp/auth/oidc/callback"
+        ),
+    )
+    TELEGRAM_OIDC_SCOPES: str = Field(
+        default="openid profile",
+        description="Пробел-разделённые scope (openid обязателен).",
     )
 
     DAILY_HOOK_HOUR: int = Field(default=10, ge=0, le=23)
@@ -249,6 +269,24 @@ class Settings(BaseSettings):
         if not path.startswith("/"):
             path = f"/{path}"
         return f"{base}{path}"
+
+    @property
+    def telegram_oidc_redirect_uri(self) -> str:
+        explicit = (self.TELEGRAM_OIDC_REDIRECT_URI or "").strip().rstrip("/")
+        if explicit:
+            return explicit
+        base = (self.WEBAPP_PUBLIC_URL or "").strip().rstrip("/")
+        if not base:
+            return ""
+        return f"{base}/api/webapp/auth/oidc/callback"
+
+    @property
+    def telegram_oidc_scopes(self) -> str:
+        raw = (self.TELEGRAM_OIDC_SCOPES or "openid profile").strip()
+        parts = [p for p in raw.split() if p]
+        if "openid" not in parts:
+            parts.insert(0, "openid")
+        return " ".join(parts)
 
     @property
     def premium_channel_url(self) -> str:

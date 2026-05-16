@@ -1,4 +1,4 @@
-"""Подписанные токены для входа с сайта (браузер) после Telegram Login Widget."""
+"""Подписанные токены для входа с сайта (браузер) после Telegram Login OIDC."""
 
 from __future__ import annotations
 

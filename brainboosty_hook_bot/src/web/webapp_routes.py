@@ -7,7 +7,9 @@ from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
-from fastapi.responses import FileResponse, JSONResponse
+from urllib.parse import urlencode
+
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,15 +25,15 @@ from brainboosty_hook_bot.src.web.webapp_auth import (
     WebAppAuthError,
     tg_user_id_from_init,
     validate_init_data,
-    validate_telegram_login_widget_payload,
 )
 from brainboosty_hook_bot.src.web.exercise_service import fetch_exercise_for_user
-from brainboosty_hook_bot.src.web.site_login_challenge import (
-    CHALLENGE_TTL_SEC,
-    create_site_login_challenge,
-    poll_site_login_challenge,
+from brainboosty_hook_bot.src.web.site_session import verify_site_access_token
+from brainboosty_hook_bot.src.web.telegram_oidc import (
+    TelegramOidcError,
+    build_authorization_url,
+    complete_oidc_login,
+    oidc_configured,
 )
-from brainboosty_hook_bot.src.web.site_session import mint_site_access_token, verify_site_access_token
 from brainboosty_hook_bot.src.web.webapp_service import (
     cognitive_questions_payload,
     get_user_by_tg_id,
@@ -127,7 +129,9 @@ async def webapp_landing() -> dict[str, str | bool]:
     base = (settings.WEBAPP_PUBLIC_URL or "").strip().rstrip("/")
     hub_entry = f"{base}/#hub-login" if base else "/#hub-login"
     return {
-        "botUrl": f"https://t.me/{bot}?start=site",
+        "botUrl": f"https://t.me/{bot}?start=webapp",
+        "oidcLoginUrl": "/api/webapp/auth/oidc/start",
+        "oidcConfigured": oidc_configured(),
         "webappEntryUrl": f"https://t.me/{bot}?start=webapp",
         "botUsername": bot,
         "channelUrl": settings.premium_channel_url,
@@ -139,55 +143,70 @@ async def webapp_landing() -> dict[str, str | bool]:
     }
 
 
-@router.post("/auth/site")
-async def webapp_auth_site(
-    body: dict[str, Any],
-    session: Annotated[AsyncSession, Depends(get_session)],
-) -> JSONResponse:
-    """Вход с сайта: тело = объект из Telegram Login Widget (onTelegramAuth)."""
-    try:
-        tg_id = validate_telegram_login_widget_payload(body)
-    except WebAppAuthError as exc:
-        raise HTTPException(status_code=401, detail=exc.code) from exc
-    user = await get_user_by_tg_id(session, tg_id)
-    if user is None:
-        raise HTTPException(status_code=403, detail="not_registered")
-    lang = normalize_lang(user.locale or "ru")
-    token = mint_site_access_token(tg_id)
-    return JSONResponse(
+def _webapp_public_origin() -> str:
+    base = (settings.WEBAPP_PUBLIC_URL or "").strip().rstrip("/")
+    return base or ""
+
+
+def _oidc_error_redirect(code: str) -> RedirectResponse:
+    origin = _webapp_public_origin()
+    target = f"{origin}/#hub-login?error={code}" if origin else f"/#hub-login?error={code}"
+    return RedirectResponse(url=target, status_code=302)
+
+
+def _oidc_success_redirect(access: str, lang: str, hint: dict[str, str]) -> RedirectResponse:
+    fragment = urlencode(
         {
-            "accessToken": token,
+            "access_token": access,
             "lang": lang,
-            "user": {"first_name": user.first_name, "last_name": ""},
+            "first_name": hint.get("first_name", ""),
         }
     )
+    origin = _webapp_public_origin()
+    target = f"{origin}/#auth/callback?{fragment}" if origin else f"/#auth/callback?{fragment}"
+    return RedirectResponse(url=target, status_code=302)
 
 
-@router.post("/auth/site/link")
-async def webapp_auth_site_link(
+@router.get("/auth/oidc/config")
+async def webapp_oidc_config() -> dict[str, str | bool]:
+    return {
+        "configured": oidc_configured(),
+        "loginUrl": "/api/webapp/auth/oidc/start" if oidc_configured() else "",
+    }
+
+
+@router.get("/auth/oidc/start")
+async def webapp_oidc_start(
+    return_to: str = Query("", max_length=200),
+) -> RedirectResponse:
+    """Редирект на oauth.telegram.org (Authorization Code + PKCE)."""
+    try:
+        url = build_authorization_url(return_path=return_to)
+    except TelegramOidcError as exc:
+        raise HTTPException(status_code=503, detail=exc.code) from exc
+    return RedirectResponse(url=url, status_code=302)
+
+
+@router.get("/auth/oidc/callback")
+async def webapp_oidc_callback(
     session: Annotated[AsyncSession, Depends(get_session)],
-) -> JSONResponse:
-    """Создать одноразовый токен: пользователь открывает telegramLink и жмёт Start в боте."""
-    login_token, telegram_link = await create_site_login_challenge(session)
-    await session.commit()
-    return JSONResponse(
-        {
-            "loginToken": login_token,
-            "telegramLink": telegram_link,
-            "expiresInSec": CHALLENGE_TTL_SEC,
-        }
-    )
-
-
-@router.get("/auth/site/poll")
-async def webapp_auth_site_poll(
-    session: Annotated[AsyncSession, Depends(get_session)],
-    token: Annotated[str, Query(min_length=1)],
-) -> JSONResponse:
-    raw = token.strip().lower()
-    data = await poll_site_login_challenge(session, raw)
-    await session.commit()
-    return JSONResponse(data)
+    code: str | None = None,
+    state: str | None = None,
+    error: str | None = None,
+    error_description: str | None = None,
+) -> RedirectResponse:
+    """Callback после согласия пользователя в Telegram OIDC."""
+    if error:
+        logger.warning("Telegram OIDC denied: %s (%s)", error, error_description or "")
+        return _oidc_error_redirect(error)
+    if not code or not state:
+        return _oidc_error_redirect("missing_code")
+    try:
+        access, lang, hint = await complete_oidc_login(session, code, state)
+    except TelegramOidcError as exc:
+        logger.info("Telegram OIDC login failed: %s", exc.code)
+        return _oidc_error_redirect(exc.code)
+    return _oidc_success_redirect(access, lang, hint)
 
 
 @router.get("/landing/photo")

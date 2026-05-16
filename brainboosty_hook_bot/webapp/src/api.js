@@ -4,9 +4,6 @@ import { computeNeuroScore } from "./data/demo-profile.js";
 export const SITE_SESSION_STORAGE_KEY = "bb-site-session";
 export const SITE_USER_STORAGE_KEY = "bb-site-user";
 
-/** Состояние поллинга входа с сайта (переживает переход в t.me в той же вкладке). */
-export const SITE_LOGIN_POLL_STATE_KEY = "bb-site-login-poll";
-
 export function formatApiError(err, fallback = "") {
   const d = err?.detail;
   if (typeof d === "string" && d.trim()) return d.trim();
@@ -133,18 +130,7 @@ export async function fetchExercise(ctx, exerciseId) {
   });
 }
 
-/** Одноразовая ссылка в бот (deep-link /start site_<token>). */
-export async function fetchSiteLoginLink() {
-  return apiFetch("/auth/site/link", {
-    initData: "",
-    siteToken: "",
-    method: "POST",
-  });
-}
-
-export async function fetchSiteLoginPoll(loginToken) {
-  return apiFetch(`/auth/site/poll?token=${encodeURIComponent(loginToken)}`, {
-    initData: "",
-    siteToken: "",
-  });
+/** Публичная конфигурация Telegram Login OIDC. */
+export async function fetchOidcConfig() {
+  return apiFetch("/auth/oidc/config", { initData: "", siteToken: "" });
 }
