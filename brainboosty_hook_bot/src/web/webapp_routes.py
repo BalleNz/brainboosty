@@ -64,12 +64,13 @@ def webapp_dist_dir() -> Path:
 def mount_webapp_static(app) -> None:
     dist = webapp_dist_dir()
     if dist.is_dir() and (dist / "index.html").is_file():
+        # html=True: SPA fallback — /test, /history, /access → index.html (History API router)
         app.mount(
             "/",
             StaticFiles(directory=str(dist), html=True),
             name="brainboosty_webapp",
         )
-        logger.info("Web App SPA mounted at / from %s", dist)
+        logger.info("Web App SPA mounted at / from %s (clean URLs)", dist)
     else:
         logger.warning(
             "Web App dist not found at %s — run: cd webapp && npm install && npm run build",
@@ -131,7 +132,7 @@ async def webapp_landing() -> dict[str, str | bool]:
     """Публичные ссылки для лендинга (без Telegram initData)."""
     bot = settings.BOT_USERNAME.strip().lstrip("@")
     base = (settings.WEBAPP_PUBLIC_URL or "").strip().rstrip("/")
-    hub_entry = f"{base}/#hub-login" if base else "/#hub-login"
+    hub_entry = f"{base}/hub-login" if base else "/hub-login"
     return {
         "botUrl": f"https://t.me/{bot}?start=webapp",
         "oidcLoginUrl": "/api/webapp/auth/oidc/start",

@@ -1,6 +1,6 @@
 import { fetchBrainProfile, SITE_SESSION_STORAGE_KEY, SITE_USER_STORAGE_KEY } from "./api.js";
 import { getStrings } from "./i18n/index.js";
-import { getRoute, navigate, onRouteChange, startRouter } from "./router.js";
+import { ROUTE, getRoute, navigate, onRouteChange, replaceRoute, startRouter } from "./router.js";
 import { initTelegramWebApp, hapticLight } from "./telegram.js";
 import { renderBrainMap } from "./views/brain-map.js";
 import { renderExerciseDetail } from "./views/exercise-detail.js";
@@ -157,7 +157,7 @@ function setupPremiumFab(profile) {
   btn.textContent = t.premiumCta;
   btn.addEventListener("click", () => {
     hapticLight();
-    navigate("premium");
+    navigate(ROUTE.access);
   });
   document.body.appendChild(btn);
 }
@@ -174,7 +174,7 @@ function setupNav(lang) {
     <button type="button" class="bb-nav__btn" data-route="map">${t.navMap}</button>
     <button type="button" class="bb-nav__btn" data-route="history">${t.navHistory}</button>
     <button type="button" class="bb-nav__btn" data-route="test">${t.navTest}</button>
-    <button type="button" class="bb-nav__btn" data-route="premium">${t.navPremium}</button>
+    <button type="button" class="bb-nav__btn" data-route="access">${t.navPremium}</button>
     ${logoutBtn}
   `;
   nav.querySelectorAll(".bb-nav__btn[data-route]").forEach((btn) => {
@@ -220,7 +220,7 @@ async function renderRoute(route) {
   setupNav(appCtx.lang);
   if (nav) nav.hidden = isExercise;
 
-  if (route.name === "premium") {
+  if (route.name === ROUTE.access) {
     renderPremium(root, profileCache);
     return;
   }
@@ -280,10 +280,10 @@ export async function bootApp(ctx) {
   });
   startRouter();
 
-  const route = getRoute();
-  if (!window.location.hash) {
-    navigate("map");
-  } else {
-    await renderRoute(route);
+  if (window.location.pathname.replace(/\/+$/, "") === "/hub-login") {
+    replaceRoute(ROUTE.map);
+    return;
   }
+
+  await renderRoute(getRoute());
 }

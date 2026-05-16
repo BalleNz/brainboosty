@@ -4,6 +4,7 @@ import { SITE_SESSION_STORAGE_KEY, SITE_USER_STORAGE_KEY } from "./api.js";
 import { bootApp } from "./app.js";
 import { bootLanding } from "./views/landing.js";
 import { initTelegramWebApp } from "./telegram.js";
+import { isAppDeepLinkWithoutSession, migrateLegacyUrl } from "./router.js";
 
 function isLikelyTelegramWebAppContext() {
   try {
@@ -69,10 +70,7 @@ async function consumeOidcHandoffFromQuery() {
         language_code: data.user?.language_code === "en" ? "en" : lang,
       }),
     );
-    const path = window.location.pathname || "/";
-    window.history.replaceState(null, "", path);
-    window.location.hash = "map";
-    window.location.reload();
+    window.location.replace("/");
     return true;
   } catch {
     return false;
@@ -103,7 +101,7 @@ function consumeOidcAuthCallback() {
     return false;
   }
 
-  window.location.replace("/#map");
+  window.location.replace("/");
   return true;
 }
 
@@ -118,10 +116,17 @@ function readSiteUserHint() {
 }
 
 async function bootstrap() {
+  migrateLegacyUrl();
+
   if (await consumeOidcHandoffFromQuery()) {
     return;
   }
   if (consumeOidcAuthCallback()) {
+    return;
+  }
+
+  if (isAppDeepLinkWithoutSession()) {
+    window.location.replace("/");
     return;
   }
 

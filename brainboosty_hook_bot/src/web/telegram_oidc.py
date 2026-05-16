@@ -262,7 +262,7 @@ def render_oidc_finish_page(*, origin: str, handoff: str, error: str = "") -> HT
     надёжнее открывают страницу с коротким ?oidc_handoff=.
     """
     if error:
-        target = f"{origin}/#hub-login?error={error}" if origin else f"/#hub-login?error={error}"
+        target = f"{origin}/hub-login?error={error}" if origin else f"/hub-login?error={error}"
         safe_target = html_module.escape(target)
         body = f"""<!DOCTYPE html>
 <html lang="ru"><head>

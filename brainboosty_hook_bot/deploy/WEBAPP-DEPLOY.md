@@ -19,6 +19,19 @@ chmod +x scripts/dev-up.sh
 6. **Neural Map Hub в браузере:** вход через [Telegram Login OIDC](https://core.telegram.org/bots/telegram-login). В [@BotFather](https://t.me/botfather) → Bot Settings → Web Login добавьте Allowed URLs (сайт и `…/api/webapp/auth/oidc/callback`), сохраните Client ID и Secret в `.env` (`TELEGRAM_OIDC_CLIENT_ID`, `TELEGRAM_OIDC_CLIENT_SECRET`).
 7. Tribute → вебхук `https://brainboosty.ai/tribute/webhook`, `TRIBUTE_WEBHOOK_PORT=0`.
 
+## Clean URLs (маршруты SPA)
+
+| URL | Экран |
+|-----|--------|
+| `/` | Neural Map (карта) |
+| `/test` | Когнитивный тест |
+| `/history` | История |
+| `/access` | Оплата / тарифы |
+| `/exercise/:id` | Упражнение |
+| `/hub-login` | Лендинг, блок входа |
+
+Старые `/#map`, `/#test`, `/premium` редиректятся автоматически. FastAPI/Caddy отдают `index.html` для неизвестных GET-путей (`StaticFiles(html=True)`).
+
 Повторный деплой без пересборки фронта:
 
 ```bash

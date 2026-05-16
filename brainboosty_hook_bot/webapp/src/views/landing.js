@@ -38,11 +38,21 @@ function hubLoginErrorMessage(t, code) {
   return t.landingHubErrorOidc;
 }
 
-function parseHubLoginErrorFromHash() {
-  const raw = (window.location.hash || "").replace(/^#/, "");
-  if (!raw.startsWith("hub-login")) return null;
-  const q = raw.includes("?") ? raw.slice(raw.indexOf("?") + 1) : "";
+function parseHubLoginError() {
+  const path = (window.location.pathname || "").replace(/\/+$/, "") || "/";
+  if (path !== "/hub-login" && path !== "/") return null;
+  if (path === "/hub-login") {
+    return new URLSearchParams(window.location.search).get("error");
+  }
+  const hash = (window.location.hash || "").replace(/^#/, "");
+  if (!hash.startsWith("hub-login")) return null;
+  const q = hash.includes("?") ? hash.slice(hash.indexOf("?") + 1) : "";
   return new URLSearchParams(q).get("error");
+}
+
+function shouldScrollToHubLogin() {
+  const path = (window.location.pathname || "").replace(/\/+$/, "") || "/";
+  return path === "/hub-login";
 }
 
 function showLanguageGate(onChoose) {
@@ -135,7 +145,7 @@ async function runLanding(lang) {
     channelUrl: "https://t.me/androgenautist",
     hasAuthorPhoto: false,
     hasChannelAvatar: false,
-    neuralMapHubUrl: "/#hub-login",
+    neuralMapHubUrl: "/hub-login",
     hubHostDisplay: "neuralmap.brainboosty.app",
     oidcLoginUrl: "/api/webapp/auth/oidc/start",
     oidcConfigured: false,
@@ -285,10 +295,14 @@ async function runLanding(lang) {
     });
   });
 
-  const oidcErr = parseHubLoginErrorFromHash();
+  const oidcErr = parseHubLoginError();
   if (oidcErr) {
     document.getElementById("hub-login")?.scrollIntoView({ behavior: "smooth", block: "start" });
     setHubStatus(hubLoginErrorMessage(t, oidcErr));
-    window.location.hash = "hub-login";
+    if (shouldScrollToHubLogin() && window.location.search) {
+      history.replaceState(null, "", "/hub-login");
+    }
+  } else if (shouldScrollToHubLogin()) {
+    document.getElementById("hub-login")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 }
