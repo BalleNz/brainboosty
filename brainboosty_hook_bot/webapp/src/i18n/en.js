@@ -63,7 +63,7 @@ export default {
   navTest: "Test",
   navPremium: "Access",
   navLogout: "Log out",
-  appBrandName: "BrainBoosty",
+  appBrandName: "brainboosty",
   appHeaderTitle: "Neural Map",
   loading: "Loading your neuro profile…",
   computing: "Computing your brain map…",

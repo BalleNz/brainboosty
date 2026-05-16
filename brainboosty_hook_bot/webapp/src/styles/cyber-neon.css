@@ -1079,25 +1079,52 @@ body.bb-app--telegram .bb-root.bb-root--spa > * {
 .bb-wordmark {
   display: block;
   font-family: var(--bb-font-display);
-  font-weight: 800;
-  font-size: clamp(1.08rem, 4vw, 1.48rem);
-  letter-spacing: -0.05em;
+  font-weight: 600;
+  font-size: clamp(1.2rem, 5vw, 1.65rem);
+  letter-spacing: -0.04em;
   line-height: 1;
-  background: linear-gradient(
-    118deg,
-    #ecfeff 0%,
-    #22d3ee 14%,
-    #67e8f9 28%,
-    #a5b4fc 48%,
-    #c084fc 64%,
-    #e879f9 80%,
-    #d946ef 92%,
-    #9333ea 100%
-  );
+  text-transform: lowercase;
+  background: linear-gradient(105deg, #00f0ff 0%, #22d3ee 28%, #a855f7 62%, #c026d3 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 16px rgba(34, 211, 238, 0.55)) drop-shadow(0 0 36px rgba(192, 132, 252, 0.4)) drop-shadow(0 3px 2px rgba(0, 0, 0, 0.45));
+  filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.5)) drop-shadow(0 0 24px rgba(192, 38, 211, 0.38));
+}
+
+/* Карта мозга: плавающий wordmark без «стеклянной» плашки, уезжает при скролле вниз */
+.bb-header.bb-app-top-nav.bb-header--map-wordmark {
+  left: 0;
+  right: 0;
+  max-width: none;
+  margin: 0;
+  padding: calc(12px + var(--bb-safe-top)) 20px 10px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  pointer-events: none;
+  transform: translateY(0);
+  opacity: 1;
+  transition:
+    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.32s ease;
+}
+
+.bb-header.bb-app-top-nav.bb-header--map-wordmark.bb-header--scroll-hidden {
+  transform: translateY(calc(-100% - var(--bb-safe-top)));
+  opacity: 0;
+}
+
+.bb-header.bb-app-top-nav.bb-header--map-wordmark .bb-header__brand {
+  pointer-events: none;
+}
+
+.bb-lang-gate__title.bb-wordmark {
+  margin: 0 auto 0.35rem;
+  font-size: clamp(1.35rem, 6vw, 1.75rem);
+  text-align: center;
 }
 
 .bb-header.bb-app-top-nav .bb-header__tagline {
@@ -2534,6 +2561,7 @@ body.bb-lang-gate-open {
   .bb-section,
   .pdf-bar-gradient,
   .bb-header:not(.bb-app-top-nav),
+  .bb-header.bb-header--map-wordmark,
   .bb-landing-cta-primary,
   body.bb-app--telegram .bb-nav__btn,
   .bb-lang-gate__btn,

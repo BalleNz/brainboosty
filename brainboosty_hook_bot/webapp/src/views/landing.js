@@ -57,7 +57,7 @@ function showLanguageGate(onChoose) {
   gate.innerHTML = `
     <div class="bb-lang-gate__backdrop" aria-hidden="true"></div>
     <div class="bb-lang-gate__dialog glass">
-      <p id="bb-lang-gate-title" class="bb-lang-gate__title">BrainBoosty</p>
+      <p id="bb-lang-gate-title" class="bb-lang-gate__title bb-wordmark" translate="no">brainboosty</p>
       <p class="bb-lang-gate__sub">Выберите язык · Choose language</p>
       <div class="bb-lang-gate__choices">
         <button type="button" class="bb-lang-gate__btn" data-lang="ru">
@@ -220,7 +220,7 @@ async function runLanding(lang) {
       </section>
 
       <footer class="bb-landing-footer">
-        <span>BrainBoosty · Neural Map</span>
+        <span>Neural Map</span>
       </footer>
     </div>
   `;

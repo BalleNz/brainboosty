@@ -10,9 +10,53 @@ import { renderTest } from "./views/test.js";
 
 let appCtx = null;
 let profileCache = null;
+let mapWordmarkScrollCleanup = null;
+
+function teardownMapWordmarkScroll() {
+  if (mapWordmarkScrollCleanup) {
+    mapWordmarkScrollCleanup();
+    mapWordmarkScrollCleanup = null;
+  }
+}
+
+function setupMapWordmarkScroll() {
+  teardownMapWordmarkScroll();
+  const header = document.getElementById("bb-header");
+  if (!header) return;
+
+  const onScroll = () => {
+    const y = window.scrollY || document.documentElement.scrollTop || 0;
+    header.classList.toggle("bb-header--scroll-hidden", y > 56);
+  };
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+  mapWordmarkScrollCleanup = () => {
+    window.removeEventListener("scroll", onScroll);
+    header.classList.remove("bb-header--scroll-hidden");
+  };
+}
+
+/** Заголовок brainboosty — только на маршруте «карта», на лендинге и остальных экранах скрыт. */
+function syncAppHeader(routeName) {
+  const header = document.getElementById("bb-header");
+  if (!header) return;
+
+  const showOnMap = routeName === "map" && !document.body.classList.contains("bb-app--needs-bot");
+  if (showOnMap) {
+    header.hidden = false;
+    const wm = document.getElementById("bb-header-wordmark");
+    if (wm) wm.textContent = "brainboosty";
+    setupMapWordmarkScroll();
+  } else {
+    header.hidden = true;
+    teardownMapWordmarkScroll();
+  }
+}
 
 function applyQuestionnaireGate(root) {
   document.body.classList.add("bb-app--needs-bot");
+  syncAppHeader("");
   document.querySelector(".bb-premium-fab")?.remove();
   const nav = document.getElementById("bb-nav");
   if (nav) {
@@ -96,8 +140,6 @@ function applyAppLang(lang) {
   appCtx.lang = next;
   document.documentElement.lang = next;
   const t = getStrings(next);
-  const wordmark = document.getElementById("bb-header-wordmark");
-  if (wordmark) wordmark.textContent = t.appBrandName;
   setupNav(next);
 }
 
@@ -156,6 +198,8 @@ function setupNav(lang) {
 async function renderRoute(route) {
   const root = document.getElementById("bb-root");
   if (!root || !appCtx) return;
+
+  syncAppHeader(route.name);
 
   const nav = document.getElementById("bb-nav");
   const isExercise = route.name === "exercise";
@@ -230,10 +274,6 @@ export async function bootApp(ctx) {
   if (!root) return;
 
   root.classList.add("bb-root--spa");
-
-  const t0 = getStrings(appCtx.lang);
-  const headerWordmark = document.getElementById("bb-header-wordmark");
-  if (headerWordmark) headerWordmark.textContent = t0.appBrandName;
 
   onRouteChange((route) => {
     renderRoute(route).catch(() => {});

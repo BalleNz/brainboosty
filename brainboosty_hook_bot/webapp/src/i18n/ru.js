@@ -63,7 +63,7 @@ export default {
   navTest: "Тест",
   navPremium: "Доступ",
   navLogout: "Выйти",
-  appBrandName: "BrainBoosty",
+  appBrandName: "brainboosty",
   appHeaderTitle: "Neural Map",
   loading: "Загружаем нейропрофиль…",
   computing: "Считаем твою карту мозга…",
