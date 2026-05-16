@@ -265,7 +265,7 @@ export async function bootApp(ctx) {
   };
   profileCache = null;
 
-  document.body.classList.add("bb-app--telegram");
+  document.body.classList.add("bb-app--telegram", "bb-theme-lux");
   if (appCtx.siteToken) {
     document.body.classList.add("bb-app--site");
   }

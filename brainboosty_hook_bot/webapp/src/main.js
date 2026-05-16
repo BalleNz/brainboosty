@@ -1,8 +1,9 @@
+import "./styles/tailwind.css";
 import "./styles/cyber-neon.css";
 import "./styles/exercise-lux.css";
 import { SITE_SESSION_STORAGE_KEY, SITE_USER_STORAGE_KEY } from "./api.js";
 import { bootApp } from "./app.js";
-import { bootLanding } from "./views/landing.js";
+import { mountReactLanding } from "./landing/mountLanding.jsx";
 import { initTelegramWebApp } from "./telegram.js";
 import { isAppDeepLinkWithoutSession, migrateLegacyUrl } from "./router.js";
 
@@ -161,7 +162,7 @@ async function bootstrap() {
         siteToken,
       });
     } else {
-      bootLanding();
+      mountReactLanding();
     }
   }
 }

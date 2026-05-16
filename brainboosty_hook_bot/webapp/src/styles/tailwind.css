@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bb-neon-pink: #ff1493;
+    --bb-neon-pink-hot: #ff00aa;
+    --bb-neon-cyan: #00f0ff;
+    --bb-neon-gold: #ffd700;
+    --bb-void: #0a0a0a;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body.bb-landing-active {
+    @apply bg-void text-white antialiased;
+    background-color: var(--bb-void);
+    background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255, 20, 147, 0.18), transparent 55%),
+      radial-gradient(ellipse 60% 40% at 90% 80%, rgba(120, 40, 200, 0.14), transparent 50%);
+  }
+}
+
+@layer components {
+  .lux-glass {
+    @apply rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .lux-btn-primary {
+    @apply inline-flex items-center justify-center rounded-full px-8 py-3.5 font-display font-semibold text-white transition;
+    background: linear-gradient(105deg, #ff1493 0%, #ff00aa 45%, #c026d3 100%);
+    box-shadow: 0 0 28px rgba(255, 20, 147, 0.55), 0 0 48px rgba(255, 0, 170, 0.2);
+  }
+
+  .lux-btn-primary:hover {
+    box-shadow: 0 0 36px rgba(255, 20, 147, 0.75), 0 0 64px rgba(255, 0, 170, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .lux-btn-ghost {
+    @apply inline-flex items-center justify-center rounded-full border border-neon-cyan/40 px-6 py-3 font-medium text-neon-cyan transition;
+    box-shadow: 0 0 16px rgba(0, 240, 255, 0.2);
+  }
+
+  .lux-btn-ghost:hover {
+    @apply border-neon-cyan/70 bg-neon-cyan/10;
+  }
+
+  .lux-heading {
+    @apply font-display font-bold tracking-tight;
+    text-shadow: 0 0 32px rgba(255, 20, 147, 0.35);
+  }
+
+  .lux-wordmark {
+    @apply font-display text-xl font-semibold lowercase tracking-tight;
+    background: linear-gradient(105deg, #00f0ff 0%, #ff1493 55%, #c026d3 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 12px rgba(255, 20, 147, 0.45));
+  }
+}

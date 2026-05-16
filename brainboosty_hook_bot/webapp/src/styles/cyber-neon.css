@@ -143,6 +143,22 @@
   --bb-tracking-ui: 0.01em;
 }
 
+/* Premium lux palette (landing + Neural Map Hub) */
+body.bb-theme-lux {
+  --bb-cyan: #00f0ff;
+  --bb-violet: #c026d3;
+  --bb-purple: #9333ea;
+  --bb-fuchsia: #ff1493;
+  --bb-bg-0: #0a0a0a;
+  --bb-bg-1: #0c0a10;
+  --bb-bg-2: #120818;
+  --bb-bg-3: #140a1a;
+  --bb-tg-bg: var(--bb-bg-0);
+  background-color: var(--bb-bg-0);
+  background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255, 20, 147, 0.14), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 90% 80%, rgba(120, 40, 200, 0.12), transparent 50%);
+}
+
 *,
 *::before,
 *::after {

@@ -1,5 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 const webappRoot = fileURLToPath(new URL(".", import.meta.url));
@@ -7,6 +8,7 @@ const packageAssets = path.resolve(webappRoot, "../assets");
 
 /** @type {import('vite').UserConfig} */
 export default defineConfig({
+  plugins: [react()],
   appType: "spa",
   base: "/",
   root: webappRoot,
