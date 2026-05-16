@@ -30,9 +30,13 @@ from brainboosty_hook_bot.src.web.exercise_service import fetch_exercise_for_use
 from brainboosty_hook_bot.src.web.site_session import verify_site_access_token
 from brainboosty_hook_bot.src.web.telegram_oidc import (
     TelegramOidcError,
+    _public_origin_from_request,
     build_authorization_url,
     complete_oidc_login,
+    mint_oidc_handoff,
     oidc_configured,
+    redeem_oidc_handoff,
+    render_oidc_finish_page,
 )
 from brainboosty_hook_bot.src.web.webapp_service import (
     cognitive_questions_payload,
@@ -143,28 +147,6 @@ async def webapp_landing() -> dict[str, str | bool]:
     }
 
 
-def _webapp_public_origin() -> str:
-    base = (settings.WEBAPP_PUBLIC_URL or "").strip().rstrip("/")
-    return base or ""
-
-
-def _oidc_error_redirect(code: str) -> RedirectResponse:
-    origin = _webapp_public_origin()
-    target = f"{origin}/#hub-login?error={code}" if origin else f"/#hub-login?error={code}"
-    return RedirectResponse(url=target, status_code=302)
-
-
-def _oidc_success_redirect(access: str, lang: str, hint: dict[str, str]) -> RedirectResponse:
-    fragment = urlencode(
-        {
-            "access_token": access,
-            "lang": lang,
-            "first_name": hint.get("first_name", ""),
-        }
-    )
-    origin = _webapp_public_origin()
-    target = f"{origin}/#auth/callback?{fragment}" if origin else f"/#auth/callback?{fragment}"
-    return RedirectResponse(url=target, status_code=302)
 
 
 @router.get("/auth/oidc/config")
@@ -187,26 +169,61 @@ async def webapp_oidc_start(
     return RedirectResponse(url=url, status_code=302)
 
 
+@router.get("/auth/oidc/handoff")
+async def webapp_oidc_handoff(
+    oidc_handoff: Annotated[str, Query(min_length=8)],
+) -> JSONResponse:
+    """Обмен короткого oidc_handoff (с главной после callback) на Bearer-токен."""
+    row = redeem_oidc_handoff(oidc_handoff)
+    if row is None:
+        raise HTTPException(status_code=400, detail="invalid_handoff")
+    access, lang, hint = row
+    return JSONResponse(
+        {
+            "accessToken": access,
+            "lang": lang,
+            "user": {
+                "first_name": hint.get("first_name", ""),
+                "last_name": hint.get("last_name", ""),
+                "language_code": hint.get("language_code", "ru"),
+            },
+        }
+    )
+
+
 @router.get("/auth/oidc/callback")
 async def webapp_oidc_callback(
+    request: Request,
     session: Annotated[AsyncSession, Depends(get_session)],
     code: str | None = None,
     state: str | None = None,
     error: str | None = None,
     error_description: str | None = None,
-) -> RedirectResponse:
+):
     """Callback после согласия пользователя в Telegram OIDC."""
+    origin = _public_origin_from_request(request)
+    logger.info(
+        "OIDC callback host=%s code=%s state=%s error=%s",
+        origin or "-",
+        "yes" if code else "no",
+        "yes" if state else "no",
+        error or "-",
+    )
     if error:
         logger.warning("Telegram OIDC denied: %s (%s)", error, error_description or "")
-        return _oidc_error_redirect(error)
+        return render_oidc_finish_page(origin=origin, handoff="", error=error)
     if not code or not state:
-        return _oidc_error_redirect("missing_code")
+        return render_oidc_finish_page(origin=origin, handoff="", error="missing_code")
     try:
         access, lang, hint = await complete_oidc_login(session, code, state)
+        handoff = mint_oidc_handoff(access, lang, hint)
+        return render_oidc_finish_page(origin=origin, handoff=handoff)
     except TelegramOidcError as exc:
         logger.info("Telegram OIDC login failed: %s", exc.code)
-        return _oidc_error_redirect(exc.code)
-    return _oidc_success_redirect(access, lang, hint)
+        return render_oidc_finish_page(origin=origin, handoff="", error=exc.code)
+    except Exception:
+        logger.exception("Telegram OIDC callback unexpected error")
+        return render_oidc_finish_page(origin=origin, handoff="", error="token_exchange_failed")
 
 
 @router.get("/landing/photo")

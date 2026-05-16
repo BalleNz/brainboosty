@@ -272,6 +272,7 @@ class Settings(BaseSettings):
 
     @property
     def telegram_oidc_redirect_uri(self) -> str:
+        """Без слэша на конце — Telegram сравнивает redirect_uri строго."""
         explicit = (self.TELEGRAM_OIDC_REDIRECT_URI or "").strip().rstrip("/")
         if explicit:
             return explicit

@@ -44,6 +44,41 @@ function getSiteToken() {
   }
 }
 
+async function consumeOidcHandoffFromQuery() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get("oidc_handoff")?.trim();
+  if (!code) return false;
+
+  try {
+    const res = await fetch(
+      `/api/webapp/auth/oidc/handoff?oidc_handoff=${encodeURIComponent(code)}`,
+      { cache: "no-store" },
+    );
+    if (!res.ok) return false;
+    const data = await res.json();
+    const token = data?.accessToken?.trim();
+    if (!token) return false;
+
+    const lang = data.lang === "en" ? "en" : "ru";
+    localStorage.setItem(SITE_SESSION_STORAGE_KEY, token);
+    localStorage.setItem(
+      SITE_USER_STORAGE_KEY,
+      JSON.stringify({
+        first_name: data.user?.first_name ?? "",
+        last_name: data.user?.last_name ?? "",
+        language_code: data.user?.language_code === "en" ? "en" : lang,
+      }),
+    );
+    const path = window.location.pathname || "/";
+    window.history.replaceState(null, "", path);
+    window.location.hash = "map";
+    window.location.reload();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function consumeOidcAuthCallback() {
   const raw = (window.location.hash || "").replace(/^#/, "");
   if (!raw.startsWith("auth/callback")) return false;
@@ -83,6 +118,9 @@ function readSiteUserHint() {
 }
 
 async function bootstrap() {
+  if (await consumeOidcHandoffFromQuery()) {
+    return;
+  }
   if (consumeOidcAuthCallback()) {
     return;
   }
