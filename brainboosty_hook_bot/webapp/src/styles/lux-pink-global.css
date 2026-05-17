@@ -265,15 +265,27 @@ body {
 }
 
 .bb-masked-logo-root--hero {
-  aspect-ratio: 1;
   max-height: min(72vw, 320px);
-  width: min(100%, 320px);
+  width: auto;
+  max-width: min(100%, 320px);
+  overflow: visible;
+  border: none;
+  outline: none;
+  box-shadow: none;
 }
 
 .bb-masked-logo-root--hero .bb-masked-logo-canvas,
+.bb-masked-logo-root--hero .bb-masked-logo-poster,
 .bb-masked-logo-root--hero .bb-masked-logo-fallback {
   max-height: min(72vw, 320px);
-  width: 100%;
+  width: auto;
+  max-width: min(100%, 320px);
+  margin-left: auto;
+  margin-right: auto;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
   filter: drop-shadow(0 0 22px rgba(255, 20, 147, 0.65)) drop-shadow(0 0 44px rgba(255, 0, 170, 0.35));
   transition: filter 0.35s ease;
 }
@@ -295,13 +307,15 @@ body {
 
 .bb-hero-video-hit:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(255, 20, 147, 0.65), 0 0 32px rgba(255, 20, 147, 0.35);
-  border-radius: 1rem;
+  box-shadow: none;
 }
 
 .bb-hero-video-stage {
-  aspect-ratio: 1;
   max-height: min(72vw, 320px);
+  border: none;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
 }
 
 .bb-hero-video {
