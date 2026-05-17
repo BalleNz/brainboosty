@@ -1,15 +1,35 @@
+import { useEffect, useRef } from "react";
+import { mountMaskedBrandLogo, prefersReducedMotion } from "../lib/masked-brand-video.js";
 import { BRAND_LOGO_SRC, BRAND_NAME } from "../data/brand.js";
 
-/** Логотип brainboosty (PNG) — React */
-export function BrandLogo({ className = "bb-brand-logo", ...props }) {
+/**
+ * Анимированный логотип (color + alpha → canvas), без статичного PNG.
+ */
+export function BrandLogo({ className = "", variant = "cover", ...props }) {
+  const rootRef = useRef(null);
+  const reduced = prefersReducedMotion();
+
+  useEffect(() => {
+    if (!rootRef.current || reduced) return undefined;
+    return mountMaskedBrandLogo(rootRef.current, { variant });
+  }, [variant, reduced]);
+
+  if (reduced) {
+    return (
+      <img
+        src={BRAND_LOGO_SRC}
+        alt={BRAND_NAME}
+        className={`bb-masked-logo-fallback ${className}`.trim()}
+        decoding="async"
+        {...props}
+      />
+    );
+  }
+
   return (
-    <img
-      src={BRAND_LOGO_SRC}
-      alt={BRAND_NAME}
-      className={className}
-      width={200}
-      height={56}
-      decoding="async"
+    <div
+      ref={rootRef}
+      className={`bb-masked-logo-root bb-masked-logo-root--${variant} ${className}`.trim()}
       {...props}
     />
   );

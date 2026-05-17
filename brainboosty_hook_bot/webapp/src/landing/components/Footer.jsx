@@ -4,7 +4,7 @@ export function Footer({ lang, meta }) {
   const isRu = lang === "ru";
   return (
     <footer className="border-t border-white/10 px-5 py-12 text-center text-sm text-white/50">
-      <BrandLogo className="bb-brand-logo bb-brand-logo--footer mx-auto" />
+      <BrandLogo variant="footer" className="mx-auto" />
       <p className="mt-3">{isRu ? "Образовательная модель · не медицинский диагноз" : "Educational model · not medical advice"}</p>
       {meta?.channelUrl && (
         <a

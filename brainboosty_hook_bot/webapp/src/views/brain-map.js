@@ -1,6 +1,7 @@
 import { openBrainZoneDrawer } from "../components/brain-zone-drawer.js";
 import { coverSectionHtml } from "../components/cover.js";
 import { regionCardHtml } from "../components/region-card.js";
+import { mountMaskedLogosIn } from "../lib/masked-brand-video.js";
 import { REGION_KEYS } from "../data/regions.js";
 import { getStrings } from "../i18n/index.js";
 import { hapticLight } from "../telegram.js";
@@ -30,6 +31,7 @@ export function renderBrainMap(root, profile, route) {
   ];
 
   root.innerHTML = sections.join("\n");
+  mountMaskedLogosIn(root);
   setupRevealAnimations(root);
   animateNeuroScore(root);
   animateBars(root);

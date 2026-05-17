@@ -62,7 +62,8 @@
   pointer-events: none;
 }
 
-.ex-lux__brand .bb-brand-logo {
+.ex-lux__brand .bb-masked-logo-root,
+.ex-lux__brand .bb-masked-logo-mount {
   max-height: 28px;
 }
 

@@ -2,7 +2,8 @@
  * Premium exercise detail (private channel). Vanilla accordions — no React.
  */
 
-import { brandLogoHtml } from "../components/brand-logo-html.js";
+import { maskedLogoMountHtml } from "../components/brand-logo-html.js";
+import { mountMaskedLogosIn } from "../lib/masked-brand-video.js";
 import { fetchExercise } from "../api.js";
 import { getStrings } from "../i18n/index.js";
 import { navigate } from "../router.js";
@@ -68,7 +69,7 @@ export async function renderExerciseDetail(root, ctx, profile, exerciseId) {
         <button type="button" class="ex-lux__back" id="ex-back" aria-label="${esc(t.exerciseBackAria)}">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg>
         </button>
-        <div class="ex-lux__brand">${brandLogoHtml("bb-brand-logo bb-brand-logo--header")}</div>
+        <div class="ex-lux__brand">${maskedLogoMountHtml("exercise")}</div>
       </header>
       <div class="ex-lux__scroll">
         <div class="ex-lux__inner">
@@ -82,6 +83,8 @@ export async function renderExerciseDetail(root, ctx, profile, exerciseId) {
         <button type="button" class="ex-lux__cta" id="ex-cta">${esc(t.exerciseCtaPrimary)}</button>
       </div>
     </div>`;
+
+  mountMaskedLogosIn(root);
 
   const back = root.querySelector("#ex-back");
   back?.addEventListener("click", () => {

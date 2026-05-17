@@ -1,6 +1,9 @@
-import { BRAND_LOGO_SRC, BRAND_NAME } from "../data/brand.js";
+/** Placeholder для vanilla SPA — монтируется через mountMaskedLogosIn */
+export function maskedLogoMountHtml(variant = "cover") {
+  return `<div class="bb-masked-logo-mount" data-masked-logo="${variant}" aria-hidden="true"></div>`;
+}
 
-/** Логотип brainboosty для vanilla HTML-шаблонов */
-export function brandLogoHtml(className = "bb-brand-logo") {
-  return `<img src="${BRAND_LOGO_SRC}" alt="${BRAND_NAME}" class="${className}" width="200" height="56" decoding="async" translate="no" />`;
+/** @deprecated используйте maskedLogoMountHtml */
+export function brandLogoHtml(variant = "cover") {
+  return maskedLogoMountHtml(variant);
 }

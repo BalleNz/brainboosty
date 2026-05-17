@@ -9,7 +9,7 @@ export function LangGate({ onChoose }) {
         initial={{ opacity: 0, scale: 0.94 }}
         animate={{ opacity: 1, scale: 1 }}
       >
-        <BrandLogo className="bb-brand-logo bb-brand-logo--gate mx-auto" />
+        <BrandLogo variant="gate" className="mx-auto" />
         <p className="mt-4 text-sm text-white/70">Выберите язык · Choose language</p>
         <motion.div className="mt-8 flex flex-col gap-3">
           <button type="button" className="lux-btn-primary" onClick={() => onChoose("ru")}>

@@ -165,38 +165,109 @@ html {
   box-shadow: 0 0 0 2px rgba(255, 20, 147, 0.75), 0 0 24px rgba(255, 20, 147, 0.35) !important;
 }
 
-/* Логотип PNG */
-.bb-brand-logo {
+/* Анимированный логотип (color + alpha → canvas) */
+.bb-masked-logo-mount,
+.bb-masked-logo-root {
   display: block;
-  height: auto;
+  position: relative;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 0;
+}
+
+.bb-masked-logo-canvas,
+.bb-masked-logo-poster,
+.bb-masked-logo-fallback {
+  display: block;
   width: auto;
-  max-width: min(220px, 78vw);
+  height: auto;
+  max-width: 100%;
   object-fit: contain;
   filter: drop-shadow(0 0 14px rgba(255, 20, 147, 0.45));
 }
 
-.bb-brand-logo--header {
+.bb-masked-logo-poster {
+  transition: opacity 0.4s ease;
+}
+
+.bb-masked-logo-poster.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+}
+
+.bb-masked-logo-root:has(.bb-masked-logo-canvas) .bb-masked-logo-poster:not(.is-hidden) {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}
+
+.bb-masked-logo-root--header {
   max-height: 34px;
-  margin: 0 auto;
 }
 
-.bb-brand-logo--hero {
-  max-height: 52px;
+.bb-masked-logo-root--header .bb-masked-logo-canvas,
+.bb-masked-logo-root--header .bb-masked-logo-fallback {
+  max-height: 34px;
 }
 
-.bb-brand-logo--gate {
+.bb-masked-logo-root--exercise {
+  max-height: 28px;
+}
+
+.bb-masked-logo-root--exercise .bb-masked-logo-canvas,
+.bb-masked-logo-root--exercise .bb-masked-logo-fallback {
+  max-height: 28px;
+}
+
+.bb-masked-logo-root--gate {
   max-height: 48px;
 }
 
-.bb-brand-logo--footer {
+.bb-masked-logo-root--gate .bb-masked-logo-canvas,
+.bb-masked-logo-root--gate .bb-masked-logo-fallback {
+  max-height: 48px;
+}
+
+.bb-masked-logo-root--footer {
   max-height: 40px;
   opacity: 0.95;
 }
 
-.bb-brand-logo--cover {
+.bb-masked-logo-root--footer .bb-masked-logo-canvas,
+.bb-masked-logo-root--footer .bb-masked-logo-fallback {
+  max-height: 40px;
+}
+
+.bb-masked-logo-root--cover {
   max-height: 44px;
-  margin-left: auto;
-  margin-right: auto;
+}
+
+.bb-masked-logo-root--cover .bb-masked-logo-canvas,
+.bb-masked-logo-root--cover .bb-masked-logo-fallback {
+  max-height: 44px;
+}
+
+.bb-masked-logo-root--hero {
+  aspect-ratio: 1;
+  max-height: min(72vw, 320px);
+  width: min(100%, 320px);
+}
+
+.bb-masked-logo-root--hero .bb-masked-logo-canvas,
+.bb-masked-logo-root--hero .bb-masked-logo-fallback {
+  max-height: min(72vw, 320px);
+  width: 100%;
+  filter: drop-shadow(0 0 22px rgba(255, 20, 147, 0.65)) drop-shadow(0 0 44px rgba(255, 0, 170, 0.35));
+  transition: filter 0.35s ease;
+}
+
+.bb-hero-video-hit:hover .bb-masked-logo-root--hero .bb-masked-logo-canvas,
+.bb-hero-video-hit:focus-visible .bb-masked-logo-root--hero .bb-masked-logo-canvas,
+.bb-hero-video-hit:hover .bb-masked-logo-root--hero .bb-masked-logo-fallback,
+.bb-hero-video-hit:focus-visible .bb-masked-logo-root--hero .bb-masked-logo-fallback {
+  filter: drop-shadow(0 0 28px rgba(255, 20, 147, 0.85)) drop-shadow(0 0 56px rgba(255, 215, 0, 0.25));
 }
 
 .bb-hero-video-hit {
@@ -251,7 +322,8 @@ html {
   filter: drop-shadow(0 0 28px rgba(255, 20, 147, 0.85)) drop-shadow(0 0 56px rgba(255, 215, 0, 0.25));
 }
 
-.bb-lang-gate__title .bb-brand-logo {
+.bb-lang-gate__title .bb-masked-logo-mount,
+.bb-lang-gate__title .bb-masked-logo-root {
   margin: 0 auto 0.35rem;
 }
 

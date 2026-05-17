@@ -1,4 +1,5 @@
-import { brandLogoHtml } from "./components/brand-logo-html.js";
+import { maskedLogoMountHtml } from "./components/brand-logo-html.js";
+import { mountMaskedBrandLogo, mountMaskedLogosIn } from "./lib/masked-brand-video.js";
 import { fetchBrainProfile, SITE_SESSION_STORAGE_KEY, SITE_USER_STORAGE_KEY } from "./api.js";
 import { getStrings } from "./i18n/index.js";
 import { ROUTE, getRoute, navigate, onRouteChange, replaceRoute, startRouter } from "./router.js";
@@ -46,6 +47,8 @@ function syncAppHeader(routeName) {
   const showOnMap = routeName === "map" && !document.body.classList.contains("bb-app--needs-bot");
   if (showOnMap) {
     header.hidden = false;
+    const headerMount = document.getElementById("bb-header-logo-mount");
+    if (headerMount) mountMaskedBrandLogo(headerMount, { variant: "header" });
     setupMapWordmarkScroll();
   } else {
     header.hidden = true;
@@ -81,7 +84,8 @@ function applyQuestionnaireGate(root) {
   const wrap = document.createElement("div");
   wrap.className = "bb-bot-gate";
   wrap.setAttribute("role", "status");
-  wrap.insertAdjacentHTML("afterbegin", brandLogoHtml("bb-brand-logo bb-brand-logo--gate"));
+  wrap.insertAdjacentHTML("afterbegin", maskedLogoMountHtml("gate"));
+  mountMaskedLogosIn(wrap);
   const line = document.createElement("p");
   line.className = "bb-bot-gate__line";
   line.textContent = t.notRegistered;
