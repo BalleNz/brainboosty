@@ -1,5 +1,5 @@
 import { maskedLogoMountHtml } from "./components/brand-logo-html.js";
-import { mountMaskedBrandLogo, mountMaskedLogosIn } from "./lib/masked-brand-video.js";
+import { mountMaskedLogosIn } from "./lib/masked-brand-video.js";
 import { fetchBrainProfile, SITE_SESSION_STORAGE_KEY, SITE_USER_STORAGE_KEY } from "./api.js";
 import { getStrings } from "./i18n/index.js";
 import { ROUTE, getRoute, navigate, onRouteChange, replaceRoute, startRouter } from "./router.js";
@@ -39,21 +39,12 @@ function setupMapWordmarkScroll() {
   };
 }
 
-/** Заголовок brainboosty — только на маршруте «карта», на лендинге и остальных экранах скрыт. */
-function syncAppHeader(routeName) {
+/** Плавающий wordmark в шапке отключён (TG + браузер). */
+function syncAppHeader(_routeName) {
   const header = document.getElementById("bb-header");
   if (!header) return;
-
-  const showOnMap = routeName === "map" && !document.body.classList.contains("bb-app--needs-bot");
-  if (showOnMap) {
-    header.hidden = false;
-    const headerMount = document.getElementById("bb-header-logo-mount");
-    if (headerMount) mountMaskedBrandLogo(headerMount, { variant: "header" });
-    setupMapWordmarkScroll();
-  } else {
-    header.hidden = true;
-    teardownMapWordmarkScroll();
-  }
+  header.hidden = true;
+  teardownMapWordmarkScroll();
 }
 
 function resolveProfileErrorMessage(t, err) {

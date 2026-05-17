@@ -57,3 +57,11 @@ export function openTributeLink(url) {
 export function hapticLight() {
   window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.("light");
 }
+
+/** Telegram Mini App (не браузерный Neural Map Hub с siteToken). */
+export function isTelegramMiniAppSession() {
+  return (
+    document.body.classList.contains("bb-app--telegram") &&
+    !document.body.classList.contains("bb-app--site")
+  );
+}

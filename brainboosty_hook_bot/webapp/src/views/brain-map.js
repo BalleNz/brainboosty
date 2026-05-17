@@ -4,7 +4,7 @@ import { regionCardHtml } from "../components/region-card.js";
 import { mountMaskedLogosIn } from "../lib/masked-brand-video.js";
 import { REGION_KEYS } from "../data/regions.js";
 import { getStrings } from "../i18n/index.js";
-import { hapticLight } from "../telegram.js";
+import { hapticLight, isTelegramMiniAppSession } from "../telegram.js";
 
 /**
  * @param {HTMLElement} root
@@ -16,11 +16,15 @@ export function renderBrainMap(root, profile, route) {
   const displayName = profile.userDisplayName || (profile.lang === "en" ? "Guest" : "Гость");
 
   const sections = [
-    coverSectionHtml(t, {
-      displayName,
-      neuroScore: profile.neuroScore,
-      connectivity: profile.connectivity,
-    }),
+    coverSectionHtml(
+      t,
+      {
+        displayName,
+        neuroScore: profile.neuroScore,
+        connectivity: profile.connectivity,
+      },
+      { showLogo: !isTelegramMiniAppSession() },
+    ),
     ...REGION_KEYS.map((key) =>
       regionCardHtml(t, key, {
         main: profile.scores[key],

@@ -12,7 +12,7 @@ function esc(s) {
  * @param {import('../i18n/index.js').getStrings extends (l:string)=>infer S ? S : never} t
  * @param {{ displayName: string, neuroScore: number, connectivity: string[] }} data
  */
-export function coverSectionHtml(t, { displayName, neuroScore, connectivity }) {
+export function coverSectionHtml(t, { displayName, neuroScore, connectivity }, { showLogo = true } = {}) {
   const connHtml =
     connectivity?.length > 0
       ? `
@@ -24,7 +24,7 @@ export function coverSectionHtml(t, { displayName, neuroScore, connectivity }) {
 
   return `
 <section class="bb-section bb-cover" data-section="cover">
-  <div class="bb-cover__logo mb-6">${maskedLogoMountHtml("cover")}</div>
+  ${showLogo ? `<div class="bb-cover__logo mb-6">${maskedLogoMountHtml("cover")}</div>` : ""}
   <div class="glass rounded-3xl p-6 sm:p-8 cover-neon-card border border-pink-500/30">
     <p class="text-center text-sm uppercase tracking-[0.35em] text-pink-200 mt-1 font-semibold drop-shadow-[0_0_16px_rgba(255,20,147,0.55)] bb-cover__kicker">
       ${esc(t.heroBrain)}

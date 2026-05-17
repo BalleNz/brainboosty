@@ -2,7 +2,6 @@ import "./styles/tailwind.css";
 import "./styles/cyber-neon.css";
 import "./styles/lux-pink-global.css";
 import "./styles/exercise-lux.css";
-import { mountMaskedBrandLogo } from "./lib/masked-brand-video.js";
 import { SITE_SESSION_STORAGE_KEY, SITE_USER_STORAGE_KEY } from "./api.js";
 import { bootApp } from "./app.js";
 import { mountReactLanding } from "./landing/mountLanding.jsx";
@@ -123,14 +122,8 @@ function readSiteUserHint() {
   }
 }
 
-function initHeaderLogo() {
-  const el = document.getElementById("bb-header-logo-mount");
-  if (el) mountMaskedBrandLogo(el, { variant: "header" });
-}
-
 async function bootstrap() {
   document.body.classList.add("bb-theme-lux");
-  initHeaderLogo();
   migrateLegacyUrl();
 
   if (await consumeOidcHandoffFromQuery()) {

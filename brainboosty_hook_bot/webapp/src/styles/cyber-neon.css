@@ -1018,6 +1018,10 @@ body.bb-app--needs-bot .bb-root.bb-root--spa.bb-root--bot-gate::before {
 }
 
 /* Telegram mini app: same glass / glow language as public landing */
+body.bb-app--telegram #bb-header {
+  display: none !important;
+}
+
 body.bb-app--telegram .bb-root.bb-root--spa {
   position: relative;
   padding-top: calc(12px + var(--bb-safe-top));
