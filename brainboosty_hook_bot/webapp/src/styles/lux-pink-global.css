@@ -199,6 +199,33 @@ html {
   margin-right: auto;
 }
 
+.bb-hero-video-hit {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bb-hero-video-hit:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 20, 147, 0.65), 0 0 32px rgba(255, 20, 147, 0.35);
+  border-radius: 1rem;
+}
+
+.bb-hero-video {
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 0 22px rgba(255, 20, 147, 0.65)) drop-shadow(0 0 44px rgba(255, 0, 170, 0.35));
+  transition: transform 0.35s ease, filter 0.35s ease;
+}
+
+.bb-hero-video-hit:hover .bb-hero-video,
+.bb-hero-video-hit:focus-visible .bb-hero-video {
+  transform: scale(1.03);
+  filter: drop-shadow(0 0 28px rgba(255, 20, 147, 0.85)) drop-shadow(0 0 56px rgba(255, 215, 0, 0.25));
+}
+
 .bb-lang-gate__title .bb-brand-logo {
   margin: 0 auto 0.35rem;
 }

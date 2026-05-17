@@ -1,6 +1,5 @@
 /** Mirrors brain_region_keys.REGION_KEYS + region_png_map.REGION_SECTION_PNG */
 
-import coverHero from "@bb-assets/full-glowing-brain.png?url";
 import amygdala from "@bb-assets/brain-sections/amygdala.png?url";
 import brainLobes from "@bb-assets/brain-sections/lobes.png?url";
 import frontalGyrus from "@bb-assets/brain-sections/frontal-gyrus.png?url";
@@ -25,5 +24,3 @@ export const REGION_IMAGES = {
   amygdala,
   frontal_gyrus: frontalGyrus,
 };
-
-export const COVER_HERO_IMAGE = coverHero;

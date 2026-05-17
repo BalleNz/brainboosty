@@ -1,8 +1,13 @@
 import { createRoot } from "react-dom/client";
 import { useCallback, useEffect, useState } from "react";
-import { fetchLandingMeta } from "../api.js";
+import {
+  fetchBrainProfile,
+  fetchLandingMeta,
+  SITE_SESSION_STORAGE_KEY,
+} from "../api.js";
 import { getStrings } from "../i18n/index.js";
 import { LangGate } from "./components/LangGate.jsx";
+import { MapPromptModal } from "./components/MapPromptModal.jsx";
 import { LandingPage } from "./LandingPage.jsx";
 
 const LANDING_LANG_KEY = "bb-landing-lang";
@@ -33,6 +38,22 @@ function getStoredLandingLang() {
   return null;
 }
 
+function getSiteToken() {
+  try {
+    return localStorage.getItem(SITE_SESSION_STORAGE_KEY)?.trim() || "";
+  } catch {
+    return "";
+  }
+}
+
+function getTelegramInitData() {
+  try {
+    return (window.Telegram?.WebApp?.initData || "").trim();
+  } catch {
+    return "";
+  }
+}
+
 function parseHubLoginError() {
   const path = (window.location.pathname || "").replace(/\/+$/, "") || "/";
   if (path === "/hub-login") {
@@ -60,6 +81,8 @@ function LandingApp() {
   const [meta, setMeta] = useState(DEFAULT_META);
   const [hubError, setHubError] = useState("");
   const [hubStatus, setHubStatus] = useState("");
+  const [mapPromptOpen, setMapPromptOpen] = useState(false);
+  const [canTryTest, setCanTryTest] = useState(false);
 
   useEffect(() => {
     if (!lang) return;
@@ -123,20 +146,67 @@ function LandingApp() {
     document.getElementById("hub-login")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
+  const onHeroVideoClick = useCallback(async () => {
+    const siteToken = getSiteToken();
+    const initData = getTelegramInitData();
+    setCanTryTest(Boolean(siteToken || initData));
+
+    if (!siteToken && !initData) {
+      setMapPromptOpen(true);
+      return;
+    }
+
+    try {
+      const profile = await fetchBrainProfile({ initData, siteToken });
+      if (profile.hasMap) {
+        window.location.href = "/";
+        return;
+      }
+      window.location.href = "/test";
+    } catch (e) {
+      setCanTryTest(Boolean(siteToken));
+      setMapPromptOpen(true);
+    }
+  }, []);
+
   if (!lang) {
     return <LangGate onChoose={onChooseLang} />;
   }
 
   return (
-    <LandingPage
-      lang={lang}
-      meta={meta}
-      hubStatus={hubStatus}
-      hubError={hubError}
-      onLogin={onLogin}
-      onCtaBot={onCtaBot}
-      onCtaLogin={onCtaLogin}
-    />
+    <>
+      <LandingPage
+        lang={lang}
+        meta={meta}
+        hubStatus={hubStatus}
+        hubError={hubError}
+        onLogin={onLogin}
+        onCtaBot={onCtaBot}
+        onCtaLogin={onCtaLogin}
+        onHeroVideoClick={onHeroVideoClick}
+      />
+      <MapPromptModal
+        lang={lang}
+        open={mapPromptOpen}
+        onClose={() => setMapPromptOpen(false)}
+        onBot={() => {
+          setMapPromptOpen(false);
+          onCtaBot();
+        }}
+        onHub={() => {
+          setMapPromptOpen(false);
+          onCtaLogin();
+        }}
+        onTest={
+          canTryTest
+            ? () => {
+                setMapPromptOpen(false);
+                window.location.href = "/test";
+              }
+            : null
+        }
+      />
+    </>
   );
 }
 

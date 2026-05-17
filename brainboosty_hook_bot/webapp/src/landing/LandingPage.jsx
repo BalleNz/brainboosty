@@ -18,11 +18,17 @@ export function LandingPage({
   onLogin,
   onCtaBot,
   onCtaLogin,
+  onHeroVideoClick,
 }) {
   return (
     <motion.div className="relative min-h-screen overflow-x-hidden">
       <NeuralBackground />
-      <Hero lang={lang} onCtaBot={onCtaBot} onCtaLogin={onCtaLogin} />
+      <Hero
+        lang={lang}
+        onCtaBot={onCtaBot}
+        onCtaLogin={onCtaLogin}
+        onHeroVideoClick={onHeroVideoClick}
+      />
       <BrainZonesGrid lang={lang} />
       <motion.div className="mx-auto max-w-5xl space-y-16 px-5 py-8">
         {THEME_SECTIONS.map((section, i) => (

@@ -1,5 +1,4 @@
 import { brandLogoHtml } from "./brand-logo-html.js";
-import { COVER_HERO_IMAGE } from "../data/regions.js";
 
 function esc(s) {
   return String(s)
@@ -25,8 +24,7 @@ export function coverSectionHtml(t, { displayName, neuroScore, connectivity }) {
 
   return `
 <section class="bb-section bb-cover" data-section="cover">
-  <div class="bb-cover__logo mb-4">${brandLogoHtml("bb-brand-logo bb-brand-logo--cover")}</div>
-  <img src="${COVER_HERO_IMAGE}" alt="" class="cover-full-brain-hero mb-4" width="360" height="260" decoding="async" />
+  <div class="bb-cover__logo mb-6">${brandLogoHtml("bb-brand-logo bb-brand-logo--cover")}</div>
   <div class="glass rounded-3xl p-6 sm:p-8 cover-neon-card border border-pink-500/30">
     <p class="text-center text-sm uppercase tracking-[0.35em] text-pink-200 mt-1 font-semibold drop-shadow-[0_0_16px_rgba(255,20,147,0.55)] bb-cover__kicker">
       ${esc(t.heroBrain)}

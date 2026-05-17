@@ -14,7 +14,7 @@ from brainboosty_hook_bot.src.services.brain_pdf.region_png_map import REGION_SE
 logger = logging.getLogger(__name__)
 
 _COVER_HERO_PNG_CANDIDATES: tuple[Path, ...] = (
-    all_assets_dir() / "full-glowing-brain.png",
+    all_assets_dir() / "brainboosty_logo.png",
     brain_sections_dir() / "cover-hero.png",
 )
 
