@@ -50,18 +50,22 @@ function getSiteToken() {
 
 async function consumeOidcHandoffFromQuery() {
   const params = new URLSearchParams(window.location.search);
-  const code = params.get("oidc_handoff")?.trim();
+  const code = (params.get("oidc_handoff") || params.get("code") || "").trim();
   if (!code) return false;
 
   try {
-    const res = await fetch(
-      `/api/webapp/auth/oidc/handoff?oidc_handoff=${encodeURIComponent(code)}`,
-      { cache: "no-store" },
-    );
-    if (!res.ok) return false;
+    const qs = new URLSearchParams({ oidc_handoff: code });
+    const res = await fetch(`/api/webapp/auth/oidc/handoff?${qs}`, { cache: "no-store" });
+    if (!res.ok) {
+      window.location.replace("/hub-login?error=handoff_failed");
+      return true;
+    }
     const data = await res.json();
     const token = data?.accessToken?.trim();
-    if (!token) return false;
+    if (!token) {
+      window.location.replace("/hub-login?error=handoff_failed");
+      return true;
+    }
 
     const lang = data.lang === "en" ? "en" : "ru";
     localStorage.setItem(SITE_SESSION_STORAGE_KEY, token);
@@ -76,7 +80,8 @@ async function consumeOidcHandoffFromQuery() {
     window.location.replace("/");
     return true;
   } catch {
-    return false;
+    window.location.replace("/hub-login?error=handoff_failed");
+    return true;
   }
 }
 

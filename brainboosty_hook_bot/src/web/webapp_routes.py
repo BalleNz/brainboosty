@@ -56,6 +56,9 @@ _webapp_dist = _package_root / "webapp" / "dist"
 
 router = APIRouter(prefix="/api/webapp", tags=["webapp"])
 
+# Без префикса /api/webapp — если в BotFather указали …/auth/oidc/callback
+oidc_alias_router = APIRouter(tags=["webapp-oidc-alias"])
+
 
 def webapp_dist_dir() -> Path:
     return _webapp_dist
@@ -63,19 +66,33 @@ def webapp_dist_dir() -> Path:
 
 def mount_webapp_static(app) -> None:
     dist = webapp_dist_dir()
-    if dist.is_dir() and (dist / "index.html").is_file():
-        # html=True: SPA fallback — /test, /history, /access → index.html (History API router)
-        app.mount(
-            "/",
-            StaticFiles(directory=str(dist), html=True),
-            name="brainboosty_webapp",
-        )
-        logger.info("Web App SPA mounted at / from %s (clean URLs)", dist)
-    else:
+    if not (dist.is_dir() and (dist / "index.html").is_file()):
         logger.warning(
             "Web App dist not found at %s — run: cd webapp && npm install && npm run build",
             dist,
         )
+        return
+
+    assets_dir = dist / "assets"
+    if assets_dir.is_dir():
+        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="webapp_assets")
+
+    index_path = dist / "index.html"
+
+    @app.get("/{full_path:path}")
+    async def spa_fallback(full_path: str = ""):
+        """SPA: файлы из dist или index.html; не перехватываем /api и webhooks."""
+        segment = (full_path or "").strip("/")
+        if segment.startswith("api/") or segment == "health" or segment.startswith("tribute/"):
+            raise HTTPException(status_code=404, detail="Not Found")
+        if segment:
+            candidate = (dist / segment).resolve()
+            dist_resolved = dist.resolve()
+            if candidate.is_file() and str(candidate).startswith(str(dist_resolved)):
+                return FileResponse(candidate)
+        return FileResponse(index_path)
+
+    logger.info("Web App SPA fallback from %s (clean URLs, /api not shadowed)", dist)
 
 
 class TestSubmitBody(BaseModel):
@@ -159,6 +176,7 @@ async def webapp_oidc_config() -> dict[str, str | bool]:
 
 
 @router.get("/auth/oidc/start")
+@oidc_alias_router.get("/auth/oidc/start")
 async def webapp_oidc_start(
     return_to: str = Query("", max_length=200),
 ) -> RedirectResponse:
@@ -171,11 +189,16 @@ async def webapp_oidc_start(
 
 
 @router.get("/auth/oidc/handoff")
+@oidc_alias_router.get("/auth/oidc/handoff")
 async def webapp_oidc_handoff(
-    oidc_handoff: Annotated[str, Query(min_length=8)],
+    oidc_handoff: Annotated[str | None, Query(min_length=8)] = None,
+    code: Annotated[str | None, Query(min_length=8)] = None,
 ) -> JSONResponse:
     """Обмен короткого oidc_handoff (с главной после callback) на Bearer-токен."""
-    row = redeem_oidc_handoff(oidc_handoff)
+    raw = (oidc_handoff or code or "").strip()
+    if len(raw) < 8:
+        raise HTTPException(status_code=400, detail="missing_handoff")
+    row = redeem_oidc_handoff(raw)
     if row is None:
         raise HTTPException(status_code=400, detail="invalid_handoff")
     access, lang, hint = row
@@ -193,6 +216,7 @@ async def webapp_oidc_handoff(
 
 
 @router.get("/auth/oidc/callback")
+@oidc_alias_router.get("/auth/oidc/callback")
 async def webapp_oidc_callback(
     request: Request,
     session: Annotated[AsyncSession, Depends(get_session)],

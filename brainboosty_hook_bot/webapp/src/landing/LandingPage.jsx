@@ -21,7 +21,7 @@ export function LandingPage({
   onHeroVideoClick,
 }) {
   return (
-    <motion.div className="relative min-h-screen overflow-x-hidden">
+    <motion.div className="relative min-h-screen">
       <NeuralBackground />
       <Hero
         lang={lang}

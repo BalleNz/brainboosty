@@ -182,6 +182,17 @@ body {
   overscroll-behavior-y: none;
 }
 
+/* clip на html, не hidden на body — иначе второй вертикальный скролл */
+html {
+  overflow-x: clip;
+}
+
+@supports not (overflow: clip) {
+  html {
+    overflow-x: hidden;
+  }
+}
+
 /* Display / headline typography — Space Grotesk */
 .bb-type-display,
 .neon-zone-title,
@@ -221,7 +232,6 @@ body {
 .bb-app {
   min-height: 100dvh;
   position: relative;
-  overflow-x: hidden;
 }
 
 /* Ambient background (sheet-premium::before) */

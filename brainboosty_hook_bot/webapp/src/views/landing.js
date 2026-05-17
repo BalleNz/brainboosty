@@ -22,6 +22,7 @@ const OIDC_ERROR_KEYS = {
   invalid_state: "landingHubErrorOidc",
   state_expired: "landingHubErrorOidc",
   missing_code: "landingHubErrorOidc",
+  handoff_failed: "landingHubErrorOidc",
 };
 
 function getStoredLandingLang() {

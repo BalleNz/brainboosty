@@ -258,11 +258,13 @@ def _public_origin_from_request(request: Any) -> str:
 
 def render_oidc_finish_page(*, origin: str, handoff: str, error: str = "") -> HTMLResponse:
     """
-    HTML вместо 302+#hash: мобильные браузеры и WebView после oauth.telegram.org
-    надёжнее открывают страницу с коротким ?oidc_handoff=.
+    HTML после callback: обмен handoff → localStorage на этой же странице (мобильные WebView),
+    затем переход на /. Относительные URL — тот же хост, что у callback.
     """
+    _ = origin  # legacy param; редиректы только относительные
+
     if error:
-        target = f"{origin}/hub-login?error={error}" if origin else f"/hub-login?error={error}"
+        target = f"/hub-login?{urlencode({'error': error})}"
         safe_target = html_module.escape(target)
         body = f"""<!DOCTYPE html>
 <html lang="ru"><head>
@@ -276,19 +278,51 @@ def render_oidc_finish_page(*, origin: str, handoff: str, error: str = "") -> HT
 </body></html>"""
         return HTMLResponse(content=body, status_code=200)
 
-    q = urlencode({"oidc_handoff": handoff})
-    target = f"{origin}/?{q}" if origin else f"/?{q}"
-    safe_target = html_module.escape(target)
+    handoff_js = json.dumps(handoff)
+    fallback_home = json.dumps(f"/?{urlencode({'oidc_handoff': handoff})}")
     body = f"""<!DOCTYPE html>
 <html lang="ru"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BrainBoosty</title>
-<meta http-equiv="refresh" content="0;url={safe_target}">
 </head><body>
 <p>Вход выполнен, открываем Neural Map…</p>
-<p><a href="{safe_target}">Нажмите здесь, если страница не перешла сама</a></p>
-<script>location.replace({json.dumps(target)});</script>
+<script>
+(async function () {{
+  const handoff = {handoff_js};
+  const storageKey = "bb-site-session";
+  const userKey = "bb-site-user";
+  try {{
+    const url =
+      "/api/webapp/auth/oidc/handoff?oidc_handoff=" + encodeURIComponent(handoff);
+    const res = await fetch(url, {{ cache: "no-store" }});
+    if (!res.ok) {{
+      location.replace("/hub-login?error=handoff_failed");
+      return;
+    }}
+    const data = await res.json();
+    const token = (data.accessToken || "").trim();
+    if (!token) {{
+      location.replace("/hub-login?error=handoff_failed");
+      return;
+    }}
+    const lang = data.lang === "en" ? "en" : "ru";
+    localStorage.setItem(storageKey, token);
+    localStorage.setItem(
+      userKey,
+      JSON.stringify({{
+        first_name: (data.user && data.user.first_name) || "",
+        last_name: "",
+        language_code:
+          (data.user && data.user.language_code) === "en" ? "en" : lang,
+      }}),
+    );
+    location.replace("/");
+  }} catch (e) {{
+    location.replace({fallback_home});
+  }}
+}})();
+</script>
 </body></html>"""
     return HTMLResponse(content=body, status_code=200)
 

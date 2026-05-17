@@ -3,8 +3,8 @@ import { BrandLogo } from "../../components/BrandLogo.jsx";
 export function Footer({ lang, meta }) {
   const isRu = lang === "ru";
   return (
-    <footer className="border-t border-white/10 px-5 py-12 text-center text-sm text-white/50">
-      <BrandLogo variant="footer" className="mx-auto" />
+    <footer className="flex flex-col items-center border-t border-white/10 px-5 py-12 text-center text-sm text-white/50">
+      <BrandLogo variant="footer" className="bb-brand-logo--footer-center" />
       <p className="mt-3">{isRu ? "Образовательная модель · не медицинский диагноз" : "Educational model · not medical advice"}</p>
       {meta?.channelUrl && (
         <a
