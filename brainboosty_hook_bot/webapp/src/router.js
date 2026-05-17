@@ -102,6 +102,7 @@ export function navigate(name, params = {}) {
   const current = `${pathname()}${window.location.search}`;
   if (current !== url) {
     history.pushState(null, "", url);
+    window.scrollTo(0, 0);
   }
   notifyListeners();
 }
@@ -109,6 +110,7 @@ export function navigate(name, params = {}) {
 export function replaceRoute(name, params = {}) {
   const p = params instanceof URLSearchParams ? new URLSearchParams(params) : new URLSearchParams(params);
   history.replaceState(null, "", buildUrl(name, p));
+  window.scrollTo(0, 0);
   notifyListeners();
 }
 

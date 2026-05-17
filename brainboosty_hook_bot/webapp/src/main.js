@@ -6,7 +6,10 @@ import { SITE_SESSION_STORAGE_KEY, SITE_USER_STORAGE_KEY } from "./api.js";
 import { bootApp } from "./app.js";
 import { mountReactLanding } from "./landing/mountLanding.jsx";
 import { initTelegramWebApp } from "./telegram.js";
+import { initScrollReset } from "./lib/scroll-reset.js";
 import { isAppDeepLinkWithoutSession, migrateLegacyUrl } from "./router.js";
+
+initScrollReset();
 
 function isLikelyTelegramWebAppContext() {
   try {
