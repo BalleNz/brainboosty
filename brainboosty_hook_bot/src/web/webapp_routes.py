@@ -280,9 +280,15 @@ async def webapp_profile(
     x_telegram_init_data: str | None = Header(default=None, alias="X-Telegram-Init-Data"),
     authorization: str | None = Header(default=None),
 ) -> JSONResponse:
-    user, lang = await _resolve_user(session, x_telegram_init_data, authorization)
-    snap = await latest_snapshot(session, user.id)
-    return JSONResponse(profile_from_snapshot(user, snap, lang=lang))
+    try:
+        user, lang = await _resolve_user(session, x_telegram_init_data, authorization)
+        snap = await latest_snapshot(session, user.id)
+        return JSONResponse(profile_from_snapshot(user, snap, lang=lang))
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("webapp_profile failed: %s", exc)
+        raise HTTPException(status_code=500, detail="profile_load_failed") from exc
 
 
 @router.get("/history")

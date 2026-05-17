@@ -7,7 +7,10 @@ from contextlib import asynccontextmanager
 
 from aiogram.types import Update
 from fastapi import FastAPI, Request, Response
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
+from sqlalchemy import text
+
+from brainboosty_hook_bot.src.database.session import async_session_maker
 
 from brainboosty_hook_bot.src.bot_runtime import (
     BotRuntime,
@@ -23,6 +26,16 @@ from brainboosty_hook_bot.src.web.tribute_app import process_tribute_webhook
 from brainboosty_hook_bot.src.web.webapp_routes import mount_webapp_static, router as webapp_router
 
 logger = logging.getLogger(__name__)
+
+
+async def _db_ping() -> bool:
+    try:
+        async with async_session_maker() as session:
+            await session.execute(text("SELECT 1"))
+        return True
+    except Exception:
+        logger.exception("database ping failed")
+        return False
 
 _runtime: BotRuntime | None = None
 
@@ -73,6 +86,12 @@ app = FastAPI(title="BrainBoosty Hook API", lifespan=lifespan)
 app.include_router(webapp_router)
 
 
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    logger.exception("Unhandled error on %s %s", request.method, request.url.path)
+    return JSONResponse(status_code=500, content={"detail": "internal_error"})
+
+
 @app.get("/health")
 async def health(request: Request) -> dict[str, str | int]:
     from brainboosty_hook_bot.src.web.webapp_routes import webapp_dist_dir
@@ -81,8 +100,10 @@ async def health(request: Request) -> dict[str, str | int]:
     built = dist.is_dir() and (dist / "index.html").is_file()
     tg = getattr(request.app.state, "tg_webhook", None) or {}
     secret_on = bool((settings.TELEGRAM_WEBHOOK_SECRET or "").strip())
+    db_ok = await _db_ping()
     return {
-        "status": "ok",
+        "status": "ok" if db_ok else "degraded",
+        "database_ok": int(db_ok),
         "telegram_mode": "webhook",
         "webapp_dist_built": int(built),
         "telegram_webhook_secret_configured": int(secret_on),

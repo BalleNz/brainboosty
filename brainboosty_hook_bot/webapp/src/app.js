@@ -53,6 +53,19 @@ function syncAppHeader(routeName) {
   }
 }
 
+function resolveProfileErrorMessage(t, err) {
+  if (err?.status === 403) return t.notRegistered;
+  if (err?.status === 401) return t.authError;
+  if (err?.code === "network" || err?.code === "upstream" || err?.detail === "server_unavailable") {
+    return t.errorServerDown;
+  }
+  if (err?.code === "invalid_response") return t.errorLoad;
+  if (typeof err?.detail === "string" && err.detail && err.detail.length < 120) {
+    return `${t.errorLoad} (${err.detail})`;
+  }
+  return t.errorLoad;
+}
+
 function applyQuestionnaireGate(root) {
   document.body.classList.add("bb-app--needs-bot");
   syncAppHeader("");
@@ -113,14 +126,17 @@ async function ensureProfileLoaded(root) {
       applyQuestionnaireGate(root);
       return false;
     }
-    const msg =
-      e?.status === 403
-        ? t.notRegistered
-        : e?.status === 401
-          ? t.authError
-          : t.errorLoad;
+    const msg = resolveProfileErrorMessage(t, e);
     root.className = "bb-root bb-root--spa";
-    root.innerHTML = `<p class="bb-error">${msg}</p>`;
+    root.innerHTML = `
+      <div class="bb-error-panel">
+        <p class="bb-error">${msg}</p>
+        <button type="button" class="lux-btn-primary bb-error-retry">${t.errorRetry}</button>
+      </div>`;
+    root.querySelector(".bb-error-retry")?.addEventListener("click", () => {
+      profileCache = null;
+      window.location.reload();
+    });
     return false;
   }
 }

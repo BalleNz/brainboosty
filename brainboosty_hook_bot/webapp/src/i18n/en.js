@@ -68,6 +68,8 @@ export default {
   loading: "Loading your neuro profile…",
   computing: "Computing your brain map…",
   errorLoad: "Could not load data. Please try again later.",
+  errorServerDown: "Server is temporarily unavailable. Wait a minute and refresh.",
+  errorRetry: "Refresh",
   authError: "Open the app from the Telegram bot.",
   notRegistered: "Take the test in the bot first!",
   historyTitle: "Progress history",

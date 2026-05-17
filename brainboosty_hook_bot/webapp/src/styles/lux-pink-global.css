@@ -213,6 +213,11 @@ html {
   border-radius: 1rem;
 }
 
+.bb-hero-video-stage {
+  aspect-ratio: 1;
+  max-height: min(72vw, 320px);
+}
+
 .bb-hero-video {
   display: block;
   object-fit: contain;
@@ -220,9 +225,29 @@ html {
   transition: transform 0.35s ease, filter 0.35s ease;
 }
 
+.bb-hero-video--poster {
+  opacity: 1;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.bb-hero-video-stage:has(.bb-hero-video--masked) .bb-hero-video--poster {
+  opacity: 0;
+}
+
+.bb-hero-video--masked {
+  height: auto;
+  max-height: min(72vw, 320px);
+  width: 100%;
+}
+
+.bb-hero-video-hit:hover .bb-hero-video-stage,
+.bb-hero-video-hit:focus-visible .bb-hero-video-stage {
+  transform: scale(1.03);
+}
+
 .bb-hero-video-hit:hover .bb-hero-video,
 .bb-hero-video-hit:focus-visible .bb-hero-video {
-  transform: scale(1.03);
   filter: drop-shadow(0 0 28px rgba(255, 20, 147, 0.85)) drop-shadow(0 0 56px rgba(255, 215, 0, 0.25));
 }
 
@@ -313,4 +338,19 @@ body.bb-app--telegram .bb-root.bb-root--spa::before {
 .bb-loading__pulse {
   border-color: rgba(255, 20, 147, 0.35) !important;
   box-shadow: 0 0 24px rgba(255, 20, 147, 0.35) !important;
+}
+
+.bb-error-panel {
+  max-width: 22rem;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.bb-error-panel .bb-error {
+  margin-bottom: 1.25rem;
+}
+
+.bb-error-panel .bb-error-retry {
+  width: 100%;
 }

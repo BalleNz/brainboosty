@@ -1,9 +1,15 @@
 import { motion } from "framer-motion";
-import { BRAND_LOGO_SRC, BRAND_VIDEO_SRC } from "../../data/brand.js";
+import { useMaskedVideoCanvas } from "../hooks/useMaskedVideoCanvas.js";
 
-/** Кликабельное hero-видео brainboosty_logo.mp4 */
+/** Кликабельный логотип: color.mp4 + alpha.mp4 → canvas без фона */
 export function HeroVideo({ onClick, lang }) {
   const isRu = lang === "ru";
+  const reducedMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const { canvasRef, posterSrc } = useMaskedVideoCanvas({ enabled: !reducedMotion });
+
   return (
     <motion.button
       type="button"
@@ -23,16 +29,31 @@ export function HeroVideo({ onClick, lang }) {
           }}
         />
       </span>
-      <video
-        className="bb-hero-video relative mx-auto w-[min(100%,320px)] rounded-2xl"
-        src={BRAND_VIDEO_SRC}
-        poster={BRAND_LOGO_SRC}
-        autoPlay
-        loop
-        muted
-        playsInline
-        preload="metadata"
-      />
+
+      <div className="bb-hero-video-stage relative mx-auto w-[min(100%,320px)]">
+        {reducedMotion ? (
+          <img
+            src={posterSrc}
+            alt=""
+            className="bb-hero-video bb-hero-video--static mx-auto block w-full"
+            width={320}
+            height={320}
+            decoding="async"
+          />
+        ) : (
+          <>
+            <img
+              src={posterSrc}
+              alt=""
+              className="bb-hero-video bb-hero-video--poster absolute inset-0 mx-auto h-full w-full object-contain"
+              aria-hidden
+              decoding="async"
+            />
+            <canvas ref={canvasRef} className="bb-hero-video bb-hero-video--masked relative z-[1] mx-auto block w-full" />
+          </>
+        )}
+      </div>
+
       <span className="mt-3 block text-xs uppercase tracking-[0.28em] text-pink-300/80">
         {isRu ? "Нажми · Neural Map" : "Tap · Neural Map"}
       </span>

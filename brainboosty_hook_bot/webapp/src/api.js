@@ -32,23 +32,54 @@ function headers(initData, siteToken, { jsonBody = false } = {}) {
 }
 
 async function apiFetch(path, { initData = "", siteToken = "", method = "GET", body } = {}) {
-  const res = await fetch(`/api/webapp${path}`, {
-    method,
-    headers: headers(initData, siteToken, { jsonBody: Boolean(body) }),
-    body: body ? JSON.stringify(body) : undefined,
-    cache: "no-store",
-  });
+  let res;
+  try {
+    res = await fetch(`/api/webapp${path}`, {
+      method,
+      headers: headers(initData, siteToken, { jsonBody: Boolean(body) }),
+      body: body ? JSON.stringify(body) : undefined,
+      cache: "no-store",
+    });
+  } catch {
+    const err = new Error("network");
+    err.code = "network";
+    throw err;
+  }
+
+  const contentType = res.headers.get("content-type") || "";
+  const isJson = contentType.includes("application/json");
+
   if (!res.ok) {
     const err = new Error(`HTTP ${res.status}`);
     err.status = res.status;
-    try {
-      err.detail = (await res.json()).detail;
-    } catch {
-      /* ignore */
+    if (isJson) {
+      try {
+        const payload = await res.json();
+        err.detail = payload.detail ?? payload.message;
+      } catch {
+        /* ignore */
+      }
+    } else if (res.status >= 502 && res.status <= 504) {
+      err.code = "upstream";
+      err.detail = "server_unavailable";
     }
     throw err;
   }
-  return res.json();
+
+  if (!isJson) {
+    const err = new Error("invalid_response");
+    err.code = "invalid_response";
+    err.status = res.status;
+    throw err;
+  }
+
+  try {
+    return await res.json();
+  } catch {
+    const err = new Error("invalid_json");
+    err.code = "invalid_response";
+    throw err;
+  }
 }
 
 function normalizeProfile(raw) {
