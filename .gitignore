@@ -1,0 +1,20 @@
+# JetBrains / PyCharm
+.idea/
+*.iml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+.venv/
+.pytest_cache/
+.mypy_cache/
+*.log
+
+# Env & local DB
+.env
+*.db
+*.sqlite
+*.sqlite3

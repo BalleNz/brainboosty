@@ -70,8 +70,8 @@ class Settings(BaseSettings):
 
     # --- Redis: FSM (анкета, когнитивный тест: cq, answers, quest_lang и т.д.) ---
     REDIS_URL: str = Field(
-        default="",
-        description="redis://host:6379/0 — FSM в Redis; пусто → MemoryStorage (один процесс, без персистентности)",
+        default="redis://127.0.0.1:6379/0",
+        description="redis://host:6379/0 — FSM в Redis (обязательно; Docker: redis://redis:6379/0)",
     )
     REDIS_FSM_STATE_TTL_SECONDS: int = Field(
         default=0,

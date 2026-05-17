@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from datetime import date, timedelta, timezone
 
 from aiogram import Bot, Dispatcher
-from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -35,10 +34,13 @@ class BotRuntime:
     tribute_runner: object | None = None
 
 
-def build_fsm_storage() -> MemoryStorage | RedisStorage:
+def build_fsm_storage() -> RedisStorage:
     url = (settings.REDIS_URL or "").strip()
     if not url:
-        return MemoryStorage()
+        raise RuntimeError(
+            "REDIS_URL обязателен для FSM (анкета, когнитивный тест). "
+            "Укажите в .env, например: redis://redis:6379/0"
+        )
     kwargs: dict = {}
     if settings.REDIS_FSM_STATE_TTL_SECONDS > 0:
         kwargs["state_ttl"] = timedelta(seconds=settings.REDIS_FSM_STATE_TTL_SECONDS)
@@ -89,10 +91,7 @@ def create_bot_runtime() -> BotRuntime:
 
 
 async def start_bot_runtime(runtime: BotRuntime) -> None:
-    if (settings.REDIS_URL or "").strip():
-        logger.info("FSM storage: Redis")
-    else:
-        logger.info("FSM storage: in-memory")
+    logger.info("FSM storage: Redis (%s)", (settings.REDIS_URL or "").strip())
     await init_db()
     runtime.scheduler.start()
     runtime.tribute_runner = await start_tribute_server(runtime.bot)

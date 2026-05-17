@@ -1,7 +1,8 @@
 .env
 *.db
 *.xml
-*.idea
+.idea/
+*.iml
 *.sqlite
 *.sqlite3
 __pycache__/
